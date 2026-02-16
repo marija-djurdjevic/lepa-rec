@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="angularnetbase.client/angularnetbase.client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="AngularNetBase.Server/AngularNetBase.Server.csproj" />
+</Solution>
