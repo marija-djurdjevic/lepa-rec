@@ -1,7 +1,12 @@
 <Solution>
-  <Project Path="angularnetbase.client/angularnetbase.client.esproj">
+  <Folder Name="/backend/">
+    <Project Path="backend/AngularNetBase.API/AngularNetBase.API.csproj" />
+  </Folder>
+  <Folder Name="/backend/Shared/">
+    <Project Path="backend/Shared/Shared.Core/Shared.Core.csproj" />
+  </Folder>
+  <Project Path="frontend/frontend.esproj">
     <Build />
     <Deploy />
   </Project>
-  <Project Path="AngularNetBase.Server/AngularNetBase.Server.csproj" />
 </Solution>

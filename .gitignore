@@ -1,0 +1,17 @@
+# Claude Code
+.claude/
+
+# Visual Studio
+.vs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+
+# Solution-level
+*.sln.docstates
