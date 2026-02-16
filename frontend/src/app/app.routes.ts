@@ -1,4 +1,18 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/auth/auth.guard';
 
-// Add feature routes here as your application grows
-export const routes: Routes = [];
+export const routes: Routes = [
+  {
+    path: 'login',
+    loadComponent: () => import('./features/auth/login').then((m) => m.Login),
+  },
+  {
+    path: '',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/home/home').then((m) => m.Home),
+  },
+  {
+    path: '**',
+    redirectTo: '',
+  },
+];

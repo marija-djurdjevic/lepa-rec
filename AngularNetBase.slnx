@@ -2,6 +2,9 @@
   <Folder Name="/backend/">
     <Project Path="backend/AngularNetBase.API/AngularNetBase.API.csproj" />
   </Folder>
+  <Folder Name="/backend/Modules/">
+    <Project Path="backend/Modules/Identity/Identity.csproj" Id="c431fcb2-e5d3-46b9-ba92-cad5d1b0ad76" />
+  </Folder>
   <Folder Name="/backend/Shared/">
     <Project Path="backend/Shared/Shared.Core/Shared.Core.csproj" />
   </Folder>

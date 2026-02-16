@@ -1,12 +1,9 @@
-﻿<header>
-  <h1>{{ title() }}</h1>
-</header>
+@if (authService.isAuthenticated()) {
+  <header>
+    <h1>{{ title() }}</h1>
+  </header>
+}
 
 <main>
-  <div class="welcome">
-    <p>Angular v21 baseline application with .NET backend</p>
-    <p class="status">Ready for features</p>
-  </div>
-
   <router-outlet />
 </main>

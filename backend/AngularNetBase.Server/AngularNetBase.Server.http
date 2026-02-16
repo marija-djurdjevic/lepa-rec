@@ -1,6 +1,0 @@
-@AngularNetBase.Server_HostAddress = http://localhost:5202
-
-GET {{AngularNetBase.Server_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
