@@ -1,6 +1,6 @@
 using System.Text;
 using AngularNetBase.Identity.Entities;
-using AngularNetBase.Identity.Persistence;
+using AngularNetBase.Identity.Infrastructure;
 using AngularNetBase.Identity.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;

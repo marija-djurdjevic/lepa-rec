@@ -2,7 +2,7 @@ using AngularNetBase.Identity.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AngularNetBase.Identity.Persistence;
+namespace AngularNetBase.Identity.Infrastructure;
 
 public static class IdentitySeeder
 {

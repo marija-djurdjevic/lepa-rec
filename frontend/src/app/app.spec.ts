@@ -5,7 +5,6 @@ import { AuthService } from './core/auth/auth.service';
 import { describe, it, expect, beforeEach } from 'vitest';
 
 describe('App', () => {
-  let component: App;
   let fixture: ComponentFixture<App>;
   let compiled: HTMLElement;
   let authService: AuthService;
@@ -19,18 +18,9 @@ describe('App', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(App);
-    component = fixture.componentInstance;
     compiled = fixture.nativeElement as HTMLElement;
     authService = TestBed.inject(AuthService);
     fixture.detectChanges();
-  });
-
-  it('should create the app', () => {
-    expect(component).toBeTruthy();
-  });
-
-  it('should have a title signal', () => {
-    expect(component.title()).toBe('Angular .NET Baseline');
   });
 
   it('should hide header when not authenticated', () => {
@@ -41,7 +31,7 @@ describe('App', () => {
     expect(header).toBeFalsy();
   });
 
-  it('should show header when authenticated', async () => {
+  it('should show header with title when authenticated', async () => {
     authService.accessToken.set('some-token');
     fixture.detectChanges();
     await fixture.whenStable();
@@ -49,10 +39,5 @@ describe('App', () => {
     const header = compiled.querySelector('header');
     expect(header).toBeTruthy();
     expect(header?.querySelector('h1')?.textContent).toBe('Angular .NET Baseline');
-  });
-
-  it('should have a router outlet', () => {
-    const routerOutlet = compiled.querySelector('router-outlet');
-    expect(routerOutlet).toBeTruthy();
   });
 });

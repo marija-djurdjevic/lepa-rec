@@ -1,6 +1,5 @@
 using AngularNetBase.Identity.Dtos;
 using AngularNetBase.Identity.Entities;
-using AngularNetBase.Identity.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -9,6 +8,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using AngularNetBase.Identity.Infrastructure;
 
 namespace AngularNetBase.Identity.Services;
 

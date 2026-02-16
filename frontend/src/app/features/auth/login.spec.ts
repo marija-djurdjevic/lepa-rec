@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter, Router } from '@angular/router';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Login } from './login';
 import { AuthResponse } from '../../core/auth/auth.models';
 
@@ -34,19 +34,6 @@ describe('Login', () => {
     localStorage.clear();
   });
 
-  it('should create the component', () => {
-    expect(component).toBeTruthy();
-  });
-
-  it('should have email and password form controls', () => {
-    expect(component.form.get('email')).toBeTruthy();
-    expect(component.form.get('password')).toBeTruthy();
-  });
-
-  it('should have form invalid when empty', () => {
-    expect(component.form.valid).toBe(false);
-  });
-
   it('should disable submit button when form is invalid', () => {
     const button = compiled.querySelector('button[type="submit"]') as HTMLButtonElement;
     expect(button.disabled).toBe(true);
@@ -61,7 +48,8 @@ describe('Login', () => {
     expect(button.disabled).toBe(false);
   });
 
-  it('should call login on valid form submit', () => {
+  it('should navigate to home on successful login', () => {
+    const navigateSpy = vi.spyOn(router, 'navigate');
     const mockResponse: AuthResponse = {
       accessToken: 'token',
       refreshToken: 'refresh',
@@ -72,8 +60,9 @@ describe('Login', () => {
     component.onSubmit();
 
     const req = httpTesting.expectOne('/api/auth/login');
-    expect(req.request.method).toBe('POST');
     req.flush(mockResponse);
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/']);
   });
 
   it('should display error on failed login', async () => {

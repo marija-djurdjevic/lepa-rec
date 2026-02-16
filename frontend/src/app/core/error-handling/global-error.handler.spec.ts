@@ -1,5 +1,5 @@
 import { GlobalErrorHandler } from './global-error.handler';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 describe('GlobalErrorHandler', () => {
   let errorHandler: GlobalErrorHandler;
@@ -12,10 +12,6 @@ describe('GlobalErrorHandler', () => {
 
   afterEach(() => {
     consoleErrorSpy.mockRestore();
-  });
-
-  it('should be created', () => {
-    expect(errorHandler).toBeTruthy();
   });
 
   it('should log error with structured format', () => {

@@ -5,7 +5,6 @@ import { Home } from './home';
 import { AuthService } from '../../core/auth/auth.service';
 
 describe('Home', () => {
-  let component: Home;
   let fixture: ComponentFixture<Home>;
   let compiled: HTMLElement;
   let authService: AuthService;
@@ -20,15 +19,10 @@ describe('Home', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(Home);
-    component = fixture.componentInstance;
     compiled = fixture.nativeElement as HTMLElement;
     authService = TestBed.inject(AuthService);
     router = TestBed.inject(Router);
     fixture.detectChanges();
-  });
-
-  it('should create the component', () => {
-    expect(component).toBeTruthy();
   });
 
   it('should display welcome message', () => {

@@ -44,6 +44,18 @@ Boundaries:
 - Keep tests focused: test behavior, not implementation details
 - Mock external dependencies (HTTP, services) but avoid over-mocking
 
+### What NOT to test
+- **No "should create" smoke tests** — if the component is broken, other tests fail anyway.
+- **No internal structure assertions** — don't assert that a form control exists, a signal holds a specific value, or a property has a type. Test the user-visible consequence instead.
+- **No framework-logic tests** — don't verify that `Validators.required` makes a form invalid. Angular already tests that.
+- **No incomplete HTTP tests** — if you fire an HTTP request in a test, assert the *outcome* (state change, navigation, DOM update), not just that the request was made.
+
+### What TO test
+- **Behavior from the user's perspective** — given state X, the DOM shows Y; when the user clicks Z, effect W happens.
+- **State transitions with observable outcomes** — login stores tokens *and* navigates; logout clears tokens *and* clears storage.
+- **Edge cases and error paths** — failed HTTP calls show error messages; missing tokens trigger redirects.
+- **Guards, interceptors, and services** — these are pure logic; test inputs → outputs directly.
+
 ## Commands
 Use the repo's existing scripts (check package.json):
 - dev: `npm start` / `ng serve`

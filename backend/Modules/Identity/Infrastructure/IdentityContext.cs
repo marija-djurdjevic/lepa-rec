@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace AngularNetBase.Identity.Persistence;
+namespace AngularNetBase.Identity.Infrastructure;
 
 public class IdentityContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
 {

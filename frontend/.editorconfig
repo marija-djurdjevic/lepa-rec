@@ -1,4 +1,4 @@
-# Editor configuration, see https://editorconfig.org
+# Tells editors to use consistent formatting: UTF-8, 2-space indentation, single quotes in TypeScript files. Works across team members automatically.
 root = true
 
 [*]
