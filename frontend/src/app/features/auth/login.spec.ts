@@ -54,6 +54,8 @@ describe('Login', () => {
       accessToken: 'token',
       refreshToken: 'refresh',
       expiresAt: '2026-01-01T00:00:00Z',
+      userId: 'test-user-id',
+      role: 'Administrator',
     };
 
     component.form.setValue({ email: 'test@example.com', password: 'password' });

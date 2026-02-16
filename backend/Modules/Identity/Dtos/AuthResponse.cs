@@ -1,3 +1,3 @@
 namespace AngularNetBase.Identity.Dtos;
 
-public record AuthResponse(string AccessToken, string RefreshToken, DateTime ExpiresAt);
+public record AuthResponse(string AccessToken, string RefreshToken, DateTime ExpiresAt, string UserId, string Role);

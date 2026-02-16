@@ -34,16 +34,28 @@ public class AuthService
         return await GenerateTokensAsync(user);
     }
 
+    public async Task LogoutAsync(string refreshToken, Guid userId)
+    {
+        var stored = await _db.RefreshTokens
+            .FirstOrDefaultAsync(r => r.Token == refreshToken && r.UserId == userId);
+
+        if (stored is null)
+            return;
+
+        _db.RefreshTokens.Remove(stored);
+        await _db.SaveChangesAsync();
+    }
+
     public async Task<AuthResponse?> RefreshAsync(string refreshToken)
     {
         var stored = await _db.RefreshTokens
             .Include(r => r.User)
-            .FirstOrDefaultAsync(r => r.Token == refreshToken && !r.IsRevoked);
+            .FirstOrDefaultAsync(r => r.Token == refreshToken);
 
         if (stored is null || stored.ExpiresAt < DateTime.UtcNow)
             return null;
 
-        stored.IsRevoked = true;
+        _db.RefreshTokens.Remove(stored);
         await _db.SaveChangesAsync();
 
         return await GenerateTokensAsync(stored.User);
@@ -51,7 +63,7 @@ public class AuthService
 
     private async Task<AuthResponse> GenerateTokensAsync(ApplicationUser user)
     {
-        var (accessToken, expiresAt) = GenerateAccessToken(user);
+        var (accessToken, expiresAt, role) = await GenerateAccessTokenAsync(user);
         var refreshTokenValue = GenerateRefreshToken();
 
         var refreshToken = new RefreshToken
@@ -66,19 +78,25 @@ public class AuthService
         _db.RefreshTokens.Add(refreshToken);
         await _db.SaveChangesAsync();
 
-        return new AuthResponse(accessToken, refreshTokenValue, expiresAt);
+        return new AuthResponse(accessToken, refreshTokenValue, expiresAt, user.Id.ToString(), role);
     }
 
-    private (string Token, DateTime ExpiresAt) GenerateAccessToken(ApplicationUser user)
+    private async Task<(string Token, DateTime ExpiresAt, string Role)> GenerateAccessTokenAsync(ApplicationUser user)
     {
         var expiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes);
 
-        var claims = new[]
+        var roles = await _userManager.GetRolesAsync(user);
+        var role = roles.FirstOrDefault() ?? string.Empty;
+
+        var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email!),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new(JwtRegisteredClaimNames.Email, user.Email!),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
+
+        if (!string.IsNullOrEmpty(role))
+            claims.Add(new Claim(ClaimTypes.Role, role));
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -90,7 +108,7 @@ public class AuthService
             expires: expiresAt,
             signingCredentials: credentials);
 
-        return (new JwtSecurityTokenHandler().WriteToken(token), expiresAt);
+        return (new JwtSecurityTokenHandler().WriteToken(token), expiresAt, role);
     }
 
     private static string GenerateRefreshToken()

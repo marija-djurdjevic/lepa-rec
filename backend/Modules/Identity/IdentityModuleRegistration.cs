@@ -4,6 +4,7 @@ using AngularNetBase.Identity.Infrastructure;
 using AngularNetBase.Identity.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +23,7 @@ public static class IdentityModuleRegistration
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
         services.AddIdentityCore<ApplicationUser>()
+            .AddRoles<IdentityRole<Guid>>()
             .AddEntityFrameworkStores<IdentityContext>();
 
         var jwtSettings = configuration.GetSection("Jwt").Get<JwtSettings>()!;

@@ -8,5 +8,4 @@ public class RefreshToken
     public ApplicationUser User { get; set; } = null!;
     public DateTime ExpiresAt { get; set; }
     public DateTime CreatedAt { get; set; }
-    public bool IsRevoked { get; set; }
 }

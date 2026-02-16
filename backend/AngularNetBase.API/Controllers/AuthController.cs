@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using AngularNetBase.Identity.Dtos;
 using AngularNetBase.Identity.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AngularNetBase.API.Controllers;
@@ -33,5 +35,14 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Invalid or expired refresh token" });
 
         return Ok(result);
+    }
+
+    [Authorize]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout(LogoutRequest request)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        await _authService.LogoutAsync(request.RefreshToken, userId);
+        return NoContent();
     }
 }

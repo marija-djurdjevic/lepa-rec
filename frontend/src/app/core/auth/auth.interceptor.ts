@@ -24,7 +24,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             return next(retryReq);
           }),
           catchError(() => {
-            authService.logout();
+            authService.clearTokens();
             return throwError(() => error);
           }),
         );
