@@ -1,45 +1,60 @@
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { App } from './app';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 describe('App', () => {
   let component: App;
   let fixture: ComponentFixture<App>;
-  let httpMock: HttpTestingController;
+  let compiled: HTMLElement;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [App],
-      imports: [HttpClientTestingModule]
+      imports: [App],
+      providers: [provideRouter([])],
     }).compileComponents();
-  });
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(App);
     component = fixture.componentInstance;
-    httpMock = TestBed.inject(HttpTestingController);
-  });
-
-  afterEach(() => {
-    httpMock.verify();
+    compiled = fixture.nativeElement as HTMLElement;
+    fixture.detectChanges();
   });
 
   it('should create the app', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should retrieve weather forecasts from the server', () => {
-    const mockForecasts = [
-      { date: '2021-10-01', temperatureC: 20, temperatureF: 68, summary: 'Mild' },
-      { date: '2021-10-02', temperatureC: 25, temperatureF: 77, summary: 'Warm' }
-    ];
-
-    component.ngOnInit();
-
-    const req = httpMock.expectOne('/weatherforecast');
-    expect(req.request.method).toEqual('GET');
-    req.flush(mockForecasts);
-
-    expect(component.forecasts).toEqual(mockForecasts);
+  it('should have a title signal', () => {
+    expect(component.title).toBeDefined();
+    expect(component.title()).toBe('Angular .NET Baseline');
   });
-};
+
+  it('should display the title in the template', () => {
+    const h1 = compiled.querySelector('h1');
+    expect(h1).toBeTruthy();
+    expect(h1?.textContent).toBe('Angular .NET Baseline');
+  });
+
+  it('should render the welcome message', () => {
+    const welcomeDiv = compiled.querySelector('.welcome');
+    expect(welcomeDiv).toBeTruthy();
+
+    const paragraphs = welcomeDiv?.querySelectorAll('p');
+    expect(paragraphs?.length).toBe(2);
+    expect(paragraphs?.[0].textContent).toContain('Angular v21 baseline application');
+    expect(paragraphs?.[1].textContent).toBe('Ready for features');
+  });
+
+  it('should have a router outlet', () => {
+    const routerOutlet = compiled.querySelector('router-outlet');
+    expect(routerOutlet).toBeTruthy();
+  });
+
+  it('should render header and main elements', () => {
+    const header = compiled.querySelector('header');
+    const main = compiled.querySelector('main');
+
+    expect(header).toBeTruthy();
+    expect(main).toBeTruthy();
+  });
+});
