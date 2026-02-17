@@ -1,0 +1,61 @@
+name: CI Tests
+
+on:
+  pull_request:
+    branches: [main, development]
+
+jobs:
+  test-backend:
+    name: Test Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Strip frontend references from csproj
+        run: |
+          FILE=backend/AngularNetBase.API/AngularNetBase.API.csproj
+          sed -i '/<ProjectReference.*frontend\.esproj/,/<\/ProjectReference>/d' "$FILE"
+          sed -i '/<SpaRoot>/d; /<SpaProxyLaunchCommand>/d; /<SpaProxyServerUrl>/d' "$FILE"
+          sed -i '/<PackageReference Include="Microsoft.AspNetCore.SpaProxy"/,/<\/PackageReference>/d' "$FILE"
+          sed -i '/<PackageReference Include="Microsoft.AspNetCore.SpaProxy"[^>]*\/>/d' "$FILE"
+
+      - name: Restore dependencies
+        run: dotnet restore backend/AngularNetBase.API/AngularNetBase.API.csproj
+
+      - name: Build
+        run: dotnet build backend/AngularNetBase.API/AngularNetBase.API.csproj --no-restore
+
+      - name: Test
+        run: |
+          TEST_PROJECTS=$(find backend -name '*Tests*.csproj' -o -name '*Test*.csproj')
+          if [ -z "$TEST_PROJECTS" ]; then
+            echo "No test projects found, skipping."
+          else
+            dotnet test $TEST_PROJECTS --verbosity normal
+          fi
+
+  test-frontend:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Test
+        run: npm test
+        working-directory: frontend
