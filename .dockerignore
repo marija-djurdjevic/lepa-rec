@@ -1,0 +1,10 @@
+**/.git
+**/.vs
+**/.idea
+**/.angular
+**/node_modules
+**/dist
+**/bin
+**/obj
+**/.env
+**/certbot

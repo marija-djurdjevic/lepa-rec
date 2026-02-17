@@ -16,15 +16,19 @@ public class Program
 
         await app.UseIdentityModuleAsync();
 
+        if (app.Configuration.GetValue<bool>("RunMigrationsOnly"))
+        {
+            return;
+        }
+
         app.UseDefaultFiles();
         app.MapStaticAssets();
 
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
+            app.UseHttpsRedirection();
         }
-
-        app.UseHttpsRedirection();
 
         app.UseAuthentication();
         app.UseAuthorization();

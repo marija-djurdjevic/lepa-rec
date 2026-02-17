@@ -1,0 +1,104 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  BACKEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/angularnetbase-backend
+  FRONTEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/angularnetbase-frontend
+
+jobs:
+  test-backend:
+    name: Test Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Strip frontend references from csproj
+        run: |
+          FILE=backend/AngularNetBase.API/AngularNetBase.API.csproj
+          sed -i '/<ProjectReference.*frontend\.esproj/,/<\/ProjectReference>/d' "$FILE"
+          sed -i '/<SpaRoot>/d; /<SpaProxyLaunchCommand>/d; /<SpaProxyServerUrl>/d' "$FILE"
+          sed -i '/<PackageReference Include="Microsoft.AspNetCore.SpaProxy"/,/<\/PackageReference>/d' "$FILE"
+          sed -i '/<PackageReference Include="Microsoft.AspNetCore.SpaProxy"[^>]*\/>/d' "$FILE"
+
+      - name: Restore dependencies
+        run: dotnet restore backend/AngularNetBase.API/AngularNetBase.API.csproj
+
+      - name: Build
+        run: dotnet build backend/AngularNetBase.API/AngularNetBase.API.csproj --no-restore
+
+      - name: Test
+        run: dotnet test backend/ --verbosity normal
+
+  test-frontend:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Test
+        run: npm test
+        working-directory: frontend
+
+  build-and-push:
+    name: Build and Push Images
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract short SHA
+        id: meta
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:latest
+            ${{ env.BACKEND_IMAGE }}:${{ steps.meta.outputs.sha_short }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:latest
+            ${{ env.FRONTEND_IMAGE }}:${{ steps.meta.outputs.sha_short }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

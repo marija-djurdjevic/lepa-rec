@@ -15,3 +15,7 @@ Thumbs.db
 
 # Solution-level
 *.sln.docstates
+
+# Deployment secrets and generated files
+.env
+ops/certbot/

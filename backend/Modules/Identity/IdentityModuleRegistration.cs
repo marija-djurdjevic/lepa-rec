@@ -53,11 +53,18 @@ public static class IdentityModuleRegistration
 
     public static async Task<WebApplication> UseIdentityModuleAsync(this WebApplication app)
     {
-        if (app.Environment.IsDevelopment())
+        var runMigrations = app.Environment.IsDevelopment()
+            || app.Configuration.GetValue<bool>("RunMigrationsOnly");
+
+        if (runMigrations)
         {
             using var scope = app.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<IdentityContext>();
             await db.Database.MigrateAsync();
+        }
+
+        if (app.Environment.IsDevelopment())
+        {
             await IdentitySeeder.SeedAsync(app.Services);
         }
 
