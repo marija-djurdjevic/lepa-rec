@@ -8,6 +8,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Google.Apis.Auth;
+using Microsoft.Extensions.Configuration;
 using AngularNetBase.Identity.Infrastructure;
 
 namespace AngularNetBase.Identity.Services;
@@ -17,12 +19,16 @@ public class AuthService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IdentityContext _db;
     private readonly JwtSettings _jwtSettings;
+    private readonly string _googleClientId;
 
-    public AuthService(UserManager<ApplicationUser> userManager, IdentityContext db, IOptions<JwtSettings> jwtSettings)
+    public AuthService(UserManager<ApplicationUser> userManager, IdentityContext db, IOptions<JwtSettings> jwtSettings, IConfiguration configuration)
     {
         _userManager = userManager;
         _db = db;
         _jwtSettings = jwtSettings.Value;
+        _googleClientId = configuration["Google:ClientId"]
+                          ?? throw new Exception("Google ClientId is missing in configuration!");
+    
     }
 
     public async Task<AuthResponse?> LoginAsync(string email, string password)
@@ -117,5 +123,51 @@ public class AuthService
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(randomBytes);
         return Convert.ToBase64String(randomBytes);
+    }
+
+    public async Task<AuthResponse> LoginWithGoogleAsync(string idToken)
+    {
+        var settings = new GoogleJsonWebSignature.ValidationSettings()
+        {
+            Audience = new List<string>() { _googleClientId }
+        };
+
+        GoogleJsonWebSignature.Payload payload;
+        try
+        {
+            payload = await GoogleJsonWebSignature.ValidateAsync(idToken, settings);
+        }
+        catch
+        {
+            throw new UnauthorizedAccessException("Invalid Google Token or Client ID mismatch.");
+        }
+        return await GetOrCreateExternalUserAsync(payload.Email, payload.GivenName, payload.FamilyName);
+    }
+
+    private async Task<AuthResponse> GetOrCreateExternalUserAsync(string email, string? firstName, string? lastName)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+
+        if (user is null)
+        {
+            user = new ApplicationUser
+            {
+                UserName = email,
+                Email = email,
+                EmailConfirmed = true,
+                FirstName = firstName ?? "", 
+                LastName = lastName ?? ""
+            };
+
+            var createResult = await _userManager.CreateAsync(user);
+            if (!createResult.Succeeded)
+            {
+                throw new Exception($"Registration failed: {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
+            }
+
+            await _userManager.AddToRoleAsync(user, "User");
+        }
+
+        return await GenerateTokensAsync(user);
     }
 }
