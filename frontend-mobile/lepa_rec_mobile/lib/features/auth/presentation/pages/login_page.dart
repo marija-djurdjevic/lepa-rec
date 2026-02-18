@@ -15,6 +15,8 @@ class _LoginPageState extends State<LoginPage> {
   final _remote = AuthRemoteDataSource();
   final _local = AuthLocalDataSource();
 
+  final _phoneController = TextEditingController();
+
   bool _loading = false;
   String? _error;
 
@@ -29,9 +31,8 @@ class _LoginPageState extends State<LoginPage> {
       await googleSignIn.initialize();
 
       final account = await googleSignIn.authenticate();
-      
 
-      final authentication =  account.authentication;
+      final authentication = account.authentication;
       final idToken = authentication.idToken;
 
       if (idToken == null || idToken.isEmpty) {
@@ -41,17 +42,12 @@ class _LoginPageState extends State<LoginPage> {
       final auth = await _remote.googleLogin(idToken);
       await _local.saveSession(auth);
 
-      final saved = await _local.readAccessToken();
-      debugPrint('SAVED ACCESS TOKEN? ${saved != null}');
-
       if (!mounted) return;
+
       Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login success ✅')),
-      );
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = 'Login failed. Please try again.';
       });
     } finally {
       setState(() {
@@ -63,22 +59,144 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (_error != null) ...[
-              Text(_error!, style: const TextStyle(color: Colors.red)),
-              const SizedBox(height: 12),
+      body: Stack(
+        children: [
+          _buildContent(),
+          if (_loading) _buildLoadingOverlay(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    return SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 40),
+
+              _buildPhoneInput(),
+              const SizedBox(height: 16),
+
+              _buildPhoneButton(),
+              const SizedBox(height: 24),
+
+              _buildDivider(),
+              const SizedBox(height: 24),
+
+              _buildGoogleButton(),
+
+              if (_error != null) ...[
+                const SizedBox(height: 24),
+                _buildErrorBox(),
+              ],
             ],
-            ElevatedButton(
-              onPressed: _loading ? null : _signInWithGoogle,
-              child: Text(_loading ? 'Loading...' : 'Continue with Google'),
-            ),
-          ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      children: const [
+        Icon(Icons.favorite, size: 72, color: Colors.pink),
+        SizedBox(height: 16),
+        Text(
+          'Lepa reč',
+          style: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 8),
+        Text(
+          'Širi lepe reči svaki dan 💌',
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPhoneInput() {
+    return TextField(
+      controller: _phoneController,
+      keyboardType: TextInputType.phone,
+      decoration: InputDecoration(
+        labelText: 'Broj mobilnog',
+        hintText: '+381 6X XXX XXXX',
+        prefixIcon: const Icon(Icons.phone),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhoneButton() {
+    return SizedBox(
+      height: 52,
+      child: ElevatedButton(
+        onPressed: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('SMS login uskoro dostupan 📱'),
+            ),
+          );
+        },
+        child: const Text('Nastavi putem broja telefona'),
+      ),
+    );
+  }
+
+  Widget _buildGoogleButton() {
+    return SizedBox(
+      height: 52,
+      child: OutlinedButton.icon(
+        onPressed: _loading ? null : _signInWithGoogle,
+        icon: const Icon(Icons.login),
+        label: const Text('Nastavi sa Google nalogom'),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Row(
+      children: const [
+        Expanded(child: Divider()),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 12),
+          child: Text('ili'),
+        ),
+        Expanded(child: Divider()),
+      ],
+    );
+  }
+
+  Widget _buildErrorBox() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Text(
+        'Došlo je do greške prilikom prijave.',
+        style: TextStyle(color: Colors.red),
+      ),
+    );
+  }
+
+
+  Widget _buildLoadingOverlay() {
+    return Container(
+      color: Colors.black.withOpacity(0.3),
+      child: const Center(
+        child: CircularProgressIndicator(),
       ),
     );
   }
