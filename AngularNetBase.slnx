@@ -4,6 +4,7 @@
   </Folder>
   <Folder Name="/backend/Modules/">
     <Project Path="backend/Modules/Identity/Identity.csproj" Id="c431fcb2-e5d3-46b9-ba92-cad5d1b0ad76" />
+    <Project Path="Practice/Practice.csproj" Id="eebb0d89-8889-4229-ac50-838c4132c6f4" />
   </Folder>
   <Folder Name="/backend/Shared/">
     <Project Path="backend/Shared/Shared.Core/Shared.Core.csproj" />
