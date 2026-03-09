@@ -12,6 +12,8 @@ namespace AngularNetBase.Practice.Infrastructure
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.HasDefaultSchema("practice");
+
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<DailySession>(entity =>
@@ -39,9 +41,9 @@ namespace AngularNetBase.Practice.Infrastructure
                 entity.Property<Guid>("Id").ValueGeneratedOnAdd();
                 entity.HasKey("Id");
 
-                entity.HasDiscriminator<string>("EventType")
-                      .HasValue<GeneralEvent>("General")
-                      .HasValue<ExerciseRecord>("Exercise");
+                entity.HasDiscriminator<string>("Discriminator")
+                .HasValue<GeneralEvent>("General")
+                .HasValue<ExerciseRecord>("Exercise");
             });
         }
     }

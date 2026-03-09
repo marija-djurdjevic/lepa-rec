@@ -1,4 +1,5 @@
 using AngularNetBase.Identity;
+using AngularNetBase.Practice;
 
 namespace AngularNetBase.API;
 
@@ -9,12 +10,14 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Services.AddIdentityModule(builder.Configuration);
+        builder.Services.AddPracticeModule(builder.Configuration);
         builder.Services.AddControllers();
         builder.Services.AddOpenApi();
 
         var app = builder.Build();
 
         await app.UseIdentityModuleAsync();
+        await app.UsePracticeModuleAsync();
 
         if (app.Configuration.GetValue<bool>("RunMigrationsOnly"))
         {

@@ -19,3 +19,16 @@ Thumbs.db
 # Deployment secrets and generated files
 .env
 ops/certbot/
+
+# .NET Build Output
+[Bb]in/
+[Oo]bj/
+
+# Rider / JetBrains
+.idea/
+
+# Visual Studio temp
+.vs/
+*.user
+*.userosscache
+*.suo

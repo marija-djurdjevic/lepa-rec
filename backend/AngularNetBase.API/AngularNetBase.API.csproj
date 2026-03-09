@@ -34,6 +34,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Modules\Identity\Identity.csproj" />
+    <ProjectReference Include="..\Shared\Shared.Core\Shared.Core.csproj" />
   </ItemGroup>
 
 </Project>
