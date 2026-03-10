@@ -21,8 +21,8 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Status = table.Column<int>(type: "integer", nullable: false),
+                    Date = table.Column<DateTime>(type: "date", nullable: false),
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     PrimerAffirmationId = table.Column<Guid>(type: "uuid", nullable: true),
                     PrimerGrowthMessageId = table.Column<Guid>(type: "uuid", nullable: true),
                     PrimerIsSkipped = table.Column<bool>(type: "boolean", nullable: true),
@@ -41,11 +41,11 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DailySessionId = table.Column<Guid>(type: "uuid", nullable: true),
+                    DailySessionId = table.Column<Guid>(type: "uuid", nullable: false),
                     Discriminator = table.Column<string>(type: "character varying(13)", maxLength: 13, nullable: false),
                     ExerciseId = table.Column<Guid>(type: "uuid", nullable: true),
-                    Type = table.Column<int>(type: "integer", nullable: true),
-                    EventType = table.Column<string>(type: "text", nullable: true)
+                    Type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    EventType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -58,6 +58,13 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DailySessions_UserId_Date",
+                schema: "practice",
+                table: "DailySessions",
+                columns: new[] { "UserId", "Date" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_SessionEvents_DailySessionId",

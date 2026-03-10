@@ -8,33 +8,133 @@ namespace AngularNetBase.Practice.Entities.Sessions
 {
     public class DailySession : Entity<Guid>, IAggregateRoot
     {
+        private readonly List<SessionEvent> _events = new();
+
         public Guid UserId { get; private set; }
         public DateTime Date { get; private set; }
         public SessionStatus Status { get; private set; }
 
         public MindsetPrimerResult? PrimerResult { get; private set; }
 
-        private readonly List<SessionEvent> _events = new();
-        public IReadOnlyCollection<SessionEvent> Events => _events.AsReadOnly();
+        public IReadOnlyCollection<SessionEvent> Events => _events;
+        public bool RequiresPrimer => PrimerResult == null;
+        public bool PrimerCompleted => PrimerResult != null && !PrimerResult.IsSkipped;
+        public bool PrimerSkipped => PrimerResult != null && PrimerResult.IsSkipped;
+        public bool HasRecordedExercises => _events.OfType<ExerciseRecord>().Any();
+        public int CompletedExercisesCount => _events.OfType<ExerciseRecord>().Count();
 
-        private DailySession() : base() { } 
+        private DailySession() : base() { }
 
-        public DailySession(Guid id, Guid userId) : base(id)
+        public DailySession(Guid id, Guid userId, DateTime date) : base(id)
         {
+            if (userId == Guid.Empty)
+                throw new ArgumentException("UserId ne može biti prazan.", nameof(userId));
+
             UserId = userId;
-            Date = DateTime.UtcNow.Date; 
+            Date = date.Date;
             Status = SessionStatus.Started;
         }
 
-        public void RecordPrimerCompleted(bool isSkipped, Guid? affirmationId = null, Guid? growthMessageId = null)
+        public void CompletePrimer(Guid affirmationValueId, Guid growthMessageId, DateTime timestamp)
+        {
+            EnsureSessionIsActive();
+            EnsurePrimerNotAlreadyRecorded();
+
+            if (affirmationValueId == Guid.Empty)
+                throw new ArgumentException("AffirmationValueId ne može biti prazan.", nameof(affirmationValueId));
+
+            if (growthMessageId == Guid.Empty)
+                throw new ArgumentException("GrowthMessageId ne može biti prazan.", nameof(growthMessageId));
+
+            PrimerResult = new MindsetPrimerResult(
+                affirmationValueId,
+                growthMessageId,
+                false,
+                timestamp);
+
+            MoveToInProgressIfNeeded();
+            AddGeneralEvent("PrimerCompleted", timestamp);
+        }
+
+        public void SkipPrimer(DateTime timestamp)
+        {
+            EnsureSessionIsActive();
+            EnsurePrimerNotAlreadyRecorded();
+
+            PrimerResult = new MindsetPrimerResult(
+                null,
+                null,
+                true,
+                timestamp);
+
+            MoveToInProgressIfNeeded();
+            AddGeneralEvent("PrimerSkipped", timestamp);
+        }
+
+        public void RecordExercise(Guid exerciseId, ExerciseType type, DateTime timestamp)
+        {
+            EnsureSessionIsActive();
+
+            if (RequiresPrimer)
+                throw new InvalidOperationException("Nije moguće evidentirati vježbu prije mindset primera.");
+
+            if (exerciseId == Guid.Empty)
+                throw new ArgumentException("ExerciseId ne može biti prazan.", nameof(exerciseId));
+
+            _events.Add(new ExerciseRecord(exerciseId, type, timestamp));
+            MoveToInProgressIfNeeded();
+        }
+
+        public void Complete(DateTime timestamp)
+        {
+            EnsureSessionIsActive();
+
+            if (RequiresPrimer)
+                throw new InvalidOperationException("Sesija ne može biti završena prije mindset primera.");
+
+            if (!HasRecordedExercises)
+                throw new InvalidOperationException("Sesija ne može biti završena bez evidentirane vježbe.");
+
+            Status = SessionStatus.Completed;
+            AddGeneralEvent("SessionCompleted", timestamp);
+        }
+
+        public void Abandon(DateTime timestamp)
+        {
+            if (Status == SessionStatus.Completed)
+                throw new InvalidOperationException("Završena sesija ne može biti napuštena.");
+
+            if (Status == SessionStatus.Abandoned)
+                throw new InvalidOperationException("Sesija je već označena kao napuštena.");
+
+            Status = SessionStatus.Abandoned;
+            AddGeneralEvent("SessionAbandoned", timestamp);
+        }
+
+        private void EnsurePrimerNotAlreadyRecorded()
         {
             if (PrimerResult != null)
-                throw new InvalidOperationException("Vježba disanja je već zabilježena za danas.");
+                throw new InvalidOperationException("Mindset primer je već zabilježen za današnju sesiju.");
+        }
 
-            PrimerResult = new MindsetPrimerResult(affirmationId, growthMessageId, isSkipped, DateTime.UtcNow);
-            Status = SessionStatus.InProgress;
+        private void EnsureSessionIsActive()
+        {
+            if (Status == SessionStatus.Completed)
+                throw new InvalidOperationException("Nije moguće mijenjati završenu sesiju.");
 
-            _events.Add(new GeneralEvent(isSkipped ? "PrimerSkipped" : "PrimerCompleted", DateTime.UtcNow));
+            if (Status == SessionStatus.Abandoned)
+                throw new InvalidOperationException("Nije moguće mijenjati napuštenu sesiju.");
+        }
+
+        private void MoveToInProgressIfNeeded()
+        {
+            if (Status == SessionStatus.Started)
+                Status = SessionStatus.InProgress;
+        }
+
+        private void AddGeneralEvent(string eventType, DateTime timestamp)
+        {
+            _events.Add(new GeneralEvent(eventType, timestamp));
         }
     }
 }

@@ -4,5 +4,15 @@ using System.Text;
 
 namespace AngularNetBase.Practice.Entities.Sessions
 {
-    public abstract record SessionEvent(DateTime Timestamp);
+    public abstract class SessionEvent
+    {
+        public DateTime Timestamp { get; protected set; }
+
+        protected SessionEvent() { }
+
+        protected SessionEvent(DateTime timestamp)
+        {
+            Timestamp = timestamp;
+        }
+    }
 }

@@ -30,10 +30,12 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("date");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -42,6 +44,9 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Date")
+                        .IsUnique();
 
                     b.ToTable("DailySessions", "practice");
                 });
@@ -52,7 +57,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("DailySessionId")
+                    b.Property<Guid>("DailySessionId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Discriminator")
@@ -81,8 +86,10 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                     b.Property<Guid>("ExerciseId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.HasDiscriminator().HasValue("Exercise");
                 });
@@ -93,7 +100,8 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
                     b.Property<string>("EventType")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.HasDiscriminator().HasValue("General");
                 });
@@ -137,7 +145,8 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                     b.HasOne("AngularNetBase.Practice.Entities.Sessions.DailySession", null)
                         .WithMany("Events")
                         .HasForeignKey("DailySessionId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("AngularNetBase.Practice.Entities.Sessions.DailySession", b =>

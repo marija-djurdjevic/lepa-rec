@@ -4,5 +4,20 @@ using System.Text;
 
 namespace AngularNetBase.Practice.Entities.Sessions
 {
-    public record ExerciseRecord(Guid ExerciseId, ExerciseType Type, DateTime Timestamp) : SessionEvent(Timestamp);
+    public class ExerciseRecord : SessionEvent
+    {
+        public Guid ExerciseId { get; private set; }
+        public ExerciseType Type { get; private set; }
+
+        private ExerciseRecord() { }
+
+        public ExerciseRecord(Guid exerciseId, ExerciseType type, DateTime timestamp) : base(timestamp)
+        {
+            if (exerciseId == Guid.Empty)
+                throw new ArgumentException("ExerciseId ne može biti prazan.", nameof(exerciseId));
+
+            ExerciseId = exerciseId;
+            Type = type;
+        }
+    }
 }

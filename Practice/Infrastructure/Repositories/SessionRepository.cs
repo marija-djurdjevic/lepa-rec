@@ -15,11 +15,13 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<DailySession?> GetTodaySessionAsync(Guid userId, DateTime date, CancellationToken cancellationToken = default)
+        public async Task<DailySession?> GetByUserAndDateAsync(Guid userId, DateTime date, CancellationToken cancellationToken = default)
         {
             return await _context.DailySessions
-                .Include(s => s.Events)
-                .FirstOrDefaultAsync(s => s.UserId == userId && s.Date == date.Date, cancellationToken);
+                .Include("_events")
+                .FirstOrDefaultAsync(
+                    s => s.UserId == userId && s.Date == date.Date,
+                    cancellationToken);
         }
 
         public async Task AddAsync(DailySession session, CancellationToken cancellationToken = default)

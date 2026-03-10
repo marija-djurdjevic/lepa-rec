@@ -20,6 +20,8 @@ public static class PracticeModuleRegistration
 
         services.AddScoped<ISessionRepository, SessionRepository>();
         services.AddScoped<ISessionService, SessionService>();
+        services.AddScoped<IDateTimeProvider, SystemDateTimeProvider>();
+
 
         return services;
     }
