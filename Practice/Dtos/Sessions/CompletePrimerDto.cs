@@ -4,5 +4,10 @@ using System.Text;
 
 namespace AngularNetBase.Practice.Dtos.Sessions
 {
-    public record CompletePrimerDto(bool IsSkipped, Guid? AffirmationValueId = null, Guid? GrowthMessageId = null);
+    public record CompletePrimerDto(
+        bool IsSkipped,
+        List<Guid>? PresentedStatementIds = null,
+        Guid? SelectedStatementId = null,
+        Guid? GrowthMessageId = null
+    );
 }

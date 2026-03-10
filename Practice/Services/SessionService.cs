@@ -29,33 +29,34 @@ namespace Modules.Practice.Services
         }
 
         public async Task<DailySessionStateDto> CompletePrimerAsync(
-            Guid userId,
-            CompletePrimerDto dto,
-            CancellationToken cancellationToken = default)
+     Guid userId,
+     CompletePrimerDto dto,
+     CancellationToken cancellationToken = default)
         {
             var session = await GetOrCreateTodaySessionEntityAsync(userId, cancellationToken);
             var now = _dateTimeProvider.UtcNow;
 
             if (dto.IsSkipped)
             {
-                if (dto.AffirmationValueId.HasValue || dto.GrowthMessageId.HasValue)
-                    throw new InvalidOperationException(
-                        "Ako je primer preskočen, AffirmationValueId i GrowthMessageId moraju biti null.");
+                if (dto.SelectedStatementId.HasValue || dto.GrowthMessageId.HasValue)
+                    throw new InvalidOperationException("Ako je primer preskočen, SelectedStatementId i GrowthMessageId moraju biti null.");
 
                 session.SkipPrimer(now);
             }
             else
             {
-                if (!dto.AffirmationValueId.HasValue)
-                    throw new InvalidOperationException(
-                        "AffirmationValueId je obavezan kada primer nije preskočen.");
+                if (dto.PresentedStatementIds == null || !dto.PresentedStatementIds.Any())
+                    throw new InvalidOperationException("Mora postojati barem jedna ponuđena izjava.");
+
+                if (!dto.SelectedStatementId.HasValue)
+                    throw new InvalidOperationException("SelectedStatementId je obavezan kada primer nije preskočen.");
 
                 if (!dto.GrowthMessageId.HasValue)
-                    throw new InvalidOperationException(
-                        "GrowthMessageId je obavezan kada primer nije preskočen.");
+                    throw new InvalidOperationException("GrowthMessageId je obavezan kada primer nije preskočen.");
 
                 session.CompletePrimer(
-                    dto.AffirmationValueId.Value,
+                    dto.PresentedStatementIds,
+                    dto.SelectedStatementId.Value,
                     dto.GrowthMessageId.Value,
                     now);
             }
@@ -63,7 +64,6 @@ namespace Modules.Practice.Services
             await _sessionRepository.SaveChangesAsync(cancellationToken);
             return MapToStateDto(session);
         }
-
         public async Task<DailySessionStateDto> RecordExerciseAsync(
             Guid userId,
             RecordExerciseDto dto,

@@ -35,19 +35,21 @@ namespace AngularNetBase.Practice.Entities.Sessions
             Status = SessionStatus.Started;
         }
 
-        public void CompletePrimer(Guid affirmationValueId, Guid growthMessageId, DateTime timestamp)
+        public void CompletePrimer(
+            IEnumerable<Guid> presentedStatementIds,
+            Guid selectedStatementId,
+            Guid growthMessageId,
+            DateTime timestamp)
         {
             EnsureSessionIsActive();
             EnsurePrimerNotAlreadyRecorded();
-
-            if (affirmationValueId == Guid.Empty)
-                throw new ArgumentException("AffirmationValueId ne može biti prazan.", nameof(affirmationValueId));
 
             if (growthMessageId == Guid.Empty)
                 throw new ArgumentException("GrowthMessageId ne može biti prazan.", nameof(growthMessageId));
 
             PrimerResult = new MindsetPrimerResult(
-                affirmationValueId,
+                presentedStatementIds,
+                selectedStatementId,
                 growthMessageId,
                 false,
                 timestamp);
@@ -62,6 +64,7 @@ namespace AngularNetBase.Practice.Entities.Sessions
             EnsurePrimerNotAlreadyRecorded();
 
             PrimerResult = new MindsetPrimerResult(
+                new List<Guid>(), 
                 null,
                 null,
                 true,

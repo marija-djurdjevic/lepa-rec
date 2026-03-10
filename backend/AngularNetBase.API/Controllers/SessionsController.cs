@@ -33,11 +33,31 @@ namespace AngularNetBase.API.Controllers
         }
 
         [HttpPost("primer/complete")]
-        public async Task<IActionResult> CompletePrimer([FromBody] CompletePrimerDto dto, CancellationToken cancellationToken)
+        public async Task<ActionResult<DailySessionStateDto>> CompletePrimer(
+            [FromBody] CompletePrimerDto dto,
+            CancellationToken cancellationToken)
         {
             var userId = GetUserId();
-            await _sessionService.CompletePrimerAsync(userId, dto, cancellationToken);
-            return Ok();
+            var result = await _sessionService.CompletePrimerAsync(userId, dto, cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpPost("exercises/record")]
+        public async Task<ActionResult<DailySessionStateDto>> RecordExercise(
+            [FromBody] RecordExerciseDto dto,
+            CancellationToken cancellationToken)
+        {
+            var userId = GetUserId();
+            var result = await _sessionService.RecordExerciseAsync(userId, dto, cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpPost("complete")]
+        public async Task<ActionResult<DailySessionStateDto>> CompleteSession(CancellationToken cancellationToken)
+        {
+            var userId = GetUserId();
+            var result = await _sessionService.CompleteTodaySessionAsync(userId, cancellationToken);
+            return Ok(result);
         }
     }
 }
