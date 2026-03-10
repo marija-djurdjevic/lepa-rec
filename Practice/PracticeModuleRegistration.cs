@@ -1,4 +1,5 @@
-﻿using AngularNetBase.Practice.Entities.Sessions;
+﻿using AngularNetBase.Practice.Entities.AffirmationValues;
+using AngularNetBase.Practice.Entities.Sessions;
 using AngularNetBase.Practice.Infrastructure;
 using AngularNetBase.Practice.Infrastructure.Repositories;
 using AngularNetBase.Practice.Services;
@@ -21,6 +22,8 @@ public static class PracticeModuleRegistration
         services.AddScoped<ISessionRepository, SessionRepository>();
         services.AddScoped<ISessionService, SessionService>();
         services.AddScoped<IDateTimeProvider, SystemDateTimeProvider>();
+        services.AddScoped<IAffirmationValueRepository, AffirmationValueRepository>();
+        services.AddScoped<IAffirmationValueService, AffirmationValueService>();
 
 
         return services;
