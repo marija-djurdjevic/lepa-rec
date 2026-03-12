@@ -1,4 +1,5 @@
 ﻿using AngularNetBase.Practice.Entities.AffirmationValues;
+using AngularNetBase.Practice.Entities.DistancedJournals;
 using AngularNetBase.Practice.Entities.GrowthMessages;
 using AngularNetBase.Practice.Entities.Sessions;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,8 @@ namespace AngularNetBase.Practice.Infrastructure
         public DbSet<DailySession> DailySessions { get; set; }
         public DbSet<AffirmationValue> AffirmationValues { get; set; }
         public DbSet<GrowthMessage> GrowthMessages { get; set; }
+        public DbSet<DistancedJournalChallenge> DistancedJournalChallenges { get; set; }
+        public DbSet<DistancedJournalExercise> DistancedJournalExercises { get; set; }
 
         public PracticeContext(DbContextOptions<PracticeContext> options) : base(options) { }
 
@@ -164,6 +167,59 @@ namespace AngularNetBase.Practice.Infrastructure
 
                 entity.Property(e => e.IsActive)
                     .IsRequired();
+            });
+
+            modelBuilder.Entity<DistancedJournalChallenge>(entity =>
+            {
+                entity.ToTable("DistancedJournalChallenges");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Content)
+                    .IsRequired()
+                    .HasMaxLength(2000);
+
+                entity.Property(e => e.FollowUpQuestion)
+                    .IsRequired()
+                    .HasMaxLength(1000);
+
+                entity.Property(e => e.ChallengeLevel)
+                    .HasConversion<string>()
+                    .HasMaxLength(20)
+                    .IsRequired();
+            });
+
+            modelBuilder.Entity<DistancedJournalExercise>(entity =>
+            {
+                entity.ToTable("DistancedJournalExercises");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.UserId)
+                    .IsRequired();
+
+                entity.Property(e => e.ChallengeId)
+                    .IsRequired();
+
+                entity.HasIndex(e => new { e.UserId, e.ChallengeId });
+
+                entity.OwnsOne(e => e.Answer, answer =>
+                {
+                    answer.Property(a => a.MainAnswer)
+                        .HasColumnName("MainAnswer")
+                        .HasMaxLength(3000);
+
+                    answer.Property(a => a.FollowUpAnswer)
+                        .HasColumnName("FollowUpAnswer")
+                        .HasMaxLength(3000);
+
+                    answer.Property(a => a.Reflection)
+                        .HasColumnName("Reflection")
+                        .HasMaxLength(3000);
+
+                    answer.Property(a => a.SubmittedAt)
+                        .HasColumnName("SubmittedAt");
+                });
             });
         }
     }

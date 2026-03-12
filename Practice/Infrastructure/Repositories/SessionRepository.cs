@@ -38,5 +38,10 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
         {
             await _context.SaveChangesAsync(cancellationToken);
         }
+        public async Task<DailySession?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            return await _context.DailySessions
+                .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+        }
     }
 }
