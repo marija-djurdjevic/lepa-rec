@@ -29,11 +29,12 @@
     <ProjectReference Include="..\..\frontend\frontend.esproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\..\Practice\Practice.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Shared\Shared.Core\Shared.Core.csproj" />
     <ProjectReference Include="..\Modules\Identity\Identity.csproj" />
+    <ProjectReference Include="..\Shared\Shared.Core\Shared.Core.csproj" />
   </ItemGroup>
 
 </Project>
