@@ -14,5 +14,7 @@ namespace AngularNetBase.Practice.Services
         Task<DailySessionStateDto> RecordExerciseAsync(Guid userId, RecordExerciseDto dto, CancellationToken cancellationToken = default);
 
         Task<DailySessionStateDto> CompleteTodaySessionAsync(Guid userId, CancellationToken cancellationToken = default);
+
+        Task<TodayPracticePlanDto> GetTodayPracticePlanAsync(Guid userId, CancellationToken cancellationToken = default);
     }
 }

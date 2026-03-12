@@ -4,5 +4,5 @@ using System.Text;
 
 namespace AngularNetBase.Practice.Entities.Sessions
 {
-    public enum ExerciseType { PerspectiveScenario, DistancedJournal }
+    public enum ExerciseType { PerspectiveScenario, DistancedJournal, DistancedJournalReflection }
 }

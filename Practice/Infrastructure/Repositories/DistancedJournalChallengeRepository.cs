@@ -53,5 +53,15 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
             _context.DistancedJournalChallenges.Remove(entity);
             await _context.SaveChangesAsync(cancellationToken);
         }
+
+        public async Task<DistancedJournalChallenge?> GetRandomByLevelAsync(ChallengeLevel challengeLevel, CancellationToken cancellationToken = default)
+        {
+            return await _context.DistancedJournalChallenges
+                .Where(x => x.ChallengeLevel == challengeLevel)
+                .OrderBy(x => Guid.NewGuid())
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+
     }
 }

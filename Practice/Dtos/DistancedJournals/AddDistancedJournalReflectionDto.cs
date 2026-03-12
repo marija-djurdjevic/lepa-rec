@@ -4,7 +4,8 @@ using System.Text;
 
 namespace AngularNetBase.Practice.Dtos.DistancedJournals
 {
-    public record AddDistancedJournalReflectionDto(
-    Guid ExerciseId,
-    string Reflection);
+    public sealed record AddDistancedJournalReflectionDto(
+        Guid ExerciseId,
+        DateTime SessionDate,
+        string Reflection);
 }

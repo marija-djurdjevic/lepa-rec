@@ -38,5 +38,9 @@ namespace AngularNetBase.Practice.Services
         Task<DistancedJournalExerciseDto> AddReflectionAsync(
             AddDistancedJournalReflectionDto dto,
             CancellationToken cancellationToken = default);
+
+        Task<DistancedJournalChallengeDto> GetRandomChallengeAsync(
+            ChallengeLevel level,
+            CancellationToken cancellationToken = default);
     }
 }

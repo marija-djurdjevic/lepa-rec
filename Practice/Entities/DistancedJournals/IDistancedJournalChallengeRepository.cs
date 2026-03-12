@@ -10,5 +10,12 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
         Task<IEnumerable<DistancedJournalChallenge>> GetByChallengeLevelAsync(
         ChallengeLevel challengeLevel,
         CancellationToken cancellationToken = default);
+
+        Task<DistancedJournalChallenge?> GetRandomByLevelAsync(
+        ChallengeLevel challengeLevel,
+        CancellationToken cancellationToken = default);
+
+
     }
+
 }

@@ -1,7 +1,10 @@
-﻿using AngularNetBase.Practice.Dtos.Sessions;
+﻿using AngularNetBase.Practice.Dtos.DistancedJournals;
+using AngularNetBase.Practice.Dtos.Sessions;
+using AngularNetBase.Practice.Entities.DistancedJournals;
 using AngularNetBase.Practice.Entities.Sessions;
 using AngularNetBase.Practice.Services;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,13 +13,19 @@ namespace Modules.Practice.Services
     public class SessionService : ISessionService
     {
         private readonly ISessionRepository _sessionRepository;
+        private readonly IDistancedJournalExerciseRepository _distancedJournalExerciseRepository;
+        private readonly IDistancedJournalChallengeRepository _distancedJournalChallengeRepository;
         private readonly IDateTimeProvider _dateTimeProvider;
 
         public SessionService(
             ISessionRepository sessionRepository,
+            IDistancedJournalExerciseRepository distancedJournalExerciseRepository,
+            IDistancedJournalChallengeRepository distancedJournalChallengeRepository,
             IDateTimeProvider dateTimeProvider)
         {
             _sessionRepository = sessionRepository;
+            _distancedJournalExerciseRepository = distancedJournalExerciseRepository;
+            _distancedJournalChallengeRepository = distancedJournalChallengeRepository;
             _dateTimeProvider = dateTimeProvider;
         }
 
@@ -29,9 +38,9 @@ namespace Modules.Practice.Services
         }
 
         public async Task<DailySessionStateDto> CompletePrimerAsync(
-     Guid userId,
-     CompletePrimerDto dto,
-     CancellationToken cancellationToken = default)
+            Guid userId,
+            CompletePrimerDto dto,
+            CancellationToken cancellationToken = default)
         {
             var session = await GetOrCreateTodaySessionEntityAsync(userId, cancellationToken);
             var now = _dateTimeProvider.UtcNow;
@@ -64,6 +73,7 @@ namespace Modules.Practice.Services
             await _sessionRepository.SaveChangesAsync(cancellationToken);
             return MapToStateDto(session);
         }
+
         public async Task<DailySessionStateDto> RecordExerciseAsync(
             Guid userId,
             RecordExerciseDto dto,
@@ -91,6 +101,77 @@ namespace Modules.Practice.Services
             return MapToStateDto(session);
         }
 
+        public async Task<TodayPracticePlanDto> GetTodayPracticePlanAsync(
+            Guid userId,
+            CancellationToken cancellationToken = default)
+        {
+            if (userId == Guid.Empty)
+                throw new ArgumentException("UserId must be provided.");
+
+            var yesterday = _dateTimeProvider.UtcNow.Date.AddDays(-1);
+
+            var yesterdaySession = await _sessionRepository.GetByUserAndDateAsync(
+                userId,
+                yesterday,
+                cancellationToken);
+
+            if (yesterdaySession is null || !yesterdaySession.HasRecordedExercises)
+            {
+                var distancedJournalChoices = await BuildDistancedJournalChoicesAsync(cancellationToken);
+
+                return new TodayPracticePlanDto(
+                    null,
+                    distancedJournalChoices,
+                    false);
+            }
+
+            var exerciseRecords = yesterdaySession.Events
+                .OfType<ExerciseRecord>()
+                .OrderBy(e => e.Timestamp)
+                .ToList();
+
+            var hasPerspectiveScenario = exerciseRecords.Any(e => e.Type == ExerciseType.PerspectiveScenario);
+            var hasDistancedJournal = exerciseRecords.Any(e => e.Type == ExerciseType.DistancedJournal);
+            var hasDistancedJournalReflection = exerciseRecords.Any(e => e.Type == ExerciseType.DistancedJournalReflection);
+
+            if (hasPerspectiveScenario)
+            {
+                var distancedJournalChoices = await BuildDistancedJournalChoicesAsync(cancellationToken);
+
+                return new TodayPracticePlanDto(
+                    null,
+                    distancedJournalChoices,
+                    false);
+            }
+
+            if (hasDistancedJournal)
+            {
+                var reflectionPrompt = await BuildReflectionPromptFromYesterdayAsync(
+                    exerciseRecords,
+                    cancellationToken);
+
+                return new TodayPracticePlanDto(
+                    reflectionPrompt,
+                    Array.Empty<DistancedJournalChallengeDto>(),
+                    true);
+            }
+
+            if (hasDistancedJournalReflection)
+            {
+                return new TodayPracticePlanDto(
+                    null,
+                    Array.Empty<DistancedJournalChallengeDto>(),
+                    true);
+            }
+
+            var defaultChoices = await BuildDistancedJournalChoicesAsync(cancellationToken);
+
+            return new TodayPracticePlanDto(
+                null,
+                defaultChoices,
+                false);
+        }
+
         private async Task<DailySession> GetOrCreateTodaySessionEntityAsync(
             Guid userId,
             CancellationToken cancellationToken)
@@ -111,6 +192,83 @@ namespace Modules.Practice.Services
             await _sessionRepository.SaveChangesAsync(cancellationToken);
 
             return session;
+        }
+
+        private async Task<DistancedJournalReflectionPromptDto?> BuildReflectionPromptFromYesterdayAsync(
+            List<ExerciseRecord> exerciseRecords,
+            CancellationToken cancellationToken)
+        {
+            var lastDistancedJournalRecord = exerciseRecords
+                .Where(e => e.Type == ExerciseType.DistancedJournal)
+                .OrderByDescending(e => e.Timestamp)
+                .FirstOrDefault();
+
+            if (lastDistancedJournalRecord is null)
+                return null;
+
+            var exercise = await _distancedJournalExerciseRepository.GetByIdAsync(
+                lastDistancedJournalRecord.ExerciseId,
+                cancellationToken);
+
+            if (exercise is null || exercise.Answer is null)
+                return null;
+
+            var challenge = await _distancedJournalChallengeRepository.GetByIdAsync(
+                exercise.ChallengeId,
+                cancellationToken);
+
+            if (challenge is null)
+                return null;
+
+            return new DistancedJournalReflectionPromptDto(
+                exercise.Id,
+                challenge.Content,
+                challenge.FollowUpQuestion,
+                exercise.Answer.MainAnswer,
+                exercise.Answer.FollowUpAnswer);
+        }
+
+        private async Task<IReadOnlyCollection<DistancedJournalChallengeDto>> BuildDistancedJournalChoicesAsync(
+            CancellationToken cancellationToken)
+        {
+            var levelPairs = new List<(ChallengeLevel First, ChallengeLevel Second)>
+            {
+                (ChallengeLevel.Easy, ChallengeLevel.Medium),
+                (ChallengeLevel.Easy, ChallengeLevel.Hard),
+                (ChallengeLevel.Medium, ChallengeLevel.Hard)
+            };
+
+            var selectedPair = levelPairs[Random.Shared.Next(levelPairs.Count)];
+
+            var firstChallenge = await _distancedJournalChallengeRepository.GetRandomByLevelAsync(
+                selectedPair.First,
+                cancellationToken);
+
+            var secondChallenge = await _distancedJournalChallengeRepository.GetRandomByLevelAsync(
+                selectedPair.Second,
+                cancellationToken);
+
+            var results = new List<DistancedJournalChallengeDto>();
+
+            if (firstChallenge is not null)
+            {
+                results.Add(new DistancedJournalChallengeDto(
+                    firstChallenge.Id,
+                    firstChallenge.Content,
+                    firstChallenge.FollowUpQuestion,
+                    firstChallenge.ChallengeLevel));
+            }
+
+            if (secondChallenge is not null)
+            {
+                results.Add(new DistancedJournalChallengeDto(
+                    secondChallenge.Id,
+                    secondChallenge.Content,
+                    secondChallenge.FollowUpQuestion,
+                    secondChallenge.ChallengeLevel));
+            }
+
+            return results;
         }
 
         private static DailySessionStateDto MapToStateDto(DailySession session)

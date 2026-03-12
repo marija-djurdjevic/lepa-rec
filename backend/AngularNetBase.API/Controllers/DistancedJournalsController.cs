@@ -105,5 +105,12 @@ namespace AngularNetBase.API.Controllers
             var result = await _distancedJournalService.AddReflectionAsync(dto, cancellationToken);
             return Ok(result);
         }
+
+        [HttpGet("challenges/random/{level}")]
+        public async Task<ActionResult<DistancedJournalChallengeDto>> GetRandomChallenge(ChallengeLevel level, CancellationToken cancellationToken)
+        {
+            var result = await _distancedJournalService.GetRandomChallengeAsync(level, cancellationToken);
+            return Ok(result);
+        }
     }
 }

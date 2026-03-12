@@ -59,5 +59,13 @@ namespace AngularNetBase.API.Controllers
             var result = await _sessionService.CompleteTodaySessionAsync(userId, cancellationToken);
             return Ok(result);
         }
+
+        [HttpGet("today-plan")]
+        public async Task<ActionResult<TodayPracticePlanDto>> GetTodayPracticePlan(CancellationToken cancellationToken)
+        {
+            var userId = GetUserId();
+            var result = await _sessionService.GetTodayPracticePlanAsync(userId, cancellationToken);
+            return Ok(result);
+        }
     }
 }

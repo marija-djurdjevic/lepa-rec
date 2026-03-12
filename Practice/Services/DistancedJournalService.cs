@@ -140,8 +140,8 @@ namespace AngularNetBase.Practice.Services
         }
 
         public async Task<DistancedJournalExerciseDto> AddReflectionAsync(
-            AddDistancedJournalReflectionDto dto,
-            CancellationToken cancellationToken = default)
+    AddDistancedJournalReflectionDto dto,
+    CancellationToken cancellationToken = default)
         {
             if (dto.ExerciseId == Guid.Empty)
                 throw new ArgumentException("ExerciseId must be provided.");
@@ -150,9 +150,24 @@ namespace AngularNetBase.Practice.Services
             if (exercise is null)
                 throw new InvalidOperationException("Distanced journal exercise was not found.");
 
+            var dailySession = await _dailySessionRepository.GetByUserAndDateAsync(
+                exercise.UserId,
+                dto.SessionDate.Date,
+                cancellationToken);
+
+            if (dailySession is null)
+                throw new InvalidOperationException("Daily session was not found.");
+
             exercise.AddReflection(dto.Reflection);
 
+            dailySession.RecordExercise(
+                exercise.Id,
+                ExerciseType.DistancedJournalReflection,
+                DateTime.UtcNow);
+
             await _exerciseRepository.UpdateAsync(exercise, cancellationToken);
+            await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
+            await _dailySessionRepository.SaveChangesAsync(cancellationToken);
 
             return MapExercise(exercise);
         }
@@ -177,6 +192,16 @@ namespace AngularNetBase.Practice.Services
                 exercise.Answer?.Reflection,
                 exercise.Answer?.SubmittedAt,
                 exercise.IsCompleted());
+        }
+
+        public async Task<DistancedJournalChallengeDto> GetRandomChallengeAsync(ChallengeLevel level, CancellationToken cancellationToken = default)
+        {
+            var challenge = await _challengeRepository.GetRandomByLevelAsync(level, cancellationToken);
+
+            if (challenge is null)
+                throw new InvalidOperationException("No challenges found for the selected level.");
+
+            return MapChallenge(challenge);
         }
     }
 }
