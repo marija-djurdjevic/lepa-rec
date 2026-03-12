@@ -36,17 +36,18 @@ public static class PracticeModuleRegistration
         var runMigrations = app.Environment.IsDevelopment()
             || app.Configuration.GetValue<bool>("RunMigrationsOnly");
 
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<PracticeContext>();
+
         if (runMigrations)
         {
-            using var scope = app.Services.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<PracticeContext>();
             await db.Database.MigrateAsync();
         }
 
-        // if (app.Environment.IsDevelopment())
-        // {
-        //     await PracticeSeeder.SeedAsync(app.Services);
-        // }
+        if (app.Environment.IsDevelopment())
+        {
+            await PracticeSeeder.SeedAsync(db);
+        }
 
         return app;
     }
