@@ -1,5 +1,6 @@
 ﻿using AngularNetBase.Practice.Dtos.DistancedJournals;
 using AngularNetBase.Practice.Entities.DistancedJournals;
+using AngularNetBase.Practice.Entities.DistancedJournals.Analysis;
 using AngularNetBase.Practice.Entities.Sessions;
 using System;
 using System.Collections.Generic;
@@ -13,15 +14,21 @@ namespace AngularNetBase.Practice.Services
         private readonly IDistancedJournalChallengeRepository _challengeRepository;
         private readonly IDistancedJournalExerciseRepository _exerciseRepository;
         private readonly ISessionRepository _dailySessionRepository;
+        private readonly IThirdPersonAnalyzer _thirdPersonAnalyzer;
+        private readonly IUserProfileReader _userProfileReader;
 
         public DistancedJournalService(
             IDistancedJournalChallengeRepository challengeRepository,
             IDistancedJournalExerciseRepository exerciseRepository,
-            ISessionRepository sessionRepository)
+            ISessionRepository sessionRepository,
+            IThirdPersonAnalyzer thirdPersonAnalyzer,
+            IUserProfileReader userProfileReader)
         {
             _challengeRepository = challengeRepository;
             _exerciseRepository = exerciseRepository;
             _dailySessionRepository = sessionRepository;
+            _thirdPersonAnalyzer = thirdPersonAnalyzer;
+            _userProfileReader = userProfileReader;
         }
 
         public async Task<DistancedJournalChallengeDto> CreateChallengeAsync(
@@ -103,7 +110,7 @@ namespace AngularNetBase.Practice.Services
             return exercises.Select(MapExercise);
         }
 
-        public async Task<DistancedJournalExerciseDto> SubmitAnswerAsync(
+        public async Task<SubmitDistancedJournalResultDto> SubmitAnswerAsync(
             SubmitDistancedJournalAnswerDto dto,
             CancellationToken cancellationToken = default)
         {
@@ -136,12 +143,20 @@ namespace AngularNetBase.Practice.Services
             await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
             await _dailySessionRepository.SaveChangesAsync(cancellationToken);
 
-            return MapExercise(exercise);
+            var fullText = $"{dto.MainAnswer} {dto.FollowUpAnswer}";
+            var firstName = await _userProfileReader.GetFirstNameAsync(exercise.UserId, cancellationToken);
+
+            var metric = _thirdPersonAnalyzer.Analyze(fullText, "sr", firstName);
+            var feedback = _thirdPersonAnalyzer.GetFeedback(metric);
+
+            return new SubmitDistancedJournalResultDto(
+                MapExercise(exercise),
+                feedback.FeedbackType);
         }
 
         public async Task<DistancedJournalExerciseDto> AddReflectionAsync(
-    AddDistancedJournalReflectionDto dto,
-    CancellationToken cancellationToken = default)
+            AddDistancedJournalReflectionDto dto,
+            CancellationToken cancellationToken = default)
         {
             if (dto.ExerciseId == Guid.Empty)
                 throw new ArgumentException("ExerciseId must be provided.");
@@ -194,7 +209,9 @@ namespace AngularNetBase.Practice.Services
                 exercise.IsCompleted());
         }
 
-        public async Task<DistancedJournalChallengeDto> GetRandomChallengeAsync(ChallengeLevel level, CancellationToken cancellationToken = default)
+        public async Task<DistancedJournalChallengeDto> GetRandomChallengeAsync(
+            ChallengeLevel level,
+            CancellationToken cancellationToken = default)
         {
             var challenge = await _challengeRepository.GetRandomByLevelAsync(level, cancellationToken);
 

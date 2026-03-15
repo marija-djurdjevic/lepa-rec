@@ -89,9 +89,9 @@ namespace AngularNetBase.API.Controllers
         }
 
         [HttpPost("submit")]
-        public async Task<ActionResult<DistancedJournalExerciseDto>> SubmitAnswer(
-            [FromBody] SubmitDistancedJournalAnswerDto dto,
-            CancellationToken cancellationToken)
+        public async Task<ActionResult<SubmitDistancedJournalResultDto>> SubmitAnswer(
+        [FromBody] SubmitDistancedJournalAnswerDto dto,
+        CancellationToken cancellationToken)
         {
             var result = await _distancedJournalService.SubmitAnswerAsync(dto, cancellationToken);
             return Ok(result);

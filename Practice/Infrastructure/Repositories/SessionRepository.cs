@@ -18,8 +18,9 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
         public async Task<DailySession?> GetByUserAndDateAsync(Guid userId, DateTime date, CancellationToken cancellationToken = default)
         {
             return await _context.DailySessions
+                .Include(s => s.Events)
                 .FirstOrDefaultAsync(
-                    s => s.UserId == userId && s.Date == date.Date,
+                    s => s.UserId == userId && s.Date.Date == date.Date,
                     cancellationToken);
         }
 
@@ -41,6 +42,7 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
         public async Task<DailySession?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return await _context.DailySessions
+                .Include(s => s.Events)
                 .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
         }
     }

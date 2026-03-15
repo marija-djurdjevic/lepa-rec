@@ -1,4 +1,5 @@
 ﻿using AngularNetBase.Practice.Entities.AffirmationValues;
+using AngularNetBase.Practice.Entities.DistancedJournals;
 using AngularNetBase.Practice.Entities.GrowthMessages;
 using AngularNetBase.Practice.Entities.Sessions;
 using AngularNetBase.Practice.Infrastructure;
@@ -27,6 +28,10 @@ public static class PracticeModuleRegistration
         services.AddScoped<IAffirmationValueService, AffirmationValueService>();
         services.AddScoped<IGrowthMessageRepository, GrowthMessageRepository>();
         services.AddScoped<IGrowthMessageService, GrowthMessageService>();
+        services.AddScoped<IDistancedJournalService, DistancedJournalService>();
+        services.AddScoped<IDistancedJournalExerciseRepository, DistancedJournalExerciseRepository>();
+        services.AddScoped<IDistancedJournalChallengeRepository, DistancedJournalChallengeRepository>();
+        services.AddScoped<IThirdPersonAnalyzer, ThirdPersonAnalyzer>();
 
         return services;
     }

@@ -102,13 +102,29 @@ namespace Modules.Practice.Services
         }
 
         public async Task<TodayPracticePlanDto> GetTodayPracticePlanAsync(
-            Guid userId,
-            CancellationToken cancellationToken = default)
+    Guid userId,
+    CancellationToken cancellationToken = default)
         {
             if (userId == Guid.Empty)
                 throw new ArgumentException("UserId must be provided.");
 
-            var yesterday = _dateTimeProvider.UtcNow.Date.AddDays(-1);
+            var today = _dateTimeProvider.UtcNow.Date;
+
+            var todaySession = await _sessionRepository.GetByUserAndDateAsync(
+                userId,
+                today,
+                cancellationToken);
+
+            var todayExerciseRecords = todaySession?.Events
+                .OfType<ExerciseRecord>()
+                .OrderBy(e => e.Timestamp)
+                .ToList() ?? new List<ExerciseRecord>();
+
+            var hasDistancedJournalToday = todayExerciseRecords.Any(e => e.Type == ExerciseType.DistancedJournal);
+            var hasDistancedJournalReflectionToday = todayExerciseRecords.Any(e => e.Type == ExerciseType.DistancedJournalReflection);
+            var hasPerspectiveScenarioToday = todayExerciseRecords.Any(e => e.Type == ExerciseType.PerspectiveScenario);
+
+            var yesterday = today.AddDays(-1);
 
             var yesterdaySession = await _sessionRepository.GetByUserAndDateAsync(
                 userId,
@@ -117,58 +133,105 @@ namespace Modules.Practice.Services
 
             if (yesterdaySession is null || !yesterdaySession.HasRecordedExercises)
             {
-                var distancedJournalChoices = await BuildDistancedJournalChoicesAsync(cancellationToken);
+                if (hasDistancedJournalToday)
+                {
+                    return new TodayPracticePlanDto(
+                        null,
+                        Array.Empty<DistancedJournalChallengeDto>(),
+                        false,
+                        true,
+                        false,
+                        false);
+                }
 
                 return new TodayPracticePlanDto(
                     null,
-                    distancedJournalChoices,
+                    await BuildDistancedJournalChoicesAsync(cancellationToken),
+                    false,
+                    false,
+                    false,
                     false);
             }
 
-            var exerciseRecords = yesterdaySession.Events
+            var yesterdayExerciseRecords = yesterdaySession.Events
                 .OfType<ExerciseRecord>()
                 .OrderBy(e => e.Timestamp)
                 .ToList();
 
-            var hasPerspectiveScenario = exerciseRecords.Any(e => e.Type == ExerciseType.PerspectiveScenario);
-            var hasDistancedJournal = exerciseRecords.Any(e => e.Type == ExerciseType.DistancedJournal);
-            var hasDistancedJournalReflection = exerciseRecords.Any(e => e.Type == ExerciseType.DistancedJournalReflection);
+            var hadPerspectiveScenarioYesterday = yesterdayExerciseRecords.Any(e => e.Type == ExerciseType.PerspectiveScenario);
+            var hadDistancedJournalYesterday = yesterdayExerciseRecords.Any(e => e.Type == ExerciseType.DistancedJournal);
+            var hadDistancedJournalReflectionYesterday = yesterdayExerciseRecords.Any(e => e.Type == ExerciseType.DistancedJournalReflection);
 
-            if (hasPerspectiveScenario)
+            if (hadPerspectiveScenarioYesterday)
             {
-                var distancedJournalChoices = await BuildDistancedJournalChoicesAsync(cancellationToken);
+                if (hasDistancedJournalToday)
+                {
+                    return new TodayPracticePlanDto(
+                        null,
+                        Array.Empty<DistancedJournalChallengeDto>(),
+                        false,
+                        true,
+                        false,
+                        false);
+                }
 
                 return new TodayPracticePlanDto(
                     null,
-                    distancedJournalChoices,
+                    await BuildDistancedJournalChoicesAsync(cancellationToken),
+                    false,
+                    false,
+                    false,
                     false);
             }
 
-            if (hasDistancedJournal)
+            if (hadDistancedJournalYesterday)
             {
-                var reflectionPrompt = await BuildReflectionPromptFromYesterdayAsync(
-                    exerciseRecords,
-                    cancellationToken);
+                DistancedJournalReflectionPromptDto? reflectionPrompt = null;
+
+                if (!hasDistancedJournalReflectionToday)
+                {
+                    reflectionPrompt = await BuildReflectionPromptFromYesterdayAsync(
+                        yesterdayExerciseRecords,
+                        cancellationToken);
+                }
 
                 return new TodayPracticePlanDto(
                     reflectionPrompt,
                     Array.Empty<DistancedJournalChallengeDto>(),
-                    true);
+                    !hasPerspectiveScenarioToday,
+                    false,
+                    hasDistancedJournalReflectionToday,
+                    hasPerspectiveScenarioToday);
             }
 
-            if (hasDistancedJournalReflection)
+            if (hadDistancedJournalReflectionYesterday)
             {
                 return new TodayPracticePlanDto(
                     null,
                     Array.Empty<DistancedJournalChallengeDto>(),
-                    true);
+                    !hasPerspectiveScenarioToday,
+                    false,
+                    hasDistancedJournalReflectionToday,
+                    hasPerspectiveScenarioToday);
             }
 
-            var defaultChoices = await BuildDistancedJournalChoicesAsync(cancellationToken);
+            if (hasDistancedJournalToday)
+            {
+                return new TodayPracticePlanDto(
+                    null,
+                    Array.Empty<DistancedJournalChallengeDto>(),
+                    false,
+                    true,
+                    false,
+                    false);
+            }
 
             return new TodayPracticePlanDto(
                 null,
-                defaultChoices,
+                await BuildDistancedJournalChoicesAsync(cancellationToken),
+                false,
+                false,
+                false,
                 false);
         }
 
