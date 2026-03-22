@@ -1,6 +1,8 @@
-﻿using AngularNetBase.Practice.Dtos.DistancedJournals;
+using AngularNetBase.Practice.Dtos.DistancedJournals;
+using AngularNetBase.Practice.Dtos.PerspectiveScenarios;
 using AngularNetBase.Practice.Dtos.Sessions;
 using AngularNetBase.Practice.Entities.DistancedJournals;
+using AngularNetBase.Practice.Entities.PerspectiveScenarios;
 using AngularNetBase.Practice.Entities.Sessions;
 using AngularNetBase.Practice.Services;
 using System;
@@ -15,17 +17,20 @@ namespace Modules.Practice.Services
         private readonly ISessionRepository _sessionRepository;
         private readonly IDistancedJournalExerciseRepository _distancedJournalExerciseRepository;
         private readonly IDistancedJournalChallengeRepository _distancedJournalChallengeRepository;
+        private readonly IPerspectiveScenarioChallengeRepository _perspectiveScenarioChallengeRepository;
         private readonly IDateTimeProvider _dateTimeProvider;
 
         public SessionService(
             ISessionRepository sessionRepository,
             IDistancedJournalExerciseRepository distancedJournalExerciseRepository,
             IDistancedJournalChallengeRepository distancedJournalChallengeRepository,
+            IPerspectiveScenarioChallengeRepository perspectiveScenarioChallengeRepository,
             IDateTimeProvider dateTimeProvider)
         {
             _sessionRepository = sessionRepository;
             _distancedJournalExerciseRepository = distancedJournalExerciseRepository;
             _distancedJournalChallengeRepository = distancedJournalChallengeRepository;
+            _perspectiveScenarioChallengeRepository = perspectiveScenarioChallengeRepository;
             _dateTimeProvider = dateTimeProvider;
         }
 
@@ -48,20 +53,20 @@ namespace Modules.Practice.Services
             if (dto.IsSkipped)
             {
                 if (dto.SelectedStatementId.HasValue || dto.GrowthMessageId.HasValue)
-                    throw new InvalidOperationException("Ako je primer preskočen, SelectedStatementId i GrowthMessageId moraju biti null.");
+                    throw new InvalidOperationException("Ako je primer preskocen, SelectedStatementId i GrowthMessageId moraju biti null.");
 
                 session.SkipPrimer(now);
             }
             else
             {
                 if (dto.PresentedStatementIds == null || !dto.PresentedStatementIds.Any())
-                    throw new InvalidOperationException("Mora postojati barem jedna ponuđena izjava.");
+                    throw new InvalidOperationException("Mora postojati barem jedna ponudena izjava.");
 
                 if (!dto.SelectedStatementId.HasValue)
-                    throw new InvalidOperationException("SelectedStatementId je obavezan kada primer nije preskočen.");
+                    throw new InvalidOperationException("SelectedStatementId je obavezan kada primer nije preskocen.");
 
                 if (!dto.GrowthMessageId.HasValue)
-                    throw new InvalidOperationException("GrowthMessageId je obavezan kada primer nije preskočen.");
+                    throw new InvalidOperationException("GrowthMessageId je obavezan kada primer nije preskocen.");
 
                 session.CompletePrimer(
                     dto.PresentedStatementIds,
@@ -102,8 +107,8 @@ namespace Modules.Practice.Services
         }
 
         public async Task<TodayPracticePlanDto> GetTodayPracticePlanAsync(
-    Guid userId,
-    CancellationToken cancellationToken = default)
+            Guid userId,
+            CancellationToken cancellationToken = default)
         {
             if (userId == Guid.Empty)
                 throw new ArgumentException("UserId must be provided.");
@@ -138,6 +143,7 @@ namespace Modules.Practice.Services
                     return new TodayPracticePlanDto(
                         null,
                         Array.Empty<DistancedJournalChallengeDto>(),
+                        null,
                         false,
                         true,
                         false,
@@ -147,6 +153,7 @@ namespace Modules.Practice.Services
                 return new TodayPracticePlanDto(
                     null,
                     await BuildDistancedJournalChoicesAsync(cancellationToken),
+                    null,
                     false,
                     false,
                     false,
@@ -169,6 +176,7 @@ namespace Modules.Practice.Services
                     return new TodayPracticePlanDto(
                         null,
                         Array.Empty<DistancedJournalChallengeDto>(),
+                        null,
                         false,
                         true,
                         false,
@@ -178,6 +186,7 @@ namespace Modules.Practice.Services
                 return new TodayPracticePlanDto(
                     null,
                     await BuildDistancedJournalChoicesAsync(cancellationToken),
+                    null,
                     false,
                     false,
                     false,
@@ -195,9 +204,14 @@ namespace Modules.Practice.Services
                         cancellationToken);
                 }
 
+                var perspectiveScenarioPrompt = !hasPerspectiveScenarioToday
+                    ? await BuildPerspectiveScenarioPromptAsync(cancellationToken)
+                    : null;
+
                 return new TodayPracticePlanDto(
                     reflectionPrompt,
                     Array.Empty<DistancedJournalChallengeDto>(),
+                    perspectiveScenarioPrompt,
                     !hasPerspectiveScenarioToday,
                     false,
                     hasDistancedJournalReflectionToday,
@@ -206,9 +220,14 @@ namespace Modules.Practice.Services
 
             if (hadDistancedJournalReflectionYesterday)
             {
+                var perspectiveScenarioPrompt = !hasPerspectiveScenarioToday
+                    ? await BuildPerspectiveScenarioPromptAsync(cancellationToken)
+                    : null;
+
                 return new TodayPracticePlanDto(
                     null,
                     Array.Empty<DistancedJournalChallengeDto>(),
+                    perspectiveScenarioPrompt,
                     !hasPerspectiveScenarioToday,
                     false,
                     hasDistancedJournalReflectionToday,
@@ -220,6 +239,7 @@ namespace Modules.Practice.Services
                 return new TodayPracticePlanDto(
                     null,
                     Array.Empty<DistancedJournalChallengeDto>(),
+                    null,
                     false,
                     true,
                     false,
@@ -229,6 +249,7 @@ namespace Modules.Practice.Services
             return new TodayPracticePlanDto(
                 null,
                 await BuildDistancedJournalChoicesAsync(cancellationToken),
+                null,
                 false,
                 false,
                 false,
@@ -332,6 +353,37 @@ namespace Modules.Practice.Services
             }
 
             return results;
+        }
+
+        private async Task<PerspectiveScenarioPromptDto?> BuildPerspectiveScenarioPromptAsync(
+            CancellationToken cancellationToken)
+        {
+            var levels = new[] { ChallengeLevel.Easy, ChallengeLevel.Medium, ChallengeLevel.Hard }
+                .OrderBy(_ => Random.Shared.Next())
+                .ToList();
+
+            foreach (var level in levels)
+            {
+                var challenge = await _perspectiveScenarioChallengeRepository.GetRandomByLevelAsync(
+                    level,
+                    cancellationToken);
+
+                if (challenge is null)
+                    continue;
+
+                return new PerspectiveScenarioPromptDto(
+                    challenge.Id,
+                    challenge.ScenarioText,
+                    challenge.ChallengeLevel,
+                    challenge.Questions
+                        .Select(q => new PerspectiveScenarioQuestionDto(
+                            q.Id,
+                            q.SkillId,
+                            q.QuestionText))
+                        .ToList());
+            }
+
+            return null;
         }
 
         private static DailySessionStateDto MapToStateDto(DailySession session)

@@ -1,7 +1,9 @@
-﻿using AngularNetBase.Practice.Entities.AffirmationValues;
+using AngularNetBase.Practice.Entities.AffirmationValues;
 using AngularNetBase.Practice.Entities.DistancedJournals;
 using AngularNetBase.Practice.Entities.GrowthMessages;
+using AngularNetBase.Practice.Entities.PerspectiveScenarios;
 using AngularNetBase.Practice.Entities.Sessions;
+using AngularNetBase.Practice.Entities.Skills;
 using AngularNetBase.Practice.Infrastructure;
 using AngularNetBase.Practice.Infrastructure.Repositories;
 using AngularNetBase.Practice.Services;
@@ -32,6 +34,10 @@ public static class PracticeModuleRegistration
         services.AddScoped<IDistancedJournalExerciseRepository, DistancedJournalExerciseRepository>();
         services.AddScoped<IDistancedJournalChallengeRepository, DistancedJournalChallengeRepository>();
         services.AddScoped<IThirdPersonAnalyzer, ThirdPersonAnalyzer>();
+        services.AddScoped<ISkillRepository, SkillRepository>();
+        services.AddScoped<IPerspectiveScenarioChallengeRepository, PerspectiveScenarioChallengeRepository>();
+        services.AddScoped<IPerspectiveScenarioExerciseRepository, PerspectiveScenarioExerciseRepository>();
+        services.AddScoped<IPerspectiveScenarioService, PerspectiveScenarioService>();
 
         return services;
     }

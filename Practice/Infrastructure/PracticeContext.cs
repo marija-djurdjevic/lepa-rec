@@ -1,7 +1,9 @@
-﻿using AngularNetBase.Practice.Entities.AffirmationValues;
+using AngularNetBase.Practice.Entities.AffirmationValues;
 using AngularNetBase.Practice.Entities.DistancedJournals;
 using AngularNetBase.Practice.Entities.GrowthMessages;
+using AngularNetBase.Practice.Entities.PerspectiveScenarios;
 using AngularNetBase.Practice.Entities.Sessions;
+using AngularNetBase.Practice.Entities.Skills;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System;
@@ -15,6 +17,10 @@ namespace AngularNetBase.Practice.Infrastructure
         public DbSet<GrowthMessage> GrowthMessages { get; set; }
         public DbSet<DistancedJournalChallenge> DistancedJournalChallenges { get; set; }
         public DbSet<DistancedJournalExercise> DistancedJournalExercises { get; set; }
+        public DbSet<PerspectiveScenarioChallenge> PerspectiveScenarioChallenges { get; set; }
+        public DbSet<PerspectiveScenarioExercise> PerspectiveScenarioExercises { get; set; }
+        public DbSet<Skill> Skills { get; set; }
+        public DbSet<SkillMastery> SkillMasteries { get; set; }
 
         public PracticeContext(DbContextOptions<PracticeContext> options) : base(options) { }
 
@@ -220,6 +226,147 @@ namespace AngularNetBase.Practice.Infrastructure
                     answer.Property(a => a.SubmittedAt)
                         .HasColumnName("SubmittedAt");
                 });
+            });
+
+            modelBuilder.Entity<Skill>(entity =>
+            {
+                entity.ToTable("Skills");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(200);
+
+                entity.Property(e => e.Description)
+                    .IsRequired()
+                    .HasMaxLength(1000);
+
+                entity.OwnsMany(e => e.Levels, level =>
+                {
+                    level.ToTable("SkillLevelDefinitions");
+
+                    level.WithOwner().HasForeignKey("SkillId");
+
+                    level.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    level.HasKey("Id");
+
+                    level.Property(l => l.LevelNumber)
+                        .IsRequired();
+
+                    level.Property(l => l.Title)
+                        .IsRequired()
+                        .HasMaxLength(200);
+
+                    level.Property(l => l.Description)
+                        .IsRequired()
+                        .HasMaxLength(1000);
+                });
+
+                entity.Navigation(e => e.Levels)
+                    .UsePropertyAccessMode(PropertyAccessMode.Field);
+            });
+
+            modelBuilder.Entity<SkillMastery>(entity =>
+            {
+                entity.ToTable("SkillMasteries");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.UserId)
+                    .IsRequired();
+
+                entity.Property(e => e.SkillId)
+                    .IsRequired();
+
+                entity.Property(e => e.CurrentLevel)
+                    .IsRequired();
+
+                entity.HasIndex(e => new { e.UserId, e.SkillId })
+                    .IsUnique();
+            });
+
+            modelBuilder.Entity<PerspectiveScenarioChallenge>(entity =>
+            {
+                entity.ToTable("PerspectiveScenarioChallenges");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.ScenarioText)
+                    .IsRequired()
+                    .HasMaxLength(2000);
+
+                entity.Property(e => e.Reveal)
+                    .IsRequired()
+                    .HasMaxLength(2000);
+
+                entity.Property(e => e.ChallengeLevel)
+                    .HasConversion<string>()
+                    .HasMaxLength(20)
+                    .IsRequired();
+
+                entity.HasMany(e => e.Questions)
+                    .WithOne()
+                    .HasForeignKey(q => q.PerspectiveScenarioChallengeId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Navigation(e => e.Questions)
+                    .UsePropertyAccessMode(PropertyAccessMode.Field);
+            });
+
+            modelBuilder.Entity<PerspectiveScenarioQuestion>(entity =>
+            {
+                entity.ToTable("PerspectiveScenarioQuestions");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.SkillId)
+                    .IsRequired();
+
+                entity.Property(e => e.QuestionText)
+                    .IsRequired()
+                    .HasMaxLength(1000);
+            });
+
+            modelBuilder.Entity<PerspectiveScenarioExercise>(entity =>
+            {
+                entity.ToTable("PerspectiveScenarioExercises");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.UserId)
+                    .IsRequired();
+
+                entity.Property(e => e.ChallengeId)
+                    .IsRequired();
+
+                entity.Property(e => e.SubmittedAt);
+
+                entity.HasIndex(e => new { e.UserId, e.ChallengeId });
+
+                entity.OwnsMany(e => e.Answers, answer =>
+                {
+                    answer.ToTable("PerspectiveScenarioAnswers");
+
+                    answer.WithOwner().HasForeignKey("PerspectiveScenarioExerciseId");
+
+                    answer.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    answer.HasKey("Id");
+
+                    answer.Property(a => a.QuestionId)
+                        .IsRequired();
+
+                    answer.Property(a => a.AnswerText)
+                        .IsRequired()
+                        .HasMaxLength(3000);
+                });
+
+                entity.Navigation(e => e.Answers)
+                    .UsePropertyAccessMode(PropertyAccessMode.Field);
             });
         }
     }
