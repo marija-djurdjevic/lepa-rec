@@ -71,7 +71,8 @@ namespace AngularNetBase.API.Controllers
             Guid id,
             CancellationToken cancellationToken)
         {
-            var result = await _distancedJournalService.GetExerciseByIdAsync(id, cancellationToken);
+            var userId = GetUserId();
+            var result = await _distancedJournalService.GetExerciseByIdAsync(userId, id, cancellationToken);
 
             if (result is null)
                 return NotFound();
@@ -93,8 +94,17 @@ namespace AngularNetBase.API.Controllers
         [FromBody] SubmitDistancedJournalAnswerDto dto,
         CancellationToken cancellationToken)
         {
-            var result = await _distancedJournalService.SubmitAnswerAsync(dto, cancellationToken);
-            return Ok(result);
+            var userId = GetUserId();
+
+            try
+            {
+                var result = await _distancedJournalService.SubmitAnswerAsync(userId, dto, cancellationToken);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return NotFound();
+            }
         }
 
         [HttpPost("reflection")]
@@ -102,8 +112,17 @@ namespace AngularNetBase.API.Controllers
             [FromBody] AddDistancedJournalReflectionDto dto,
             CancellationToken cancellationToken)
         {
-            var result = await _distancedJournalService.AddReflectionAsync(dto, cancellationToken);
-            return Ok(result);
+            var userId = GetUserId();
+
+            try
+            {
+                var result = await _distancedJournalService.AddReflectionAsync(userId, dto, cancellationToken);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return NotFound();
+            }
         }
 
         [HttpGet("challenges/random/{level}")]

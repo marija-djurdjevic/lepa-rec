@@ -71,7 +71,8 @@ namespace AngularNetBase.API.Controllers
             Guid id,
             CancellationToken cancellationToken)
         {
-            var result = await _perspectiveScenarioService.GetExerciseByIdAsync(id, cancellationToken);
+            var userId = GetUserId();
+            var result = await _perspectiveScenarioService.GetExerciseByIdAsync(userId, id, cancellationToken);
 
             if (result is null)
                 return NotFound();
@@ -93,8 +94,17 @@ namespace AngularNetBase.API.Controllers
             [FromBody] SubmitPerspectiveScenarioAnswerDto dto,
             CancellationToken cancellationToken)
         {
-            var result = await _perspectiveScenarioService.SubmitAnswersAsync(dto, cancellationToken);
-            return Ok(result);
+            var userId = GetUserId();
+
+            try
+            {
+                var result = await _perspectiveScenarioService.SubmitAnswersAsync(userId, dto, cancellationToken);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return NotFound();
+            }
         }
 
         [HttpGet("challenges/random/{level}")]
