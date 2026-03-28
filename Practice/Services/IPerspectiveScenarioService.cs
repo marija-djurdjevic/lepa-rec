@@ -28,6 +28,7 @@ namespace AngularNetBase.Practice.Services
             CancellationToken cancellationToken = default);
 
         Task<PerspectiveScenarioExerciseDto?> GetExerciseByIdAsync(
+            Guid userId,
             Guid id,
             CancellationToken cancellationToken = default);
 
@@ -36,6 +37,7 @@ namespace AngularNetBase.Practice.Services
             CancellationToken cancellationToken = default);
 
         Task<SubmitPerspectiveScenarioResultDto> SubmitAnswersAsync(
+            Guid userId,
             SubmitPerspectiveScenarioAnswerDto dto,
             CancellationToken cancellationToken = default);
     }

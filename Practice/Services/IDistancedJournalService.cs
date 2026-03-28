@@ -24,6 +24,7 @@ namespace AngularNetBase.Practice.Services
             CancellationToken cancellationToken = default);
 
         Task<DistancedJournalExerciseDto?> GetExerciseByIdAsync(
+            Guid userId,
             Guid id,
             CancellationToken cancellationToken = default);
 
@@ -32,10 +33,12 @@ namespace AngularNetBase.Practice.Services
             CancellationToken cancellationToken = default);
 
         Task<SubmitDistancedJournalResultDto> SubmitAnswerAsync(
+        Guid userId,
         SubmitDistancedJournalAnswerDto dto,
         CancellationToken cancellationToken = default);
 
         Task<DistancedJournalExerciseDto> AddReflectionAsync(
+            Guid userId,
             AddDistancedJournalReflectionDto dto,
             CancellationToken cancellationToken = default);
 

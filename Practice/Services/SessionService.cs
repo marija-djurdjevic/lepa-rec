@@ -10,7 +10,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Modules.Practice.Services
+namespace AngularNetBase.Practice.Services
 {
     public class SessionService : ISessionService
     {
@@ -18,6 +18,7 @@ namespace Modules.Practice.Services
         private readonly IDistancedJournalExerciseRepository _distancedJournalExerciseRepository;
         private readonly IDistancedJournalChallengeRepository _distancedJournalChallengeRepository;
         private readonly IPerspectiveScenarioChallengeRepository _perspectiveScenarioChallengeRepository;
+        private readonly IPerspectiveScenarioExerciseRepository _perspectiveScenarioExerciseRepository;
         private readonly IDateTimeProvider _dateTimeProvider;
 
         public SessionService(
@@ -25,12 +26,14 @@ namespace Modules.Practice.Services
             IDistancedJournalExerciseRepository distancedJournalExerciseRepository,
             IDistancedJournalChallengeRepository distancedJournalChallengeRepository,
             IPerspectiveScenarioChallengeRepository perspectiveScenarioChallengeRepository,
+            IPerspectiveScenarioExerciseRepository perspectiveScenarioExerciseRepository,
             IDateTimeProvider dateTimeProvider)
         {
             _sessionRepository = sessionRepository;
             _distancedJournalExerciseRepository = distancedJournalExerciseRepository;
             _distancedJournalChallengeRepository = distancedJournalChallengeRepository;
             _perspectiveScenarioChallengeRepository = perspectiveScenarioChallengeRepository;
+            _perspectiveScenarioExerciseRepository = perspectiveScenarioExerciseRepository;
             _dateTimeProvider = dateTimeProvider;
         }
 
@@ -86,6 +89,8 @@ namespace Modules.Practice.Services
         {
             var session = await GetOrCreateTodaySessionEntityAsync(userId, cancellationToken);
             var now = _dateTimeProvider.UtcNow;
+
+            await ValidateExerciseForRecordingAsync(userId, dto, cancellationToken);
 
             session.RecordExercise(dto.ExerciseId, dto.Type, now);
 
@@ -276,6 +281,33 @@ namespace Modules.Practice.Services
             await _sessionRepository.SaveChangesAsync(cancellationToken);
 
             return session;
+        }
+
+        private async Task ValidateExerciseForRecordingAsync(
+            Guid userId,
+            RecordExerciseDto dto,
+            CancellationToken cancellationToken)
+        {
+            if (dto.ExerciseId == Guid.Empty)
+                throw new ArgumentException("ExerciseId must be provided.", nameof(dto));
+
+            if (dto.Type == ExerciseType.PerspectiveScenario)
+            {
+                var exercise = await _perspectiveScenarioExerciseRepository.GetByIdAsync(dto.ExerciseId, cancellationToken);
+                if (exercise is null || exercise.UserId != userId)
+                    throw new InvalidOperationException("Perspective scenario exercise was not found.");
+                return;
+            }
+
+            if (dto.Type == ExerciseType.DistancedJournal || dto.Type == ExerciseType.DistancedJournalReflection)
+            {
+                var exercise = await _distancedJournalExerciseRepository.GetByIdAsync(dto.ExerciseId, cancellationToken);
+                if (exercise is null || exercise.UserId != userId)
+                    throw new InvalidOperationException("Distanced journal exercise was not found.");
+                return;
+            }
+
+            throw new InvalidOperationException("Unsupported exercise type.");
         }
 
         private async Task<DistancedJournalReflectionPromptDto?> BuildReflectionPromptFromYesterdayAsync(

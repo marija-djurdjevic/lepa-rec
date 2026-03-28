@@ -90,7 +90,11 @@ namespace AngularNetBase.Practice.Entities.Sessions
 
         public void Complete(DateTime timestamp)
         {
-            EnsureSessionIsActive();
+            if (Status == SessionStatus.Completed)
+                return;
+
+            if (Status == SessionStatus.Abandoned)
+                throw new InvalidOperationException("Napuštena sesija ne može biti završena.");
 
             if (RequiresPrimer)
                 throw new InvalidOperationException("Sesija ne može biti završena prije mindset primera.");

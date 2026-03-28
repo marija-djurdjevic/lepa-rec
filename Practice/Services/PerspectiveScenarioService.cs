@@ -16,17 +16,20 @@ namespace AngularNetBase.Practice.Services
         private readonly IPerspectiveScenarioExerciseRepository _exerciseRepository;
         private readonly ISessionRepository _dailySessionRepository;
         private readonly ISkillRepository _skillRepository;
+        private readonly IDateTimeProvider _dateTimeProvider;
 
         public PerspectiveScenarioService(
             IPerspectiveScenarioChallengeRepository challengeRepository,
             IPerspectiveScenarioExerciseRepository exerciseRepository,
             ISessionRepository dailySessionRepository,
-            ISkillRepository skillRepository)
+            ISkillRepository skillRepository,
+            IDateTimeProvider dateTimeProvider)
         {
             _challengeRepository = challengeRepository;
             _exerciseRepository = exerciseRepository;
             _dailySessionRepository = dailySessionRepository;
             _skillRepository = skillRepository;
+            _dateTimeProvider = dateTimeProvider;
         }
 
         public async Task<PerspectiveScenarioChallengeDto> CreateChallengeAsync(
@@ -106,6 +109,7 @@ namespace AngularNetBase.Practice.Services
         }
 
         public async Task<PerspectiveScenarioExerciseDto?> GetExerciseByIdAsync(
+            Guid userId,
             Guid id,
             CancellationToken cancellationToken = default)
         {
@@ -113,6 +117,9 @@ namespace AngularNetBase.Practice.Services
                 throw new ArgumentException("Exercise id must be provided.", nameof(id));
 
             var exercise = await _exerciseRepository.GetByIdAsync(id, cancellationToken);
+            if (exercise is null || exercise.UserId != userId)
+                return null;
+
             return exercise is null ? null : MapExercise(exercise);
         }
 
@@ -128,6 +135,7 @@ namespace AngularNetBase.Practice.Services
         }
 
         public async Task<SubmitPerspectiveScenarioResultDto> SubmitAnswersAsync(
+            Guid userId,
             SubmitPerspectiveScenarioAnswerDto dto,
             CancellationToken cancellationToken = default)
         {
@@ -140,6 +148,8 @@ namespace AngularNetBase.Practice.Services
             var exercise = await _exerciseRepository.GetByIdAsync(dto.ExerciseId, cancellationToken);
             if (exercise is null)
                 throw new InvalidOperationException("Perspective scenario exercise was not found.");
+            if (exercise.UserId != userId)
+                throw new UnauthorizedAccessException("Exercise does not belong to the current user.");
 
             var challenge = await _challengeRepository.GetByIdAsync(exercise.ChallengeId, cancellationToken);
             if (challenge is null)
@@ -147,7 +157,7 @@ namespace AngularNetBase.Practice.Services
 
             var dailySession = await _dailySessionRepository.GetByUserAndDateAsync(
                 exercise.UserId,
-                dto.SessionDate.Date,
+                _dateTimeProvider.UtcNow.Date,
                 cancellationToken);
 
             if (dailySession is null)
@@ -155,7 +165,7 @@ namespace AngularNetBase.Practice.Services
 
             EnsureAnswersMatchChallengeQuestions(challenge, dto.Answers);
 
-            var submittedAt = DateTime.UtcNow;
+            var submittedAt = _dateTimeProvider.UtcNow;
             var answers = dto.Answers
                 .Select(x => new ScenarioAnswer(x.QuestionId, x.AnswerText))
                 .ToList();
@@ -167,7 +177,6 @@ namespace AngularNetBase.Practice.Services
                 ExerciseType.PerspectiveScenario,
                 submittedAt);
 
-            await _exerciseRepository.UpdateAsync(exercise, cancellationToken);
             await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
             await _dailySessionRepository.SaveChangesAsync(cancellationToken);
 

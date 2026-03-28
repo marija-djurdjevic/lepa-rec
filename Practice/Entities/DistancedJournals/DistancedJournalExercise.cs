@@ -29,7 +29,7 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
             ChallengeId = challengeId;
         }
 
-        public void SubmitAnswer(string mainAnswer, string followUpAnswer, string? reflection)
+        public void SubmitAnswer(string mainAnswer, string followUpAnswer, string? reflection, DateTime submittedAt)
         {
             if (Answer is not null)
                 throw new InvalidOperationException("Answer has already been submitted.");
@@ -38,7 +38,7 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
                 mainAnswer,
                 followUpAnswer,
                 reflection,
-                DateTime.UtcNow);
+                submittedAt);
         }
 
         public void AddReflection(string reflection)
