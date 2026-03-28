@@ -50,18 +50,22 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
         public async Task AddAsync(DistancedJournalExercise entity, CancellationToken cancellationToken = default)
         {
             await _context.DistancedJournalExercises.AddAsync(entity, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
         }
 
         public async Task UpdateAsync(DistancedJournalExercise entity, CancellationToken cancellationToken = default)
         {
             _context.DistancedJournalExercises.Update(entity);
-            await _context.SaveChangesAsync(cancellationToken);
+            await Task.CompletedTask;
         }
 
         public async Task DeleteAsync(DistancedJournalExercise entity, CancellationToken cancellationToken = default)
         {
             _context.DistancedJournalExercises.Remove(entity);
+            await Task.CompletedTask;
+        }
+
+        public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
             await _context.SaveChangesAsync(cancellationToken);
         }
     }

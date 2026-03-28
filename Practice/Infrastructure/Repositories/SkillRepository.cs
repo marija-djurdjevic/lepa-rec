@@ -39,18 +39,22 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
         public async Task AddAsync(Skill entity, CancellationToken cancellationToken = default)
         {
             await _context.Skills.AddAsync(entity, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
         }
 
         public async Task UpdateAsync(Skill entity, CancellationToken cancellationToken = default)
         {
             _context.Skills.Update(entity);
-            await _context.SaveChangesAsync(cancellationToken);
+            await Task.CompletedTask;
         }
 
         public async Task DeleteAsync(Skill entity, CancellationToken cancellationToken = default)
         {
             _context.Skills.Remove(entity);
+            await Task.CompletedTask;
+        }
+
+        public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
             await _context.SaveChangesAsync(cancellationToken);
         }
     }

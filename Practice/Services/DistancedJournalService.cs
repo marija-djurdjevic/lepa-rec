@@ -46,6 +46,7 @@ namespace AngularNetBase.Practice.Services
                 dto.ChallengeLevel);
 
             await _challengeRepository.AddAsync(challenge, cancellationToken);
+            await _challengeRepository.SaveChangesAsync(cancellationToken);
 
             return MapChallenge(challenge);
         }
@@ -88,6 +89,7 @@ namespace AngularNetBase.Practice.Services
                 dto.ChallengeId);
 
             await _exerciseRepository.AddAsync(exercise, cancellationToken);
+            await _exerciseRepository.SaveChangesAsync(cancellationToken);
 
             return MapExercise(exercise);
         }
@@ -132,13 +134,7 @@ namespace AngularNetBase.Practice.Services
             if (exercise.UserId != userId)
                 throw new UnauthorizedAccessException("Exercise does not belong to the current user.");
 
-            var dailySession = await _dailySessionRepository.GetByUserAndDateAsync(
-                exercise.UserId,
-                _dateTimeProvider.UtcNow.Date,
-                cancellationToken);
-
-            if (dailySession is null)
-                throw new InvalidOperationException("Daily session was not found.");
+            var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
 
             var submittedAt = _dateTimeProvider.UtcNow;
 
@@ -181,13 +177,7 @@ namespace AngularNetBase.Practice.Services
             if (exercise.UserId != userId)
                 throw new UnauthorizedAccessException("Exercise does not belong to the current user.");
 
-            var dailySession = await _dailySessionRepository.GetByUserAndDateAsync(
-                exercise.UserId,
-                _dateTimeProvider.UtcNow.Date,
-                cancellationToken);
-
-            if (dailySession is null)
-                throw new InvalidOperationException("Daily session was not found.");
+            var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
 
             exercise.AddReflection(dto.Reflection);
 
@@ -222,6 +212,27 @@ namespace AngularNetBase.Practice.Services
                 exercise.Answer?.Reflection,
                 exercise.Answer?.SubmittedAt,
                 exercise.IsCompleted());
+        }
+
+        private async Task<DailySession> GetOrCreateTodaySessionAsync(
+            Guid userId,
+            CancellationToken cancellationToken)
+        {
+            var today = _dateTimeProvider.UtcNow.Date;
+
+            var session = await _dailySessionRepository.GetByUserAndDateAsync(
+                userId,
+                today,
+                cancellationToken);
+
+            if (session is not null)
+                return session;
+
+            session = new DailySession(Guid.NewGuid(), userId, today);
+            await _dailySessionRepository.AddAsync(session, cancellationToken);
+            await _dailySessionRepository.SaveChangesAsync(cancellationToken);
+
+            return session;
         }
 
         public async Task<DistancedJournalChallengeDto> GetRandomChallengeAsync(

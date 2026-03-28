@@ -10,5 +10,7 @@ namespace AngularNetBase.Practice.Entities.Skills
         Task<IReadOnlyCollection<Skill>> GetByIdsAsync(
             IEnumerable<Guid> ids,
             CancellationToken cancellationToken = default);
+
+        Task SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

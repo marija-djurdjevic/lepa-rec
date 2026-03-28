@@ -43,19 +43,18 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
         public async Task AddAsync(PerspectiveScenarioChallenge entity, CancellationToken cancellationToken = default)
         {
             await _context.PerspectiveScenarioChallenges.AddAsync(entity, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
         }
 
         public async Task UpdateAsync(PerspectiveScenarioChallenge entity, CancellationToken cancellationToken = default)
         {
             _context.PerspectiveScenarioChallenges.Update(entity);
-            await _context.SaveChangesAsync(cancellationToken);
+            await Task.CompletedTask;
         }
 
         public async Task DeleteAsync(PerspectiveScenarioChallenge entity, CancellationToken cancellationToken = default)
         {
             _context.PerspectiveScenarioChallenges.Remove(entity);
-            await _context.SaveChangesAsync(cancellationToken);
+            await Task.CompletedTask;
         }
 
         public async Task<PerspectiveScenarioChallenge?> GetRandomByLevelAsync(ChallengeLevel challengeLevel, CancellationToken cancellationToken = default)
@@ -65,6 +64,11 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
                 .Where(x => x.ChallengeLevel == challengeLevel)
                 .OrderBy(x => Guid.NewGuid())
                 .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            await _context.SaveChangesAsync(cancellationToken);
         }
     }
 }

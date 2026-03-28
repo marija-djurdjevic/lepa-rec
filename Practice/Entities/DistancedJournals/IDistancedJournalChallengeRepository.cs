@@ -15,6 +15,7 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
         ChallengeLevel challengeLevel,
         CancellationToken cancellationToken = default);
 
+        Task SaveChangesAsync(CancellationToken cancellationToken = default);
 
     }
 

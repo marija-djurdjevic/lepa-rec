@@ -15,5 +15,7 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
         Task<PerspectiveScenarioChallenge?> GetRandomByLevelAsync(
             ChallengeLevel challengeLevel,
             CancellationToken cancellationToken = default);
+
+        Task SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

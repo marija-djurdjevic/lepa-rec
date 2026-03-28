@@ -53,6 +53,7 @@ namespace AngularNetBase.Practice.Services
                 dto.Questions.Select(x => (Guid.NewGuid(), x.SkillId, x.QuestionText)));
 
             await _challengeRepository.AddAsync(challenge, cancellationToken);
+            await _challengeRepository.SaveChangesAsync(cancellationToken);
 
             return MapChallenge(challenge);
         }
@@ -104,6 +105,7 @@ namespace AngularNetBase.Practice.Services
                 dto.ChallengeId);
 
             await _exerciseRepository.AddAsync(exercise, cancellationToken);
+            await _exerciseRepository.SaveChangesAsync(cancellationToken);
 
             return MapExercise(exercise);
         }
@@ -155,13 +157,7 @@ namespace AngularNetBase.Practice.Services
             if (challenge is null)
                 throw new InvalidOperationException("Perspective scenario challenge was not found.");
 
-            var dailySession = await _dailySessionRepository.GetByUserAndDateAsync(
-                exercise.UserId,
-                _dateTimeProvider.UtcNow.Date,
-                cancellationToken);
-
-            if (dailySession is null)
-                throw new InvalidOperationException("Daily session was not found.");
+            var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
 
             EnsureAnswersMatchChallengeQuestions(challenge, dto.Answers);
 
@@ -242,6 +238,27 @@ namespace AngularNetBase.Practice.Services
                 exercise.Answers.Select(x => new ScenarioAnswerDto(x.QuestionId, x.AnswerText)).ToList(),
                 exercise.SubmittedAt,
                 exercise.IsCompleted());
+        }
+
+        private async Task<DailySession> GetOrCreateTodaySessionAsync(
+            Guid userId,
+            CancellationToken cancellationToken)
+        {
+            var today = _dateTimeProvider.UtcNow.Date;
+
+            var session = await _dailySessionRepository.GetByUserAndDateAsync(
+                userId,
+                today,
+                cancellationToken);
+
+            if (session is not null)
+                return session;
+
+            session = new DailySession(Guid.NewGuid(), userId, today);
+            await _dailySessionRepository.AddAsync(session, cancellationToken);
+            await _dailySessionRepository.SaveChangesAsync(cancellationToken);
+
+            return session;
         }
     }
 }

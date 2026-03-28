@@ -62,19 +62,10 @@ namespace AngularNetBase.Practice.Services
             }
             else
             {
-                if (dto.PresentedStatementIds == null || !dto.PresentedStatementIds.Any())
-                    throw new InvalidOperationException("Mora postojati barem jedna ponudena izjava.");
-
-                if (!dto.SelectedStatementId.HasValue)
-                    throw new InvalidOperationException("SelectedStatementId je obavezan kada primer nije preskocen.");
-
-                if (!dto.GrowthMessageId.HasValue)
-                    throw new InvalidOperationException("GrowthMessageId je obavezan kada primer nije preskocen.");
-
                 session.CompletePrimer(
-                    dto.PresentedStatementIds,
-                    dto.SelectedStatementId.Value,
-                    dto.GrowthMessageId.Value,
+                    dto.PresentedStatementIds ?? new List<Guid>(),
+                    dto.SelectedStatementId.GetValueOrDefault(),
+                    dto.GrowthMessageId.GetValueOrDefault(),
                     now);
             }
 
@@ -143,26 +134,9 @@ namespace AngularNetBase.Practice.Services
 
             if (yesterdaySession is null || !yesterdaySession.HasRecordedExercises)
             {
-                if (hasDistancedJournalToday)
-                {
-                    return new TodayPracticePlanDto(
-                        null,
-                        Array.Empty<DistancedJournalChallengeDto>(),
-                        null,
-                        false,
-                        true,
-                        false,
-                        false);
-                }
-
-                return new TodayPracticePlanDto(
-                    null,
-                    await BuildDistancedJournalChoicesAsync(cancellationToken),
-                    null,
-                    false,
-                    false,
-                    false,
-                    false);
+                return await BuildPlanBasedOnDistancedJournalTodayAsync(
+                    hasDistancedJournalToday,
+                    cancellationToken);
             }
 
             var yesterdayExerciseRecords = yesterdaySession.Events
@@ -176,89 +150,34 @@ namespace AngularNetBase.Practice.Services
 
             if (hadPerspectiveScenarioYesterday)
             {
-                if (hasDistancedJournalToday)
-                {
-                    return new TodayPracticePlanDto(
-                        null,
-                        Array.Empty<DistancedJournalChallengeDto>(),
-                        null,
-                        false,
-                        true,
-                        false,
-                        false);
-                }
-
-                return new TodayPracticePlanDto(
-                    null,
-                    await BuildDistancedJournalChoicesAsync(cancellationToken),
-                    null,
-                    false,
-                    false,
-                    false,
-                    false);
+                return await BuildPlanBasedOnDistancedJournalTodayAsync(
+                    hasDistancedJournalToday,
+                    cancellationToken);
             }
 
             if (hadDistancedJournalYesterday)
             {
-                DistancedJournalReflectionPromptDto? reflectionPrompt = null;
-
-                if (!hasDistancedJournalReflectionToday)
-                {
-                    reflectionPrompt = await BuildReflectionPromptFromYesterdayAsync(
-                        yesterdayExerciseRecords,
-                        cancellationToken);
-                }
-
-                var perspectiveScenarioPrompt = !hasPerspectiveScenarioToday
-                    ? await BuildPerspectiveScenarioPromptAsync(cancellationToken)
-                    : null;
-
-                return new TodayPracticePlanDto(
-                    reflectionPrompt,
-                    Array.Empty<DistancedJournalChallengeDto>(),
-                    perspectiveScenarioPrompt,
-                    !hasPerspectiveScenarioToday,
-                    false,
+                return await BuildPlanAfterDistancedJournalYesterdayAsync(
+                    yesterdayExerciseRecords,
                     hasDistancedJournalReflectionToday,
-                    hasPerspectiveScenarioToday);
+                    hasPerspectiveScenarioToday,
+                    cancellationToken);
             }
 
             if (hadDistancedJournalReflectionYesterday)
             {
-                var perspectiveScenarioPrompt = !hasPerspectiveScenarioToday
-                    ? await BuildPerspectiveScenarioPromptAsync(cancellationToken)
-                    : null;
-
-                return new TodayPracticePlanDto(
-                    null,
-                    Array.Empty<DistancedJournalChallengeDto>(),
-                    perspectiveScenarioPrompt,
-                    !hasPerspectiveScenarioToday,
-                    false,
+                return await BuildPlanAfterReflectionYesterdayAsync(
                     hasDistancedJournalReflectionToday,
-                    hasPerspectiveScenarioToday);
+                    hasPerspectiveScenarioToday,
+                    cancellationToken);
             }
 
             if (hasDistancedJournalToday)
             {
-                return new TodayPracticePlanDto(
-                    null,
-                    Array.Empty<DistancedJournalChallengeDto>(),
-                    null,
-                    false,
-                    true,
-                    false,
-                    false);
+                return BuildPlanWithDistancedJournalCompletedOnly();
             }
 
-            return new TodayPracticePlanDto(
-                null,
-                await BuildDistancedJournalChoicesAsync(cancellationToken),
-                null,
-                false,
-                false,
-                false,
-                false);
+            return await BuildPlanWithDistancedJournalChoicesAsync(cancellationToken);
         }
 
         private async Task<DailySession> GetOrCreateTodaySessionEntityAsync(
@@ -416,6 +335,108 @@ namespace AngularNetBase.Practice.Services
             }
 
             return null;
+        }
+
+        private static TodayPracticePlanDto BuildPlan(
+            DistancedJournalReflectionPromptDto? reflectionPrompt,
+            IReadOnlyCollection<DistancedJournalChallengeDto> distancedJournalChoices,
+            PerspectiveScenarioPromptDto? perspectiveScenarioPrompt,
+            bool shouldShowPerspectiveScenario,
+            bool isDistancedJournalCompleted,
+            bool isReflectionCompleted,
+            bool isPerspectiveScenarioCompleted)
+        {
+            return new TodayPracticePlanDto(
+                reflectionPrompt,
+                distancedJournalChoices,
+                perspectiveScenarioPrompt,
+                shouldShowPerspectiveScenario,
+                isDistancedJournalCompleted,
+                isReflectionCompleted,
+                isPerspectiveScenarioCompleted);
+        }
+
+        private static TodayPracticePlanDto BuildPlanWithDistancedJournalCompletedOnly()
+        {
+            return BuildPlan(
+                null,
+                Array.Empty<DistancedJournalChallengeDto>(),
+                null,
+                false,
+                true,
+                false,
+                false);
+        }
+
+        private async Task<TodayPracticePlanDto> BuildPlanWithDistancedJournalChoicesAsync(
+            CancellationToken cancellationToken)
+        {
+            return BuildPlan(
+                null,
+                await BuildDistancedJournalChoicesAsync(cancellationToken),
+                null,
+                false,
+                false,
+                false,
+                false);
+        }
+
+        private async Task<TodayPracticePlanDto> BuildPlanBasedOnDistancedJournalTodayAsync(
+            bool hasDistancedJournalToday,
+            CancellationToken cancellationToken)
+        {
+            if (hasDistancedJournalToday)
+                return BuildPlanWithDistancedJournalCompletedOnly();
+
+            return await BuildPlanWithDistancedJournalChoicesAsync(cancellationToken);
+        }
+
+        private async Task<TodayPracticePlanDto> BuildPlanAfterDistancedJournalYesterdayAsync(
+            List<ExerciseRecord> yesterdayExerciseRecords,
+            bool hasDistancedJournalReflectionToday,
+            bool hasPerspectiveScenarioToday,
+            CancellationToken cancellationToken)
+        {
+            DistancedJournalReflectionPromptDto? reflectionPrompt = null;
+
+            if (!hasDistancedJournalReflectionToday)
+            {
+                reflectionPrompt = await BuildReflectionPromptFromYesterdayAsync(
+                    yesterdayExerciseRecords,
+                    cancellationToken);
+            }
+
+            var perspectiveScenarioPrompt = !hasPerspectiveScenarioToday
+                ? await BuildPerspectiveScenarioPromptAsync(cancellationToken)
+                : null;
+
+            return BuildPlan(
+                reflectionPrompt,
+                Array.Empty<DistancedJournalChallengeDto>(),
+                perspectiveScenarioPrompt,
+                !hasPerspectiveScenarioToday,
+                false,
+                hasDistancedJournalReflectionToday,
+                hasPerspectiveScenarioToday);
+        }
+
+        private async Task<TodayPracticePlanDto> BuildPlanAfterReflectionYesterdayAsync(
+            bool hasDistancedJournalReflectionToday,
+            bool hasPerspectiveScenarioToday,
+            CancellationToken cancellationToken)
+        {
+            var perspectiveScenarioPrompt = !hasPerspectiveScenarioToday
+                ? await BuildPerspectiveScenarioPromptAsync(cancellationToken)
+                : null;
+
+            return BuildPlan(
+                null,
+                Array.Empty<DistancedJournalChallengeDto>(),
+                perspectiveScenarioPrompt,
+                !hasPerspectiveScenarioToday,
+                false,
+                hasDistancedJournalReflectionToday,
+                hasPerspectiveScenarioToday);
         }
 
         private static DailySessionStateDto MapToStateDto(DailySession session)

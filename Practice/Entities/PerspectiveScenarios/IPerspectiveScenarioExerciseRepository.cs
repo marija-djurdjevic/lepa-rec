@@ -15,5 +15,7 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
             Guid userId,
             Guid challengeId,
             CancellationToken cancellationToken = default);
+
+        Task SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

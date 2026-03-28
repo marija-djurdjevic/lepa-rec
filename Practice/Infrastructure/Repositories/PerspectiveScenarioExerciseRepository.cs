@@ -43,18 +43,22 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
         public async Task AddAsync(PerspectiveScenarioExercise entity, CancellationToken cancellationToken = default)
         {
             await _context.PerspectiveScenarioExercises.AddAsync(entity, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
         }
 
         public async Task UpdateAsync(PerspectiveScenarioExercise entity, CancellationToken cancellationToken = default)
         {
             _context.PerspectiveScenarioExercises.Update(entity);
-            await _context.SaveChangesAsync(cancellationToken);
+            await Task.CompletedTask;
         }
 
         public async Task DeleteAsync(PerspectiveScenarioExercise entity, CancellationToken cancellationToken = default)
         {
             _context.PerspectiveScenarioExercises.Remove(entity);
+            await Task.CompletedTask;
+        }
+
+        public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
             await _context.SaveChangesAsync(cancellationToken);
         }
     }
