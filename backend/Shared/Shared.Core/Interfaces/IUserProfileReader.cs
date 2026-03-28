@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace AngularNetBase.Practice.Services
+namespace AngularNetBase.Shared.Core.Interfaces
 {
     public interface IUserProfileReader
     {
