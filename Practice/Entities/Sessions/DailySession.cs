@@ -55,7 +55,7 @@ namespace AngularNetBase.Practice.Entities.Sessions
                 timestamp);
 
             MoveToInProgressIfNeeded();
-            AddGeneralEvent("PrimerCompleted", timestamp);
+            AddGeneralEvent(SessionEventTypes.PrimerCompleted, timestamp);
         }
 
         public void SkipPrimer(DateTime timestamp)
@@ -71,7 +71,7 @@ namespace AngularNetBase.Practice.Entities.Sessions
                 timestamp);
 
             MoveToInProgressIfNeeded();
-            AddGeneralEvent("PrimerSkipped", timestamp);
+            AddGeneralEvent(SessionEventTypes.PrimerSkipped, timestamp);
         }
 
         public void RecordExercise(Guid exerciseId, ExerciseType type, DateTime timestamp)
@@ -84,13 +84,20 @@ namespace AngularNetBase.Practice.Entities.Sessions
             if (exerciseId == Guid.Empty)
                 throw new ArgumentException("ExerciseId ne može biti prazan.", nameof(exerciseId));
 
+            if (_events.OfType<ExerciseRecord>().Any(e => e.ExerciseId == exerciseId && e.Type == type))
+                return;
+
             _events.Add(new ExerciseRecord(exerciseId, type, timestamp));
             MoveToInProgressIfNeeded();
         }
 
         public void Complete(DateTime timestamp)
         {
-            EnsureSessionIsActive();
+            if (Status == SessionStatus.Completed)
+                return;
+
+            if (Status == SessionStatus.Abandoned)
+                throw new InvalidOperationException("Napuštena sesija ne može biti završena.");
 
             if (RequiresPrimer)
                 throw new InvalidOperationException("Sesija ne može biti završena prije mindset primera.");
@@ -99,7 +106,7 @@ namespace AngularNetBase.Practice.Entities.Sessions
                 throw new InvalidOperationException("Sesija ne može biti završena bez evidentirane vježbe.");
 
             Status = SessionStatus.Completed;
-            AddGeneralEvent("SessionCompleted", timestamp);
+            AddGeneralEvent(SessionEventTypes.SessionCompleted, timestamp);
         }
 
         public void Abandon(DateTime timestamp)
@@ -111,7 +118,7 @@ namespace AngularNetBase.Practice.Entities.Sessions
                 throw new InvalidOperationException("Sesija je već označena kao napuštena.");
 
             Status = SessionStatus.Abandoned;
-            AddGeneralEvent("SessionAbandoned", timestamp);
+            AddGeneralEvent(SessionEventTypes.SessionAbandoned, timestamp);
         }
 
         private void EnsurePrimerNotAlreadyRecorded()

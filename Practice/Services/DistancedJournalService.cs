@@ -2,6 +2,7 @@
 using AngularNetBase.Practice.Entities.DistancedJournals;
 using AngularNetBase.Practice.Entities.DistancedJournals.Analysis;
 using AngularNetBase.Practice.Entities.Sessions;
+using AngularNetBase.Shared.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,19 +17,22 @@ namespace AngularNetBase.Practice.Services
         private readonly ISessionRepository _dailySessionRepository;
         private readonly IThirdPersonAnalyzer _thirdPersonAnalyzer;
         private readonly IUserProfileReader _userProfileReader;
+        private readonly IDateTimeProvider _dateTimeProvider;
 
         public DistancedJournalService(
             IDistancedJournalChallengeRepository challengeRepository,
             IDistancedJournalExerciseRepository exerciseRepository,
             ISessionRepository sessionRepository,
             IThirdPersonAnalyzer thirdPersonAnalyzer,
-            IUserProfileReader userProfileReader)
+            IUserProfileReader userProfileReader,
+            IDateTimeProvider dateTimeProvider)
         {
             _challengeRepository = challengeRepository;
             _exerciseRepository = exerciseRepository;
             _dailySessionRepository = sessionRepository;
             _thirdPersonAnalyzer = thirdPersonAnalyzer;
             _userProfileReader = userProfileReader;
+            _dateTimeProvider = dateTimeProvider;
         }
 
         public async Task<DistancedJournalChallengeDto> CreateChallengeAsync(
@@ -42,6 +46,7 @@ namespace AngularNetBase.Practice.Services
                 dto.ChallengeLevel);
 
             await _challengeRepository.AddAsync(challenge, cancellationToken);
+            await _challengeRepository.SaveChangesAsync(cancellationToken);
 
             return MapChallenge(challenge);
         }
@@ -84,11 +89,13 @@ namespace AngularNetBase.Practice.Services
                 dto.ChallengeId);
 
             await _exerciseRepository.AddAsync(exercise, cancellationToken);
+            await _exerciseRepository.SaveChangesAsync(cancellationToken);
 
             return MapExercise(exercise);
         }
 
         public async Task<DistancedJournalExerciseDto?> GetExerciseByIdAsync(
+            Guid userId,
             Guid id,
             CancellationToken cancellationToken = default)
         {
@@ -96,6 +103,9 @@ namespace AngularNetBase.Practice.Services
                 throw new ArgumentException("Exercise id must be provided.");
 
             var exercise = await _exerciseRepository.GetByIdAsync(id, cancellationToken);
+            if (exercise is null || exercise.UserId != userId)
+                return null;
+
             return exercise is null ? null : MapExercise(exercise);
         }
 
@@ -111,6 +121,7 @@ namespace AngularNetBase.Practice.Services
         }
 
         public async Task<SubmitDistancedJournalResultDto> SubmitAnswerAsync(
+            Guid userId,
             SubmitDistancedJournalAnswerDto dto,
             CancellationToken cancellationToken = default)
         {
@@ -120,26 +131,24 @@ namespace AngularNetBase.Practice.Services
             var exercise = await _exerciseRepository.GetByIdAsync(dto.ExerciseId, cancellationToken);
             if (exercise is null)
                 throw new InvalidOperationException("Distanced journal exercise was not found.");
+            if (exercise.UserId != userId)
+                throw new UnauthorizedAccessException("Exercise does not belong to the current user.");
 
-            var dailySession = await _dailySessionRepository.GetByUserAndDateAsync(
-                exercise.UserId,
-                dto.SessionDate.Date,
-                cancellationToken);
+            var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
 
-            if (dailySession is null)
-                throw new InvalidOperationException("Daily session was not found.");
+            var submittedAt = _dateTimeProvider.UtcNow;
 
             exercise.SubmitAnswer(
                 dto.MainAnswer,
                 dto.FollowUpAnswer,
-                dto.Reflection);
+                dto.Reflection,
+                submittedAt);
 
             dailySession.RecordExercise(
                 exercise.Id,
                 ExerciseType.DistancedJournal,
-                DateTime.UtcNow);
+                submittedAt);
 
-            await _exerciseRepository.UpdateAsync(exercise, cancellationToken);
             await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
             await _dailySessionRepository.SaveChangesAsync(cancellationToken);
 
@@ -155,6 +164,7 @@ namespace AngularNetBase.Practice.Services
         }
 
         public async Task<DistancedJournalExerciseDto> AddReflectionAsync(
+            Guid userId,
             AddDistancedJournalReflectionDto dto,
             CancellationToken cancellationToken = default)
         {
@@ -164,23 +174,18 @@ namespace AngularNetBase.Practice.Services
             var exercise = await _exerciseRepository.GetByIdAsync(dto.ExerciseId, cancellationToken);
             if (exercise is null)
                 throw new InvalidOperationException("Distanced journal exercise was not found.");
+            if (exercise.UserId != userId)
+                throw new UnauthorizedAccessException("Exercise does not belong to the current user.");
 
-            var dailySession = await _dailySessionRepository.GetByUserAndDateAsync(
-                exercise.UserId,
-                dto.SessionDate.Date,
-                cancellationToken);
-
-            if (dailySession is null)
-                throw new InvalidOperationException("Daily session was not found.");
+            var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
 
             exercise.AddReflection(dto.Reflection);
 
             dailySession.RecordExercise(
                 exercise.Id,
                 ExerciseType.DistancedJournalReflection,
-                DateTime.UtcNow);
+                _dateTimeProvider.UtcNow);
 
-            await _exerciseRepository.UpdateAsync(exercise, cancellationToken);
             await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
             await _dailySessionRepository.SaveChangesAsync(cancellationToken);
 
@@ -207,6 +212,27 @@ namespace AngularNetBase.Practice.Services
                 exercise.Answer?.Reflection,
                 exercise.Answer?.SubmittedAt,
                 exercise.IsCompleted());
+        }
+
+        private async Task<DailySession> GetOrCreateTodaySessionAsync(
+            Guid userId,
+            CancellationToken cancellationToken)
+        {
+            var today = _dateTimeProvider.UtcNow.Date;
+
+            var session = await _dailySessionRepository.GetByUserAndDateAsync(
+                userId,
+                today,
+                cancellationToken);
+
+            if (session is not null)
+                return session;
+
+            session = new DailySession(Guid.NewGuid(), userId, today);
+            await _dailySessionRepository.AddAsync(session, cancellationToken);
+            await _dailySessionRepository.SaveChangesAsync(cancellationToken);
+
+            return session;
         }
 
         public async Task<DistancedJournalChallengeDto> GetRandomChallengeAsync(

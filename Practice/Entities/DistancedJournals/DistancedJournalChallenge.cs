@@ -26,6 +26,8 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
             if (string.IsNullOrWhiteSpace(content))
                 throw new ArgumentException("Content must be provided.");
 
+            if (string.IsNullOrWhiteSpace(followUpQuestion))
+                throw new ArgumentException("Follow-up question must be provided.");
 
             Content = content.Trim();
             FollowUpQuestion = followUpQuestion.Trim();

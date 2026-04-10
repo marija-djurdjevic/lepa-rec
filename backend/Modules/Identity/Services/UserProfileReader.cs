@@ -1,5 +1,5 @@
 ﻿using AngularNetBase.Identity.Entities;
-using AngularNetBase.Practice.Services;
+using AngularNetBase.Shared.Core.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;

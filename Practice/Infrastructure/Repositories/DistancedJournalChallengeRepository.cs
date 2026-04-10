@@ -39,19 +39,18 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
         public async Task AddAsync(DistancedJournalChallenge entity, CancellationToken cancellationToken = default)
         {
             await _context.DistancedJournalChallenges.AddAsync(entity, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
         }
 
         public async Task UpdateAsync(DistancedJournalChallenge entity, CancellationToken cancellationToken = default)
         {
             _context.DistancedJournalChallenges.Update(entity);
-            await _context.SaveChangesAsync(cancellationToken);
+            await Task.CompletedTask;
         }
 
         public async Task DeleteAsync(DistancedJournalChallenge entity, CancellationToken cancellationToken = default)
         {
             _context.DistancedJournalChallenges.Remove(entity);
-            await _context.SaveChangesAsync(cancellationToken);
+            await Task.CompletedTask;
         }
 
         public async Task<DistancedJournalChallenge?> GetRandomByLevelAsync(ChallengeLevel challengeLevel, CancellationToken cancellationToken = default)
@@ -60,6 +59,11 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
                 .Where(x => x.ChallengeLevel == challengeLevel)
                 .OrderBy(x => Guid.NewGuid())
                 .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
 

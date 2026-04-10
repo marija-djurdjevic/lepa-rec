@@ -10,5 +10,9 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
        Task<IEnumerable<DistancedJournalExercise>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
 
        Task<DistancedJournalExercise?> GetByUserIdAndChallengeIdAsync(Guid userId, Guid challengeId, CancellationToken cancellationToken = default);
+
+       Task<IReadOnlyCollection<Guid>> GetUsedChallengeIdsAsync(CancellationToken cancellationToken = default);
+
+       Task SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

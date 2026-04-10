@@ -47,6 +47,9 @@ namespace AngularNetBase.Practice.Entities.Sessions
 
                 if (!distinctIds.Contains(selectedStatementId.Value))
                     throw new ArgumentException("Selected statement must be one of the presented statements.", nameof(selectedStatementId));
+
+                if (!growthMessageId.HasValue || growthMessageId.Value == Guid.Empty)
+                    throw new ArgumentException("Growth message is required when primer is not skipped.", nameof(growthMessageId));
             }
 
             PresentedStatementIds = distinctIds;
