@@ -1,0 +1,250 @@
+﻿using AngularNetBase.Practice.Dtos.DistancedJournals;
+using AngularNetBase.Practice.Entities.DistancedJournals;
+using AngularNetBase.Practice.Entities.DistancedJournals.Analysis;
+using AngularNetBase.Practice.Entities.Sessions;
+using AngularNetBase.Shared.Core.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace AngularNetBase.Practice.Services
+{
+    public class DistancedJournalService : IDistancedJournalService
+    {
+        private readonly IDistancedJournalChallengeRepository _challengeRepository;
+        private readonly IDistancedJournalExerciseRepository _exerciseRepository;
+        private readonly ISessionRepository _dailySessionRepository;
+        private readonly IThirdPersonAnalyzer _thirdPersonAnalyzer;
+        private readonly IUserProfileReader _userProfileReader;
+        private readonly IDateTimeProvider _dateTimeProvider;
+
+        public DistancedJournalService(
+            IDistancedJournalChallengeRepository challengeRepository,
+            IDistancedJournalExerciseRepository exerciseRepository,
+            ISessionRepository sessionRepository,
+            IThirdPersonAnalyzer thirdPersonAnalyzer,
+            IUserProfileReader userProfileReader,
+            IDateTimeProvider dateTimeProvider)
+        {
+            _challengeRepository = challengeRepository;
+            _exerciseRepository = exerciseRepository;
+            _dailySessionRepository = sessionRepository;
+            _thirdPersonAnalyzer = thirdPersonAnalyzer;
+            _userProfileReader = userProfileReader;
+            _dateTimeProvider = dateTimeProvider;
+        }
+
+        public async Task<DistancedJournalChallengeDto> CreateChallengeAsync(
+            CreateDistancedJournalChallengeDto dto,
+            CancellationToken cancellationToken = default)
+        {
+            var challenge = new DistancedJournalChallenge(
+                Guid.NewGuid(),
+                dto.Content,
+                dto.FollowUpQuestion,
+                dto.ChallengeLevel);
+
+            await _challengeRepository.AddAsync(challenge, cancellationToken);
+            await _challengeRepository.SaveChangesAsync(cancellationToken);
+
+            return MapChallenge(challenge);
+        }
+
+        public async Task<IEnumerable<DistancedJournalChallengeDto>> GetAllChallengesAsync(
+            CancellationToken cancellationToken = default)
+        {
+            var challenges = await _challengeRepository.GetAllAsync(cancellationToken);
+            return challenges.Select(MapChallenge);
+        }
+
+        public async Task<IEnumerable<DistancedJournalChallengeDto>> GetChallengesByLevelAsync(
+            ChallengeLevel challengeLevel,
+            CancellationToken cancellationToken = default)
+        {
+            var challenges = await _challengeRepository.GetByChallengeLevelAsync(
+                challengeLevel,
+                cancellationToken);
+
+            return challenges.Select(MapChallenge);
+        }
+
+        public async Task<DistancedJournalExerciseDto> StartExerciseAsync(
+            StartDistancedJournalExerciseDto dto,
+            CancellationToken cancellationToken = default)
+        {
+            if (dto.UserId == Guid.Empty)
+                throw new ArgumentException("UserId must be provided.");
+
+            if (dto.ChallengeId == Guid.Empty)
+                throw new ArgumentException("ChallengeId must be provided.");
+
+            var challenge = await _challengeRepository.GetByIdAsync(dto.ChallengeId, cancellationToken);
+            if (challenge is null)
+                throw new InvalidOperationException("Distanced journal challenge was not found.");
+
+            var exercise = new DistancedJournalExercise(
+                Guid.NewGuid(),
+                dto.UserId,
+                dto.ChallengeId);
+
+            await _exerciseRepository.AddAsync(exercise, cancellationToken);
+            await _exerciseRepository.SaveChangesAsync(cancellationToken);
+
+            return MapExercise(exercise);
+        }
+
+        public async Task<DistancedJournalExerciseDto?> GetExerciseByIdAsync(
+            Guid userId,
+            Guid id,
+            CancellationToken cancellationToken = default)
+        {
+            if (id == Guid.Empty)
+                throw new ArgumentException("Exercise id must be provided.");
+
+            var exercise = await _exerciseRepository.GetByIdAsync(id, cancellationToken);
+            if (exercise is null || exercise.UserId != userId)
+                return null;
+
+            return exercise is null ? null : MapExercise(exercise);
+        }
+
+        public async Task<IEnumerable<DistancedJournalExerciseDto>> GetExercisesByUserIdAsync(
+            Guid userId,
+            CancellationToken cancellationToken = default)
+        {
+            if (userId == Guid.Empty)
+                throw new ArgumentException("User id must be provided.");
+
+            var exercises = await _exerciseRepository.GetByUserIdAsync(userId, cancellationToken);
+            return exercises.Select(MapExercise);
+        }
+
+        public async Task<SubmitDistancedJournalResultDto> SubmitAnswerAsync(
+            Guid userId,
+            SubmitDistancedJournalAnswerDto dto,
+            CancellationToken cancellationToken = default)
+        {
+            if (dto.ExerciseId == Guid.Empty)
+                throw new ArgumentException("ExerciseId must be provided.");
+
+            var exercise = await _exerciseRepository.GetByIdAsync(dto.ExerciseId, cancellationToken);
+            if (exercise is null)
+                throw new InvalidOperationException("Distanced journal exercise was not found.");
+            if (exercise.UserId != userId)
+                throw new UnauthorizedAccessException("Exercise does not belong to the current user.");
+
+            var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
+
+            var submittedAt = _dateTimeProvider.UtcNow;
+
+            exercise.SubmitAnswer(
+                dto.MainAnswer,
+                dto.FollowUpAnswer,
+                dto.Reflection,
+                submittedAt);
+
+            dailySession.RecordExercise(
+                exercise.Id,
+                ExerciseType.DistancedJournal,
+                submittedAt);
+
+            await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
+            await _dailySessionRepository.SaveChangesAsync(cancellationToken);
+
+            var fullText = $"{dto.MainAnswer} {dto.FollowUpAnswer}";
+            var firstName = await _userProfileReader.GetFirstNameAsync(exercise.UserId, cancellationToken);
+
+            var metric = _thirdPersonAnalyzer.Analyze(fullText, "sr", firstName);
+            var feedback = _thirdPersonAnalyzer.GetFeedback(metric);
+
+            return new SubmitDistancedJournalResultDto(
+                MapExercise(exercise),
+                feedback.FeedbackType);
+        }
+
+        public async Task<DistancedJournalExerciseDto> AddReflectionAsync(
+            Guid userId,
+            AddDistancedJournalReflectionDto dto,
+            CancellationToken cancellationToken = default)
+        {
+            if (dto.ExerciseId == Guid.Empty)
+                throw new ArgumentException("ExerciseId must be provided.");
+
+            var exercise = await _exerciseRepository.GetByIdAsync(dto.ExerciseId, cancellationToken);
+            if (exercise is null)
+                throw new InvalidOperationException("Distanced journal exercise was not found.");
+            if (exercise.UserId != userId)
+                throw new UnauthorizedAccessException("Exercise does not belong to the current user.");
+
+            var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
+
+            exercise.AddReflection(dto.Reflection);
+
+            dailySession.RecordExercise(
+                exercise.Id,
+                ExerciseType.DistancedJournalReflection,
+                _dateTimeProvider.UtcNow);
+
+            await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
+            await _dailySessionRepository.SaveChangesAsync(cancellationToken);
+
+            return MapExercise(exercise);
+        }
+
+        private static DistancedJournalChallengeDto MapChallenge(DistancedJournalChallenge challenge)
+        {
+            return new DistancedJournalChallengeDto(
+                challenge.Id,
+                challenge.Content,
+                challenge.FollowUpQuestion,
+                challenge.ChallengeLevel);
+        }
+
+        private static DistancedJournalExerciseDto MapExercise(DistancedJournalExercise exercise)
+        {
+            return new DistancedJournalExerciseDto(
+                exercise.Id,
+                exercise.UserId,
+                exercise.ChallengeId,
+                exercise.Answer?.MainAnswer,
+                exercise.Answer?.FollowUpAnswer,
+                exercise.Answer?.Reflection,
+                exercise.Answer?.SubmittedAt,
+                exercise.IsCompleted());
+        }
+
+        private async Task<DailySession> GetOrCreateTodaySessionAsync(
+            Guid userId,
+            CancellationToken cancellationToken)
+        {
+            var today = _dateTimeProvider.UtcNow.Date;
+
+            var session = await _dailySessionRepository.GetByUserAndDateAsync(
+                userId,
+                today,
+                cancellationToken);
+
+            if (session is not null)
+                return session;
+
+            session = new DailySession(Guid.NewGuid(), userId, today);
+            await _dailySessionRepository.AddAsync(session, cancellationToken);
+            await _dailySessionRepository.SaveChangesAsync(cancellationToken);
+
+            return session;
+        }
+
+        public async Task<DistancedJournalChallengeDto> GetRandomChallengeAsync(
+            ChallengeLevel level,
+            CancellationToken cancellationToken = default)
+        {
+            var challenge = await _challengeRepository.GetRandomByLevelAsync(level, cancellationToken);
+
+            if (challenge is null)
+                throw new InvalidOperationException("No challenges found for the selected level.");
+
+            return MapChallenge(challenge);
+        }
+    }
+}

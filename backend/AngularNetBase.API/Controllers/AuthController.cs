@@ -45,4 +45,22 @@ public class AuthController : ControllerBase
         await _authService.LogoutAsync(request.RefreshToken, userId);
         return NoContent();
     }
+
+    [HttpPost("google-login")]
+    public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+    {
+        try
+        {
+            var result = await _authService.LoginWithGoogleAsync(request.IdToken);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new { message = "Invalid Google Token" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

@@ -2,6 +2,7 @@ using System.Text;
 using AngularNetBase.Identity.Entities;
 using AngularNetBase.Identity.Infrastructure;
 using AngularNetBase.Identity.Services;
+using AngularNetBase.Shared.Core.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
@@ -47,6 +48,7 @@ public static class IdentityModuleRegistration
         services.AddAuthorization();
 
         services.AddScoped<AuthService>();
+        services.AddScoped<IUserProfileReader, UserProfileReader>();
 
         return services;
     }

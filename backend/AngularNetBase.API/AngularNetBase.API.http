@@ -1,0 +1,14 @@
+﻿@AngularNetBase.API_HostAddress = http://localhost:5202
+
+GET {{AngularNetBase.API_HostAddress}}/api/sessions/today
+
+###
+
+POST {{AngularNetBase.API_HostAddress}}/api/auth/google-login
+Content-Type: application/json
+
+{
+  email: "masadjurdjevic02@gmail.com"
+}
+
+###
