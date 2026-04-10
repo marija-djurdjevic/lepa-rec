@@ -9,7 +9,7 @@ namespace AngularNetBase.Practice.Dtos.Sessions
     public record TodayPracticePlanDto(
        DistancedJournalReflectionPromptDto? ReflectionPrompt,
        IReadOnlyCollection<DistancedJournalChallengeDto> DistancedJournalChoices,
-       PerspectiveScenarioPromptDto? PerspectiveScenarioPrompt,
+       IReadOnlyCollection<PerspectiveScenarioPromptDto> PerspectiveScenarioChoices,
        bool ShouldShowPerspectiveScenario,
        bool IsDistancedJournalCompleted,
        bool IsReflectionCompleted,

@@ -4,8 +4,9 @@ using AngularNetBase.Practice.Dtos.Sessions;
 using AngularNetBase.Practice.Entities.DistancedJournals;
 using AngularNetBase.Practice.Entities.PerspectiveScenarios;
 using AngularNetBase.Practice.Entities.Sessions;
-using AngularNetBase.Practice.Services;
+using AngularNetBase.Practice.Entities.Scheduling;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,6 +20,7 @@ namespace AngularNetBase.Practice.Services
         private readonly IDistancedJournalChallengeRepository _distancedJournalChallengeRepository;
         private readonly IPerspectiveScenarioChallengeRepository _perspectiveScenarioChallengeRepository;
         private readonly IPerspectiveScenarioExerciseRepository _perspectiveScenarioExerciseRepository;
+        private readonly IDailyChallengeAssignmentService _dailyChallengeAssignmentService;
         private readonly IDateTimeProvider _dateTimeProvider;
 
         public SessionService(
@@ -27,6 +29,7 @@ namespace AngularNetBase.Practice.Services
             IDistancedJournalChallengeRepository distancedJournalChallengeRepository,
             IPerspectiveScenarioChallengeRepository perspectiveScenarioChallengeRepository,
             IPerspectiveScenarioExerciseRepository perspectiveScenarioExerciseRepository,
+            IDailyChallengeAssignmentService dailyChallengeAssignmentService,
             IDateTimeProvider dateTimeProvider)
         {
             _sessionRepository = sessionRepository;
@@ -34,6 +37,7 @@ namespace AngularNetBase.Practice.Services
             _distancedJournalChallengeRepository = distancedJournalChallengeRepository;
             _perspectiveScenarioChallengeRepository = perspectiveScenarioChallengeRepository;
             _perspectiveScenarioExerciseRepository = perspectiveScenarioExerciseRepository;
+            _dailyChallengeAssignmentService = dailyChallengeAssignmentService;
             _dateTimeProvider = dateTimeProvider;
         }
 
@@ -110,6 +114,7 @@ namespace AngularNetBase.Practice.Services
                 throw new ArgumentException("UserId must be provided.");
 
             var today = _dateTimeProvider.UtcNow.Date;
+            var assignment = await _dailyChallengeAssignmentService.GetOrCreateTodayAssignmentAsync(cancellationToken);
 
             var todaySession = await _sessionRepository.GetByUserAndDateAsync(
                 userId,
@@ -136,6 +141,7 @@ namespace AngularNetBase.Practice.Services
             {
                 return await BuildPlanBasedOnDistancedJournalTodayAsync(
                     hasDistancedJournalToday,
+                    assignment,
                     cancellationToken);
             }
 
@@ -152,6 +158,7 @@ namespace AngularNetBase.Practice.Services
             {
                 return await BuildPlanBasedOnDistancedJournalTodayAsync(
                     hasDistancedJournalToday,
+                    assignment,
                     cancellationToken);
             }
 
@@ -161,14 +168,15 @@ namespace AngularNetBase.Practice.Services
                     yesterdayExerciseRecords,
                     hasDistancedJournalReflectionToday,
                     hasPerspectiveScenarioToday,
+                    assignment,
                     cancellationToken);
             }
 
             if (hadDistancedJournalReflectionYesterday)
             {
-                return await BuildPlanAfterReflectionYesterdayAsync(
-                    hasDistancedJournalReflectionToday,
-                    hasPerspectiveScenarioToday,
+                return await BuildPlanBasedOnDistancedJournalTodayAsync(
+                    hasDistancedJournalToday,
+                    assignment,
                     cancellationToken);
             }
 
@@ -177,7 +185,7 @@ namespace AngularNetBase.Practice.Services
                 return BuildPlanWithDistancedJournalCompletedOnly();
             }
 
-            return await BuildPlanWithDistancedJournalChoicesAsync(cancellationToken);
+            return await BuildPlanWithDistancedJournalChoicesAsync(assignment, cancellationToken);
         }
 
         private async Task<DailySession> GetOrCreateTodaySessionEntityAsync(
@@ -263,84 +271,164 @@ namespace AngularNetBase.Practice.Services
                 exercise.Answer.FollowUpAnswer);
         }
 
-        private async Task<IReadOnlyCollection<DistancedJournalChallengeDto>> BuildDistancedJournalChoicesAsync(
+        private async Task<IReadOnlyCollection<DistancedJournalChallengeDto>> BuildDistancedJournalChoicesForTodayAsync(
+            DailyChallengeAssignment assignment,
             CancellationToken cancellationToken)
         {
-            var levelPairs = new List<(ChallengeLevel First, ChallengeLevel Second)>
+            var choices = new List<DistancedJournalChallengeDto>();
+            var ids = new[]
             {
-                (ChallengeLevel.Easy, ChallengeLevel.Medium),
-                (ChallengeLevel.Easy, ChallengeLevel.Hard),
-                (ChallengeLevel.Medium, ChallengeLevel.Hard)
+                assignment.DistancedJournalChallengeId,
+                assignment.DistancedJournalChallengeId2
             };
 
-            var selectedPair = levelPairs[Random.Shared.Next(levelPairs.Count)];
-
-            var firstChallenge = await _distancedJournalChallengeRepository.GetRandomByLevelAsync(
-                selectedPair.First,
-                cancellationToken);
-
-            var secondChallenge = await _distancedJournalChallengeRepository.GetRandomByLevelAsync(
-                selectedPair.Second,
-                cancellationToken);
-
-            var results = new List<DistancedJournalChallengeDto>();
-
-            if (firstChallenge is not null)
+            foreach (var id in ids.Distinct())
             {
-                results.Add(new DistancedJournalChallengeDto(
-                    firstChallenge.Id,
-                    firstChallenge.Content,
-                    firstChallenge.FollowUpQuestion,
-                    firstChallenge.ChallengeLevel));
+                if (id == Guid.Empty)
+                    continue;
+
+                var challenge = await _distancedJournalChallengeRepository.GetByIdAsync(id, cancellationToken);
+                if (challenge is null)
+                    continue;
+
+                choices.Add(new DistancedJournalChallengeDto(
+                    challenge.Id,
+                    challenge.Content,
+                    challenge.FollowUpQuestion,
+                    challenge.ChallengeLevel));
             }
 
-            if (secondChallenge is not null)
+            if (choices.Count < 2)
             {
+                var fallback = await BuildFallbackDistancedJournalChoicesAsync(
+                    choices.Select(x => x.Id).ToHashSet(),
+                    cancellationToken);
+
+                choices.AddRange(fallback);
+            }
+
+            return choices.Take(2).ToList();
+        }
+
+        private async Task<IReadOnlyCollection<DistancedJournalChallengeDto>> BuildFallbackDistancedJournalChoicesAsync(
+            HashSet<Guid> excludeIds,
+            CancellationToken cancellationToken)
+        {
+            var challenges = await _distancedJournalChallengeRepository.GetAllAsync(cancellationToken);
+            var available = challenges
+                .Where(x => !excludeIds.Contains(x.Id))
+                .ToList();
+
+            if (available.Count == 0)
+                return Array.Empty<DistancedJournalChallengeDto>();
+
+            var first = available[Random.Shared.Next(available.Count)];
+            var results = new List<DistancedJournalChallengeDto>
+            {
+                new DistancedJournalChallengeDto(
+                    first.Id,
+                    first.Content,
+                    first.FollowUpQuestion,
+                    first.ChallengeLevel)
+            };
+
+            var remaining = available.Where(x => x.Id != first.Id).ToList();
+            if (remaining.Count > 0)
+            {
+                var second = remaining[Random.Shared.Next(remaining.Count)];
                 results.Add(new DistancedJournalChallengeDto(
-                    secondChallenge.Id,
-                    secondChallenge.Content,
-                    secondChallenge.FollowUpQuestion,
-                    secondChallenge.ChallengeLevel));
+                    second.Id,
+                    second.Content,
+                    second.FollowUpQuestion,
+                    second.ChallengeLevel));
             }
 
             return results;
         }
 
-        private async Task<PerspectiveScenarioPromptDto?> BuildPerspectiveScenarioPromptAsync(
+        private async Task<IReadOnlyCollection<PerspectiveScenarioPromptDto>> BuildPerspectiveScenarioChoicesForTodayAsync(
+            DailyChallengeAssignment assignment,
             CancellationToken cancellationToken)
         {
-            var levels = new[] { ChallengeLevel.Easy, ChallengeLevel.Medium, ChallengeLevel.Hard }
-                .OrderBy(_ => Random.Shared.Next())
-                .ToList();
-
-            foreach (var level in levels)
+            var choices = new List<PerspectiveScenarioPromptDto>();
+            var ids = new[]
             {
-                var challenge = await _perspectiveScenarioChallengeRepository.GetRandomByLevelAsync(
-                    level,
-                    cancellationToken);
+                assignment.PerspectiveScenarioChallengeId,
+                assignment.PerspectiveScenarioChallengeId2
+            };
 
+            foreach (var id in ids.Distinct())
+            {
+                if (id == Guid.Empty)
+                    continue;
+
+                var challenge = await _perspectiveScenarioChallengeRepository.GetByIdAsync(id, cancellationToken);
                 if (challenge is null)
                     continue;
 
-                return new PerspectiveScenarioPromptDto(
-                    challenge.Id,
-                    challenge.ScenarioText,
-                    challenge.ChallengeLevel,
-                    challenge.Questions
-                        .Select(q => new PerspectiveScenarioQuestionDto(
-                            q.Id,
-                            q.SkillId,
-                            q.QuestionText))
-                        .ToList());
+                choices.Add(MapPerspectiveScenarioPrompt(challenge));
             }
 
-            return null;
+            if (choices.Count < 2)
+            {
+                var fallback = await BuildPerspectiveScenarioChoicesFallbackAsync(
+                    choices.Select(x => x.Id).ToHashSet(),
+                    cancellationToken);
+
+                choices.AddRange(fallback);
+            }
+
+            return choices.Take(2).ToList();
+        }
+
+        private async Task<IReadOnlyCollection<PerspectiveScenarioPromptDto>> BuildPerspectiveScenarioChoicesFallbackAsync(
+            HashSet<Guid> excludeIds,
+            CancellationToken cancellationToken)
+        {
+            var challenges = await _perspectiveScenarioChallengeRepository.GetAllAsync(cancellationToken);
+            var available = challenges
+                .Where(x => !excludeIds.Contains(x.Id))
+                .ToList();
+
+            if (available.Count == 0)
+                return Array.Empty<PerspectiveScenarioPromptDto>();
+
+            var first = available[Random.Shared.Next(available.Count)];
+            var results = new List<PerspectiveScenarioPromptDto>
+            {
+                MapPerspectiveScenarioPrompt(first)
+            };
+
+            var remaining = available.Where(x => x.Id != first.Id).ToList();
+            if (remaining.Count > 0)
+            {
+                var second = remaining[Random.Shared.Next(remaining.Count)];
+                results.Add(MapPerspectiveScenarioPrompt(second));
+            }
+
+            return results;
+        }
+
+        private static PerspectiveScenarioPromptDto MapPerspectiveScenarioPrompt(PerspectiveScenarioChallenge challenge)
+        {
+            return new PerspectiveScenarioPromptDto(
+                challenge.Id,
+                challenge.ActorCount,
+                challenge.Context,
+                challenge.ScenarioText,
+                challenge.ChallengeLevel,
+                challenge.Questions
+                    .Select(q => new PerspectiveScenarioQuestionDto(
+                        q.Id,
+                        q.SkillId,
+                        q.QuestionText))
+                    .ToList());
         }
 
         private static TodayPracticePlanDto BuildPlan(
             DistancedJournalReflectionPromptDto? reflectionPrompt,
             IReadOnlyCollection<DistancedJournalChallengeDto> distancedJournalChoices,
-            PerspectiveScenarioPromptDto? perspectiveScenarioPrompt,
+            IReadOnlyCollection<PerspectiveScenarioPromptDto> perspectiveScenarioChoices,
             bool shouldShowPerspectiveScenario,
             bool isDistancedJournalCompleted,
             bool isReflectionCompleted,
@@ -349,7 +437,7 @@ namespace AngularNetBase.Practice.Services
             return new TodayPracticePlanDto(
                 reflectionPrompt,
                 distancedJournalChoices,
-                perspectiveScenarioPrompt,
+                perspectiveScenarioChoices,
                 shouldShowPerspectiveScenario,
                 isDistancedJournalCompleted,
                 isReflectionCompleted,
@@ -361,7 +449,7 @@ namespace AngularNetBase.Practice.Services
             return BuildPlan(
                 null,
                 Array.Empty<DistancedJournalChallengeDto>(),
-                null,
+                Array.Empty<PerspectiveScenarioPromptDto>(),
                 false,
                 true,
                 false,
@@ -369,12 +457,13 @@ namespace AngularNetBase.Practice.Services
         }
 
         private async Task<TodayPracticePlanDto> BuildPlanWithDistancedJournalChoicesAsync(
+            DailyChallengeAssignment assignment,
             CancellationToken cancellationToken)
         {
             return BuildPlan(
                 null,
-                await BuildDistancedJournalChoicesAsync(cancellationToken),
-                null,
+                await BuildDistancedJournalChoicesForTodayAsync(assignment, cancellationToken),
+                Array.Empty<PerspectiveScenarioPromptDto>(),
                 false,
                 false,
                 false,
@@ -383,18 +472,20 @@ namespace AngularNetBase.Practice.Services
 
         private async Task<TodayPracticePlanDto> BuildPlanBasedOnDistancedJournalTodayAsync(
             bool hasDistancedJournalToday,
+            DailyChallengeAssignment assignment,
             CancellationToken cancellationToken)
         {
             if (hasDistancedJournalToday)
                 return BuildPlanWithDistancedJournalCompletedOnly();
 
-            return await BuildPlanWithDistancedJournalChoicesAsync(cancellationToken);
+            return await BuildPlanWithDistancedJournalChoicesAsync(assignment, cancellationToken);
         }
 
         private async Task<TodayPracticePlanDto> BuildPlanAfterDistancedJournalYesterdayAsync(
             List<ExerciseRecord> yesterdayExerciseRecords,
             bool hasDistancedJournalReflectionToday,
             bool hasPerspectiveScenarioToday,
+            DailyChallengeAssignment assignment,
             CancellationToken cancellationToken)
         {
             DistancedJournalReflectionPromptDto? reflectionPrompt = null;
@@ -406,34 +497,17 @@ namespace AngularNetBase.Practice.Services
                     cancellationToken);
             }
 
-            var perspectiveScenarioPrompt = !hasPerspectiveScenarioToday
-                ? await BuildPerspectiveScenarioPromptAsync(cancellationToken)
-                : null;
+            var perspectiveScenarioChoices = !hasPerspectiveScenarioToday
+                ? await BuildPerspectiveScenarioChoicesForTodayAsync(assignment, cancellationToken)
+                : Array.Empty<PerspectiveScenarioPromptDto>();
+
+            var shouldShowPerspectiveScenario = !hasPerspectiveScenarioToday && perspectiveScenarioChoices.Count > 0;
 
             return BuildPlan(
                 reflectionPrompt,
                 Array.Empty<DistancedJournalChallengeDto>(),
-                perspectiveScenarioPrompt,
-                !hasPerspectiveScenarioToday,
-                false,
-                hasDistancedJournalReflectionToday,
-                hasPerspectiveScenarioToday);
-        }
-
-        private async Task<TodayPracticePlanDto> BuildPlanAfterReflectionYesterdayAsync(
-            bool hasDistancedJournalReflectionToday,
-            bool hasPerspectiveScenarioToday,
-            CancellationToken cancellationToken)
-        {
-            var perspectiveScenarioPrompt = !hasPerspectiveScenarioToday
-                ? await BuildPerspectiveScenarioPromptAsync(cancellationToken)
-                : null;
-
-            return BuildPlan(
-                null,
-                Array.Empty<DistancedJournalChallengeDto>(),
-                perspectiveScenarioPrompt,
-                !hasPerspectiveScenarioToday,
+                perspectiveScenarioChoices,
+                shouldShowPerspectiveScenario,
                 false,
                 hasDistancedJournalReflectionToday,
                 hasPerspectiveScenarioToday);

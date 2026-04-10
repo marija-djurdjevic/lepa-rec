@@ -40,6 +40,14 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
                 .FirstOrDefaultAsync(x => x.UserId == userId && x.ChallengeId == challengeId, cancellationToken);
         }
 
+        public async Task<IReadOnlyCollection<Guid>> GetUsedChallengeIdsAsync(CancellationToken cancellationToken = default)
+        {
+            return await _context.PerspectiveScenarioExercises
+                .Select(x => x.ChallengeId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task AddAsync(PerspectiveScenarioExercise entity, CancellationToken cancellationToken = default)
         {
             await _context.PerspectiveScenarioExercises.AddAsync(entity, cancellationToken);

@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using AngularNetBase.Practice.Entities.Scheduling;
 
 namespace AngularNetBase.Practice;
 
@@ -24,6 +25,9 @@ public static class PracticeModuleRegistration
 
         services.AddScoped<ISessionRepository, SessionRepository>();
         services.AddScoped<ISessionService, SessionService>();
+        services.AddScoped<IDailyChallengeAssignmentRepository, DailyChallengeAssignmentRepository>();
+        services.AddScoped<IDailyChallengeAssignmentService, DailyChallengeAssignmentService>();
+        services.AddHostedService<DailyChallengeAssignmentScheduler>();
         services.AddScoped<IDateTimeProvider, SystemDateTimeProvider>();
         services.AddScoped<IAffirmationValueRepository, AffirmationValueRepository>();
         services.AddScoped<IAffirmationValueService, AffirmationValueService>();

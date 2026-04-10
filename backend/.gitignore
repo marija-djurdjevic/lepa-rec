@@ -118,3 +118,5 @@ appsettings.Local.json
 PublishProfiles/
 *.pubxml
 *.publishproj
+# .NET local SDK cache/sentinels (repo-local)
+.dotnet/

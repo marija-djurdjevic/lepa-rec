@@ -7,6 +7,7 @@ using AngularNetBase.Practice.Entities.Skills;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System;
+using AngularNetBase.Practice.Entities.Scheduling;
 
 namespace AngularNetBase.Practice.Infrastructure
 {
@@ -21,6 +22,7 @@ namespace AngularNetBase.Practice.Infrastructure
         public DbSet<PerspectiveScenarioExercise> PerspectiveScenarioExercises { get; set; }
         public DbSet<Skill> Skills { get; set; }
         public DbSet<SkillMastery> SkillMasteries { get; set; }
+        public DbSet<DailyChallengeAssignment> DailyChallengeAssignments { get; set; }
 
         public PracticeContext(DbContextOptions<PracticeContext> options) : base(options) { }
 
@@ -126,6 +128,36 @@ namespace AngularNetBase.Practice.Infrastructure
                     .HasConversion<string>()
                     .HasMaxLength(50)
                     .IsRequired();
+            });
+
+
+            modelBuilder.Entity<DailyChallengeAssignment>(entity =>
+            {
+                entity.ToTable("DailyChallengeAssignments");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Date)
+                    .HasColumnType("date")
+                    .IsRequired();
+
+                entity.Property(e => e.DistancedJournalChallengeId)
+                    .IsRequired();
+
+                entity.Property(e => e.DistancedJournalChallengeId2)
+                    .IsRequired();
+
+                entity.Property(e => e.PerspectiveScenarioChallengeId)
+                    .IsRequired();
+
+                entity.Property(e => e.PerspectiveScenarioChallengeId2)
+                    .IsRequired();
+
+                entity.Property(e => e.AssignedAt)
+                    .IsRequired();
+
+                entity.HasIndex(e => e.Date)
+                    .IsUnique();
             });
 
             modelBuilder.Entity<AffirmationValue>(entity =>
@@ -301,6 +333,14 @@ namespace AngularNetBase.Practice.Infrastructure
                 entity.Property(e => e.Reveal)
                     .IsRequired()
                     .HasMaxLength(2000);
+
+                entity.Property(e => e.Context)
+                    .HasConversion<string>()
+                    .HasMaxLength(20)
+                    .IsRequired();
+
+                entity.Property(e => e.ActorCount)
+                    .IsRequired();
 
                 entity.Property(e => e.ChallengeLevel)
                     .HasConversion<string>()

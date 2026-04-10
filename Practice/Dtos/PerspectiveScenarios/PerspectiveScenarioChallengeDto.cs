@@ -1,4 +1,5 @@
 using AngularNetBase.Practice.Entities.DistancedJournals;
+using AngularNetBase.Practice.Entities.PerspectiveScenarios;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -7,6 +8,8 @@ namespace AngularNetBase.Practice.Dtos.PerspectiveScenarios
 {
     public record PerspectiveScenarioChallengeDto(
         Guid Id,
+        int ActorCount,
+        PerspectiveScenarioContext Context,
         string ScenarioText,
         string Reveal,
         ChallengeLevel ChallengeLevel,

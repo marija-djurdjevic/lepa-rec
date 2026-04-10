@@ -47,6 +47,8 @@ namespace AngularNetBase.Practice.Services
 
             var challenge = new PerspectiveScenarioChallenge(
                 Guid.NewGuid(),
+                dto.Context,
+                dto.ActorCount,
                 dto.ScenarioText,
                 dto.Reveal,
                 dto.ChallengeLevel,
@@ -206,6 +208,8 @@ namespace AngularNetBase.Practice.Services
         {
             return new PerspectiveScenarioChallengeDto(
                 challenge.Id,
+                challenge.ActorCount,
+                challenge.Context,
                 challenge.ScenarioText,
                 challenge.Reveal,
                 challenge.ChallengeLevel,
@@ -216,6 +220,8 @@ namespace AngularNetBase.Practice.Services
         {
             return new PerspectiveScenarioPromptDto(
                 challenge.Id,
+                challenge.ActorCount,
+                challenge.Context,
                 challenge.ScenarioText,
                 challenge.ChallengeLevel,
                 challenge.Questions.Select(MapQuestion).ToList());

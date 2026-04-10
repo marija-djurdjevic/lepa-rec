@@ -47,6 +47,14 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
                     cancellationToken);
         }
 
+        public async Task<IReadOnlyCollection<Guid>> GetUsedChallengeIdsAsync(CancellationToken cancellationToken = default)
+        {
+            return await _context.DistancedJournalExercises
+                .Select(x => x.ChallengeId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task AddAsync(DistancedJournalExercise entity, CancellationToken cancellationToken = default)
         {
             await _context.DistancedJournalExercises.AddAsync(entity, cancellationToken);

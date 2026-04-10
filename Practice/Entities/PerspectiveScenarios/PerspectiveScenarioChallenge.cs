@@ -9,6 +9,8 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
         private readonly List<PerspectiveScenarioQuestion> _questions = new();
 
         public ChallengeLevel ChallengeLevel { get; private set; }
+        public PerspectiveScenarioContext Context { get; private set; }
+        public int ActorCount { get; private set; }
         public string ScenarioText { get; private set; } = string.Empty;
         public string Reveal { get; private set; } = string.Empty;
 
@@ -18,6 +20,8 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
 
         public PerspectiveScenarioChallenge(
             Guid id,
+            PerspectiveScenarioContext context,
+            int actorCount,
             string scenarioText,
             string reveal,
             ChallengeLevel challengeLevel,
@@ -25,6 +29,9 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
         {
             if (id == Guid.Empty)
                 throw new ArgumentException("Id must be a valid GUID.", nameof(id));
+
+            if (actorCount < 1)
+                throw new ArgumentException("Actor count must be at least 1.", nameof(actorCount));
 
             if (string.IsNullOrWhiteSpace(scenarioText))
                 throw new ArgumentException("Scenario text must be provided.", nameof(scenarioText));
@@ -44,6 +51,8 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
                 throw new ArgumentException("Question ids must be unique.", nameof(questions));
 
             ChallengeLevel = challengeLevel;
+            Context = context;
+            ActorCount = actorCount;
             ScenarioText = scenarioText.Trim();
             Reveal = reveal.Trim();
 
@@ -81,9 +90,6 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
         {
             if (questionCount == 0)
                 throw new ArgumentException("At least one question is required.", nameof(questionCount));
-
-            if (challengeLevel == ChallengeLevel.Easy && questionCount != 1)
-                throw new ArgumentException("Easy perspective scenarios must contain exactly one question.", nameof(questionCount));
 
             if (challengeLevel == ChallengeLevel.Hard && questionCount < 2)
                 throw new ArgumentException("Hard perspective scenarios must contain multiple questions.", nameof(questionCount));
