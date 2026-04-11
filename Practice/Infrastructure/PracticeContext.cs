@@ -203,6 +203,11 @@ namespace AngularNetBase.Practice.Infrastructure
                     .IsRequired()
                     .HasMaxLength(1000);
 
+                entity.Property(e => e.Type)
+                    .HasConversion<string>()
+                    .HasMaxLength(20)
+                    .IsRequired();
+
                 entity.Property(e => e.IsActive)
                     .IsRequired();
             });

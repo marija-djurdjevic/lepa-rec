@@ -7,6 +7,7 @@ using AngularNetBase.Practice.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -23,12 +24,12 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 {
 
     [DbContext(typeof(PracticeContext))]
-
-    partial class PracticeContextModelSnapshot : ModelSnapshot
+    [Migration("20260411120000_AddGrowthMessageType")]
+    partial class AddGrowthMessageType
 
     {
 
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
 
         {
 

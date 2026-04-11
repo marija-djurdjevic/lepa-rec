@@ -48,6 +48,7 @@ services:
       Jwt__Audience: ${JWT_AUDIENCE}
       Jwt__AccessTokenExpirationMinutes: ${JWT_ACCESS_TOKEN_EXPIRATION_MINUTES:-60}
       Jwt__RefreshTokenExpirationDays: ${JWT_REFRESH_TOKEN_EXPIRATION_DAYS:-7}
+      SeedPracticeContent: ${SEED_PRACTICE_CONTENT:-false}
     networks:
       - internal
     expose:

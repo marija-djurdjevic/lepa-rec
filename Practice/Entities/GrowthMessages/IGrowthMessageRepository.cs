@@ -7,7 +7,9 @@ namespace AngularNetBase.Practice.Entities.GrowthMessages
     public interface IGrowthMessageRepository
     {
         Task<GrowthMessage?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-        Task<GrowthMessage?> GetRandomActiveMessageAsync(CancellationToken cancellationToken = default);
+        Task<GrowthMessage?> GetRandomActiveMessageAsync(
+            GrowthMessageType type,
+            CancellationToken cancellationToken = default);
         Task AddAsync(GrowthMessage growthMessage, CancellationToken cancellationToken = default);
         Task UpdateAsync(GrowthMessage growthMessage, CancellationToken cancellationToken = default);
         Task SaveChangesAsync(CancellationToken cancellationToken = default);
