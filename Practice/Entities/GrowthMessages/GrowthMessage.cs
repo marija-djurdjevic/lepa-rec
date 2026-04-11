@@ -9,17 +9,23 @@ namespace AngularNetBase.Practice.Entities.GrowthMessages
     public class GrowthMessage : Entity<Guid>, IAggregateRoot
     {
         public string Text { get; private set; } = string.Empty;
+        public GrowthMessageType Type { get; private set; }
 
         public bool IsActive { get; private set; }
 
         private GrowthMessage() : base() { }
 
-        public GrowthMessage(Guid id, string text, bool isActive = true) : base(id)
+        public GrowthMessage(
+            Guid id,
+            string text,
+            GrowthMessageType type = GrowthMessageType.Begin,
+            bool isActive = true) : base(id)
         {
             if (string.IsNullOrWhiteSpace(text))
                 throw new ArgumentException("Growth message text is required.", nameof(text));
 
             Text = text.Trim();
+            Type = type;
             IsActive = isActive;
         }
 

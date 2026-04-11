@@ -13,29 +13,162 @@ namespace AngularNetBase.Practice.Infrastructure
     {
         public static async Task SeedAsync(PracticeContext context)
         {
-            if (!context.AffirmationValues.Any())
+            context.GrowthMessages.RemoveRange(context.GrowthMessages);
+            context.AffirmationValues.RemoveRange(context.AffirmationValues);
+            await context.SaveChangesAsync();
+
+            var affirmationData = new (string Name, string[] Statements)[]
             {
-                var value1 = new AffirmationValue(Guid.NewGuid(), "Fokus na ucenje");
-                value1.AddStatement(Guid.NewGuid(), "Danas biram da budem otvoren/a za nova znanja.");
-                value1.AddStatement(Guid.NewGuid(), "Svaka greška je prilika da naucim nešto novo.");
+                ("Empatija", new[]
+                {
+                    "Danas pokušavam da vidim svet tuđim očima.",
+                }),
+                ("Poniznost", new[]
+                {
+                    "Ne moram da budem u pravu da bih bio/la vredna.",
+                }),
+                ("Povezanost", new[]
+                {
+                    "Danas tražim ono što me povezuje s nekim ko je drugačiji od mene.",
+                }),
+                ("Radoznalost", new[]
+                {
+                    "Danas biram da pitam umesto da pretpostavim.",
+                    "Svaka osoba ima perspektivu koju ja nisam razmatrao/la.",
+                    "Radoznalost prema drugima počinje jednim iskrenim pitanjem.",
+                    "Danas tražim priču iza mišljenja.",
+                }),
+                ("Autonomija", new[]
+                {
+                    "Biram da rastem zato što to želim, ne zato što moram.",
+                    "Moj razvoj pripada meni i ja određujem ritam.",
+                    "Danas radim ono što je u skladu s mojim vrednostima.",
+                    "Ne moram da se složim da bih razumeo/la.",
+                    "Biram da budem otvoren/a jer sam to odlučio/la, ne jer se to očekuje.",
+                }),
+                ("Pravičnost", new[]
+                {
+                    "Kontekst u kome neko živi oblikuje ono što može da postigne.",
+                    "Danas se pitam šta bih ja uradio/la na tuđem mestu, s tuđim resursima i ograničenjima.",
+                    "Razumevanje počinje kad uvažim da su startne pozicije različite.",
+                    "Svačija realnost je oblikovana prilikama koje je imao.",
+                    "Danas biram da ne sudim pre nego što razumem pozadinu.",
+                    "Pravičnost je kad vidim celu sliku, ne samo svoj deo.",
+                }),
+                ("Velikodušnost", new[]
+                {
+                    "Danas biram da pretpostavim dobru nameru.",
+                    "Danas tumačim tuđe reči blagonaklono dok ne saznam više.",
+                    "Jedna velikodušna misao može da promeni ceo utisak o nekome.",
+                    "Biram da vidim osobu iza postupka.",
+                    "Nekad je najmudrije dati nekome drugu šansu.",
+                    "Danas biram razumevanje pre reagovanja.",
+                    "Lako je osuditi, a vredno je pokušati da razumem.",
+                }),
+                ("Hrabrost", new[]
+                {
+                    "Danas biram da ostanem otvoren/a čak i kad je nelagodno.",
+                    "Danas ne bežim od mišljenja koje me uznemirava.",
+                    "Rast počinje tamo gde prestaje zona komfora.",
+                    "Biram da saslušam ono što je teško čuti.",
+                    "Snaga je u tome da izdržim nesigurnost bez da odustanem.",
+                    "Danas se ne branim, već slušam.",
+                    "Hrabrost je priznati sebi da sam možda pogrešio/la.",
+                    "Jedan neugodan razgovor danas može otvoriti nova vrata sutra.",
+                }),
+                ("Mudrost", new[]
+                {
+                    "Danas biram da sagledam celu sliku pre nego što zaključim.",
+                    "Pre nego što odlučim, pitam se šta bih savetovao/la prijatelju.",
+                    "Danas biram da razmišljam sporije i šire.",
+                    "Situacija izgleda drugačije kad je pogledam iz daljine.",
+                    "Danas tražim ono što mi nije očigledno na prvi pogled.",
+                    "Žuran odgovor retko je mudar odgovor.",
+                    "Biram da zadržim više mogućnosti otvorenim pre nego što zaključim.",
+                    "Mudrost je znati da moja perspektiva nije jedina koja važi.",
+                    "Danas gledam svoje probleme kao da pomažem nekom drugom.",
+                }),
+                ("Rast", new[]
+                {
+                    "Mali koraci danas donose velike rezultate sutra.",
+                    "Svaka greška je prilika da naučim nešto novo.",
+                    "Danas vežbam veštinu koju juče nisam imao/la.",
+                    "Trud danas gradi sposobnost za sutra.",
+                    "Danas biram napredak, ne savršenstvo.",
+                    "Ono što mi je teško sada, biće lakše s vežbom.",
+                    "Fokusiram se na proces, ne na rezultat.",
+                    "Svaki pokušaj me čini boljim/om nego juče.",
+                    "Razvoj je niz malih odluka, ne jedan veliki skok.",
+                    "Danas biram da pokušam, čak i kad nisam siguran/na.",
+                }),
+            };
 
-                var value2 = new AffirmationValue(Guid.NewGuid(), "Samopouzdanje");
-                value2.AddStatement(Guid.NewGuid(), "Verujem u proces i svoj napredak.");
-                value2.AddStatement(Guid.NewGuid(), "Fokusiram se na ono što mogu da kontrolišem.");
-
-                var value3 = new AffirmationValue(Guid.NewGuid(), "Istrajnost");
-                value3.AddStatement(Guid.NewGuid(), "Mali koraci danas donose velike rezultate sutra.");
-
-                context.AffirmationValues.AddRange(value1, value2, value3);
+            foreach (var entry in affirmationData)
+            {
+                var value = new AffirmationValue(Guid.NewGuid(), entry.Name);
+                foreach (var statement in entry.Statements)
+                {
+                    value.AddStatement(Guid.NewGuid(), statement);
+                }
+                context.AffirmationValues.Add(value);
             }
 
-            if (!context.GrowthMessages.Any())
+            var beginMessages = new[]
             {
-                context.GrowthMessages.AddRange(
-                    new GrowthMessage(Guid.NewGuid(), "Odlican izbor! Pravi nacin razmišljanja je pola posla."),
-                    new GrowthMessage(Guid.NewGuid(), "Samo napred, svaki trud se racuna."),
-                    new GrowthMessage(Guid.NewGuid(), "Spreman/na si za današnje izazove. Srecan rad!")
-                );
+                "Iskoristite sledećih nekoliko minuta da vidite svet malo šire.",
+                "Svaki put kad pokušate da razumete nekoga, vaš svet postaje veći.",
+                "Danas imate priliku da vežbate nešto što većina ljudi nikad ne vežba svesno.",
+                "Ono što vas čeka traži samo jednu stvar: iskrenu nameru da pokušate.",
+                "Spremni ste. Ne morate biti savršeni, dovoljno je da ste prisutni.",
+                "Nekoliko minuta fokusa danas gradi veštinu koja traje.",
+                "Vaš trud danas menja način na koji ćete sutra videti ljude oko sebe.",
+                "Ne postoji pogrešan odgovor, već samo vaša spremnost da razmislite.",
+                "Danas vežbate nešto što vas čini boljim sagovornikom, kolegom i prijateljem.",
+                "Čak i malo vežbanja daje velike rezultate na duže staze.",
+                "Perspektiva se širi jednim pokušajem u trenutku. Ovo je vaš trenutak.",
+                "Sve što vam treba za ovaj izazov već nosite sa sobom.",
+                "Danas radite nešto retko: svesno birate da vidite šire.",
+                "Nema žurbe. Uzmite vremena koliko vam treba i budite iskreni prema sebi.",
+                "Svaki izazov koji rešite dodaje sloj razumevanja koji niste imali juče.",
+                "Ovaj izazov je mali, ali ono što gradite njime nije.",
+                "Danas birate da se potrudite oko nečega što je zaista važno.",
+                "Vaša pažnja je najvredniji resurs koji imate. Uložite je u sledećih par minuta.",
+                "Niko ne vidi rezultate ove vežbe odmah, ali svi ih osete vremenom.",
+                "Počnite polako. Razumevanje nije trka, već praksa.",
+            };
+
+            var endMessages = new[]
+            {
+                "Upravo ste uradili nešto što većina ljudi danas nije: svesno ste pokušali da vidite šire.",
+                "Ovo što ste upravo završili ne daje rezultate odmah, ali ih daje sigurno.",
+                "Svaki put kad prođete kroz ovaj proces, malo lakše razumete ljude oko sebe.",
+                "Možda ne osećate razliku danas, ali ona se upravo desila.",
+                "Ono što ste upravo vežbali čini vas boljim u svakom razgovoru koji vas čeka.",
+                "Malo ko danas svesno vežba razumevanje drugih. Vi jeste.",
+                "Rezultati ove vežbe se ne mere brojevima, nego kvalitetom vaših budućih razgovora.",
+                "Upravo ste uložili u veštinu koja tiho menja sve vaše odnose.",
+                "Svaka sesija vas pomera napred, čak i kad to ne izgleda tako.",
+                "Ovo nije bio lak zadatak i baš zato vredi što ste ga završili.",
+                "Upravo ste trenirali mišić koji većina ljudi ne zna da ima.",
+                "Vaš trud danas ima efekat koji ćete videti u nedeljama i mesecima koji dolaze.",
+                "Ne morate savršeno da uradite svaki izazov. Dovoljno je da ste ga prošli iskreno.",
+                "Ono što gradite ovim vežbama menja kako slušate, kako gledate i kako razumete.",
+                "Danas ste izabrali da se potrudite oko nečeg teškog. To zaslužuje poštovanje.",
+                "Perspektiva nije nešto što se stekne odjednom. Gradi se upravo ovako.",
+                "Upravo ste završili nešto čemu se većina odraslih nikad ne vraća svesno.",
+                "Razumevanje se razvija u tišini, ali se primećuje u svakom odnosu.",
+                "Vi ste danas vežbali. To je jedini korak koji je bio potreban.",
+                "Svaka završena sesija je dokaz da vam je stalo, a to je već mnogo.",
+            };
+
+            foreach (var message in beginMessages)
+            {
+                context.GrowthMessages.Add(new GrowthMessage(Guid.NewGuid(), message, GrowthMessageType.Begin));
+            }
+
+            foreach (var message in endMessages)
+            {
+                context.GrowthMessages.Add(new GrowthMessage(Guid.NewGuid(), message, GrowthMessageType.End));
             }
 
             if (!context.DistancedJournalChallenges.Any())

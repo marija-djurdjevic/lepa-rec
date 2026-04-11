@@ -21,10 +21,12 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
                 .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
         }
 
-        public async Task<GrowthMessage?> GetRandomActiveMessageAsync(CancellationToken cancellationToken = default)
+        public async Task<GrowthMessage?> GetRandomActiveMessageAsync(
+            GrowthMessageType type,
+            CancellationToken cancellationToken = default)
         {
             return await _context.GrowthMessages
-                .Where(m => m.IsActive)
+                .Where(m => m.IsActive && m.Type == type)
                 .OrderBy(r => Guid.NewGuid())
                 .FirstOrDefaultAsync(cancellationToken);
         }
