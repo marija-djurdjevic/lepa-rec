@@ -58,7 +58,9 @@ public static class PracticeModuleRegistration
             await db.Database.MigrateAsync();
         }
 
-        if (app.Environment.IsDevelopment())
+        var shouldSeedPracticeContent = app.Configuration.GetValue<bool>("SeedPracticeContent");
+
+        if (app.Environment.IsDevelopment() || shouldSeedPracticeContent)
         {
             await PracticeSeeder.SeedAsync(db);
         }

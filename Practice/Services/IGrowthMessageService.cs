@@ -1,7 +1,5 @@
-﻿using AngularNetBase.Practice.Dtos.GrowthMessages;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using AngularNetBase.Practice.Dtos.GrowthMessages;
+using AngularNetBase.Practice.Entities.GrowthMessages;
 
 namespace AngularNetBase.Practice.Services
 {
@@ -9,6 +7,8 @@ namespace AngularNetBase.Practice.Services
     {
         Task<Guid> CreateMessageAsync(CreateGrowthMessageDto dto, CancellationToken cancellationToken = default);
         Task ToggleMessageStatusAsync(Guid id, bool activate, CancellationToken cancellationToken = default);
-        Task<GrowthMessageDto> GetRandomMessageAsync(CancellationToken cancellationToken = default);
+        Task<GrowthMessageDto> GetRandomMessageAsync(
+            GrowthMessageType type,
+            CancellationToken cancellationToken = default);
     }
 }

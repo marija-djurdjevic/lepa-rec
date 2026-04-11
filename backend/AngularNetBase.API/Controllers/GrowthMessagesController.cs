@@ -1,4 +1,5 @@
-﻿using AngularNetBase.Practice.Dtos.GrowthMessages;
+using AngularNetBase.Practice.Dtos.GrowthMessages;
+using AngularNetBase.Practice.Entities.GrowthMessages;
 using AngularNetBase.Practice.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -35,9 +36,13 @@ namespace AngularNetBase.API.Controllers
         }
 
         [HttpGet("random")]
-        public async Task<IActionResult> GetRandomMessage(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetRandomMessage(
+            [FromQuery] GrowthMessageType? type,
+            CancellationToken cancellationToken)
         {
-            var message = await _growthMessageService.GetRandomMessageAsync(cancellationToken);
+            var message = await _growthMessageService.GetRandomMessageAsync(
+                type ?? GrowthMessageType.Begin,
+                cancellationToken);
             return Ok(message);
         }
     }

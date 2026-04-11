@@ -17,7 +17,7 @@ namespace AngularNetBase.Practice.Services
 
         public async Task<Guid> CreateMessageAsync(CreateGrowthMessageDto dto, CancellationToken cancellationToken = default)
         {
-            var message = new GrowthMessage(Guid.NewGuid(), dto.Text, true);
+            var message = new GrowthMessage(Guid.NewGuid(), dto.Text, dto.Type, true);
 
             await _repository.AddAsync(message, cancellationToken);
             await _repository.SaveChangesAsync(cancellationToken);
@@ -39,9 +39,11 @@ namespace AngularNetBase.Practice.Services
             await _repository.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<GrowthMessageDto> GetRandomMessageAsync(CancellationToken cancellationToken = default)
+        public async Task<GrowthMessageDto> GetRandomMessageAsync(
+            GrowthMessageType type,
+            CancellationToken cancellationToken = default)
         {
-            var message = await _repository.GetRandomActiveMessageAsync(cancellationToken)
+            var message = await _repository.GetRandomActiveMessageAsync(type, cancellationToken)
                 ?? throw new InvalidOperationException("Nema aktivnih poruka ohrabrenja u bazi.");
 
             return new GrowthMessageDto(message.Id, message.Text);
