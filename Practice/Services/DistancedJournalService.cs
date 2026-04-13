@@ -402,7 +402,7 @@ namespace AngularNetBase.Practice.Services
             }
             catch (DbUpdateConcurrencyException)
             {
-                var fresh = await _dailySessionRepository.GetByIdAsync(session.Id, cancellationToken);
+                var fresh = await _dailySessionRepository.ReloadAsync(session.Id, cancellationToken);
                 if (fresh is null)
                     throw;
 
