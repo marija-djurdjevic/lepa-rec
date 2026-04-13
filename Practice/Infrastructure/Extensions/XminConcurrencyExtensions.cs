@@ -2,9 +2,9 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Npgsql.EntityFrameworkCore.PostgreSQL
+namespace AngularNetBase.Practice.Infrastructure.Extensions
 {
-    public static class NpgsqlModelBuilderExtensions
+    public static class XminConcurrencyExtensions
     {
         public static EntityTypeBuilder UseXminAsConcurrencyToken(this EntityTypeBuilder builder)
         {

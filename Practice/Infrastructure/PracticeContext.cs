@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System;
 using AngularNetBase.Practice.Entities.Scheduling;
 using AngularNetBase.Shared.Core.Domain;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
+using AngularNetBase.Practice.Infrastructure.Extensions;
 
 namespace AngularNetBase.Practice.Infrastructure
 {
