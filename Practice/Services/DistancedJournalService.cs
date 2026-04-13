@@ -139,8 +139,6 @@ namespace AngularNetBase.Practice.Services
             if (exercise.UserId != userId)
                 throw new UnauthorizedAccessException("Exercise does not belong to the current user.");
 
-            var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
-
             var submittedAt = _dateTimeProvider.UtcNow;
 
             ValidateTextAnswer(dto.MainAnswer, dto.FollowUpAnswer);
@@ -151,6 +149,10 @@ namespace AngularNetBase.Practice.Services
                 dto.Reflection,
                 submittedAt);
 
+            await _exerciseRepository.UpdateAsync(exercise, cancellationToken);
+            await _exerciseRepository.SaveChangesAsync(cancellationToken);
+
+            var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
             dailySession.RecordExercise(
                 exercise.Id,
                 ExerciseType.DistancedJournal,
@@ -202,7 +204,6 @@ namespace AngularNetBase.Practice.Services
             if (exercise.UserId != userId)
                 throw new UnauthorizedAccessException("Exercise does not belong to the current user.");
 
-            var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
             var submittedAt = _dateTimeProvider.UtcNow;
 
             foreach (var photo in photos)
@@ -241,6 +242,10 @@ namespace AngularNetBase.Practice.Services
                 dto.Reflection,
                 submittedAt);
 
+            await _exerciseRepository.UpdateAsync(exercise, cancellationToken);
+            await _exerciseRepository.SaveChangesAsync(cancellationToken);
+
+            var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
             dailySession.RecordExercise(
                 exercise.Id,
                 ExerciseType.DistancedJournal,
@@ -300,10 +305,12 @@ namespace AngularNetBase.Practice.Services
             if (exercise.UserId != userId)
                 throw new UnauthorizedAccessException("Exercise does not belong to the current user.");
 
-            var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
-
             exercise.AddReflection(dto.Reflection);
 
+            await _exerciseRepository.UpdateAsync(exercise, cancellationToken);
+            await _exerciseRepository.SaveChangesAsync(cancellationToken);
+
+            var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
             dailySession.RecordExercise(
                 exercise.Id,
                 ExerciseType.DistancedJournalReflection,
@@ -404,7 +411,7 @@ namespace AngularNetBase.Practice.Services
             {
                 var fresh = await _dailySessionRepository.ReloadAsync(session.Id, cancellationToken);
                 if (fresh is null)
-                    throw;
+                    return;
 
                 var alreadyRecorded = fresh.Events
                     .OfType<ExerciseRecord>()
@@ -413,9 +420,16 @@ namespace AngularNetBase.Practice.Services
                 if (alreadyRecorded)
                     return;
 
-                fresh.RecordExercise(exerciseId, exerciseType, timestamp);
-                await _dailySessionRepository.UpdateAsync(fresh, cancellationToken);
-                await _dailySessionRepository.SaveChangesAsync(cancellationToken);
+                try
+                {
+                    fresh.RecordExercise(exerciseId, exerciseType, timestamp);
+                    await _dailySessionRepository.UpdateAsync(fresh, cancellationToken);
+                    await _dailySessionRepository.SaveChangesAsync(cancellationToken);
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    return;
+                }
             }
         }
 
