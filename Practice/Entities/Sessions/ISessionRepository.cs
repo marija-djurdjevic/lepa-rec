@@ -12,6 +12,7 @@ namespace AngularNetBase.Practice.Entities.Sessions
         Task UpdateAsync(DailySession session, CancellationToken cancellationToken = default);
         Task SaveChangesAsync(CancellationToken cancellationToken = default);
         Task<DailySession?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+        Task<DailySession?> ReloadAsync(Guid id, CancellationToken cancellationToken = default);
 
     }
 }

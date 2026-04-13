@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace AngularNetBase.Practice.Infrastructure.Repositories
@@ -41,6 +42,22 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
         }
         public async Task<DailySession?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
+            return await _context.DailySessions
+                .Include(s => s.Events)
+                .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+        }
+
+        public async Task<DailySession?> ReloadAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            var tracked = _context.ChangeTracker
+                .Entries<DailySession>()
+                .FirstOrDefault(entry => entry.Entity.Id == id);
+
+            if (tracked is not null)
+            {
+                tracked.State = EntityState.Detached;
+            }
+
             return await _context.DailySessions
                 .Include(s => s.Events)
                 .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
