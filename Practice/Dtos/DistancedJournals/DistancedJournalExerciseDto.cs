@@ -12,5 +12,6 @@ namespace AngularNetBase.Practice.Dtos.DistancedJournals
     string? FollowUpAnswer,
     string? Reflection,
     DateTime? SubmittedAt,
-    bool IsCompleted);
+    bool IsCompleted,
+    IReadOnlyCollection<string> PhotoUrls);
 }

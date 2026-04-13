@@ -7,6 +7,7 @@ using AngularNetBase.Practice.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -23,12 +24,13 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 {
 
     [DbContext(typeof(PracticeContext))]
+    [Migration("20260413130000_AddDistancedJournalPhotos")]
 
-    partial class PracticeContextModelSnapshot : ModelSnapshot
+    partial class AddDistancedJournalPhotos
 
     {
 
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
 
         {
 
@@ -1249,4 +1251,5 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
     }
 
 }
+
 

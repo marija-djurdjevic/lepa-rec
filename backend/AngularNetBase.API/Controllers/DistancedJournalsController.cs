@@ -1,4 +1,5 @@
-﻿using AngularNetBase.Practice.Dtos.DistancedJournals;
+using AngularNetBase.API.Models;
+using AngularNetBase.Practice.Dtos.DistancedJournals;
 using AngularNetBase.Practice.Entities.DistancedJournals;
 using AngularNetBase.Practice.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -91,14 +92,52 @@ namespace AngularNetBase.API.Controllers
 
         [HttpPost("submit")]
         public async Task<ActionResult<SubmitDistancedJournalResultDto>> SubmitAnswer(
-        [FromBody] SubmitDistancedJournalAnswerDto dto,
-        CancellationToken cancellationToken)
+            [FromBody] SubmitDistancedJournalAnswerDto dto,
+            CancellationToken cancellationToken)
         {
             var userId = GetUserId();
 
             try
             {
                 var result = await _distancedJournalService.SubmitAnswerAsync(userId, dto, cancellationToken);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpPost("submit-with-photos")]
+        [RequestSizeLimit(20_000_000)]
+        public async Task<ActionResult<SubmitDistancedJournalResultDto>> SubmitAnswerWithPhotos(
+            [FromForm] SubmitDistancedJournalPhotoAnswerRequest request,
+            CancellationToken cancellationToken)
+        {
+            var userId = GetUserId();
+
+            var dto = new SubmitDistancedJournalAnswerDto(
+                request.ExerciseId,
+                request.SessionDate,
+                request.MainAnswer ?? string.Empty,
+                request.FollowUpAnswer ?? string.Empty,
+                request.Reflection);
+
+            var photos = request.Photos
+                .Select(p => new PhotoUpload(
+                    p.OpenReadStream(),
+                    p.ContentType ?? "application/octet-stream",
+                    p.FileName,
+                    p.Length))
+                .ToList();
+
+            try
+            {
+                var result = await _distancedJournalService.SubmitAnswerWithPhotosAsync(
+                    userId,
+                    dto,
+                    photos,
+                    cancellationToken);
                 return Ok(result);
             }
             catch (UnauthorizedAccessException)
@@ -130,6 +169,24 @@ namespace AngularNetBase.API.Controllers
         {
             var result = await _distancedJournalService.GetRandomChallengeAsync(level, cancellationToken);
             return Ok(result);
+        }
+
+        [HttpGet("{id:guid}/photos/{photoId:guid}")]
+        public async Task<IActionResult> GetPhoto(
+            Guid id,
+            Guid photoId,
+            CancellationToken cancellationToken)
+        {
+            var userId = GetUserId();
+            try
+            {
+                var result = await _distancedJournalService.GetPhotoAsync(userId, id, photoId, cancellationToken);
+                return File(result.Stream, result.ContentType, result.FileName);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return NotFound();
+            }
         }
     }
 }
