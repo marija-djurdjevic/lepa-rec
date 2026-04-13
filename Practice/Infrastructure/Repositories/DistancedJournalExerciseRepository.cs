@@ -18,6 +18,7 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
         public async Task<DistancedJournalExercise?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return await _context.DistancedJournalExercises
+                .Include(x => x.Photos)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
 
@@ -32,6 +33,7 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
             CancellationToken cancellationToken = default)
         {
             return await _context.DistancedJournalExercises
+                .Include(x => x.Photos)
                 .Where(x => x.UserId == userId)
                 .ToListAsync(cancellationToken);
         }
@@ -42,6 +44,7 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
             CancellationToken cancellationToken = default)
         {
             return await _context.DistancedJournalExercises
+                .Include(x => x.Photos)
                 .FirstOrDefaultAsync(
                     x => x.UserId == userId && x.ChallengeId == challengeId,
                     cancellationToken);
