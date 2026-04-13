@@ -11,6 +11,8 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
         public Guid UserId { get; private set; }
         public Guid ChallengeId { get; private set; }
         public DistancedJournalAnswer? Answer { get; private set; }
+        private readonly List<DistancedJournalPhoto> _photos = new();
+        public IReadOnlyCollection<DistancedJournalPhoto> Photos => _photos.AsReadOnly();
 
         private DistancedJournalExercise() : base() { }
 
@@ -29,7 +31,7 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
             ChallengeId = challengeId;
         }
 
-        public void SubmitAnswer(string mainAnswer, string followUpAnswer, string? reflection, DateTime submittedAt)
+        public void SubmitAnswer(string? mainAnswer, string? followUpAnswer, string? reflection, DateTime submittedAt)
         {
             if (Answer is not null)
                 throw new InvalidOperationException("Answer has already been submitted.");
@@ -39,6 +41,17 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
                 followUpAnswer,
                 reflection,
                 submittedAt);
+        }
+
+        public void AddPhoto(DistancedJournalPhoto photo, int maxPhotos)
+        {
+            if (photo is null)
+                throw new ArgumentNullException(nameof(photo));
+
+            if (_photos.Count >= maxPhotos)
+                throw new InvalidOperationException($"Cannot add more than {maxPhotos} photos.");
+
+            _photos.Add(photo);
         }
 
         public void AddReflection(string reflection)

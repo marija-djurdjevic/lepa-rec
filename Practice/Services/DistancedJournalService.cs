@@ -18,6 +18,8 @@ namespace AngularNetBase.Practice.Services
         private readonly IThirdPersonAnalyzer _thirdPersonAnalyzer;
         private readonly IUserProfileReader _userProfileReader;
         private readonly IDateTimeProvider _dateTimeProvider;
+        private readonly IJournalPhotoStorage _photoStorage;
+        private const int MaxPhotosPerAnswer = 3;
 
         public DistancedJournalService(
             IDistancedJournalChallengeRepository challengeRepository,
@@ -25,7 +27,8 @@ namespace AngularNetBase.Practice.Services
             ISessionRepository sessionRepository,
             IThirdPersonAnalyzer thirdPersonAnalyzer,
             IUserProfileReader userProfileReader,
-            IDateTimeProvider dateTimeProvider)
+            IDateTimeProvider dateTimeProvider,
+            IJournalPhotoStorage photoStorage)
         {
             _challengeRepository = challengeRepository;
             _exerciseRepository = exerciseRepository;
@@ -33,6 +36,7 @@ namespace AngularNetBase.Practice.Services
             _thirdPersonAnalyzer = thirdPersonAnalyzer;
             _userProfileReader = userProfileReader;
             _dateTimeProvider = dateTimeProvider;
+            _photoStorage = photoStorage;
         }
 
         public async Task<DistancedJournalChallengeDto> CreateChallengeAsync(
@@ -138,6 +142,8 @@ namespace AngularNetBase.Practice.Services
 
             var submittedAt = _dateTimeProvider.UtcNow;
 
+            ValidateTextAnswer(dto.MainAnswer, dto.FollowUpAnswer);
+
             exercise.SubmitAnswer(
                 dto.MainAnswer,
                 dto.FollowUpAnswer,
@@ -152,15 +158,123 @@ namespace AngularNetBase.Practice.Services
             await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
             await _dailySessionRepository.SaveChangesAsync(cancellationToken);
 
-            var fullText = $"{dto.MainAnswer} {dto.FollowUpAnswer}";
-            var firstName = await _userProfileReader.GetFirstNameAsync(exercise.UserId, cancellationToken);
-
-            var metric = _thirdPersonAnalyzer.Analyze(fullText, "sr", firstName);
-            var feedback = _thirdPersonAnalyzer.GetFeedback(metric);
+            var feedback = await ComputeFeedbackAsync(
+                exercise.UserId,
+                dto.MainAnswer!,
+                dto.FollowUpAnswer!,
+                cancellationToken);
 
             return new SubmitDistancedJournalResultDto(
                 MapExercise(exercise),
-                feedback.FeedbackType);
+                feedback);
+        }
+
+        public async Task<SubmitDistancedJournalResultDto> SubmitAnswerWithPhotosAsync(
+            Guid userId,
+            SubmitDistancedJournalAnswerDto dto,
+            IReadOnlyCollection<PhotoUpload> photos,
+            CancellationToken cancellationToken = default)
+        {
+            if (dto.ExerciseId == Guid.Empty)
+                throw new ArgumentException("ExerciseId must be provided.");
+
+            if (photos.Count > MaxPhotosPerAnswer)
+                throw new InvalidOperationException($"You can upload up to {MaxPhotosPerAnswer} photos.");
+
+            var hasPhotos = photos.Count > 0;
+            var hasText = !string.IsNullOrWhiteSpace(dto.MainAnswer)
+                || !string.IsNullOrWhiteSpace(dto.FollowUpAnswer);
+
+            if (!hasPhotos && !hasText)
+                throw new InvalidOperationException("Provide at least text or photos.");
+
+            if (hasText)
+                ValidateTextAnswer(dto.MainAnswer, dto.FollowUpAnswer);
+
+            var exercise = await _exerciseRepository.GetByIdAsync(dto.ExerciseId, cancellationToken);
+            if (exercise is null)
+                throw new InvalidOperationException("Distanced journal exercise was not found.");
+            if (exercise.UserId != userId)
+                throw new UnauthorizedAccessException("Exercise does not belong to the current user.");
+
+            var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
+            var submittedAt = _dateTimeProvider.UtcNow;
+
+            foreach (var photo in photos)
+            {
+                var photoId = Guid.NewGuid();
+                var objectKey = $"distanced-journals/{exercise.Id}/{photoId}";
+
+                try
+                {
+                    await _photoStorage.SaveAsync(
+                        objectKey,
+                        photo.Content,
+                        photo.SizeBytes,
+                        photo.ContentType,
+                        cancellationToken);
+                }
+                finally
+                {
+                    photo.Content.Dispose();
+                }
+
+                var entity = new DistancedJournalPhoto(
+                    photoId,
+                    objectKey,
+                    photo.FileName,
+                    photo.ContentType,
+                    photo.SizeBytes,
+                    submittedAt);
+
+                exercise.AddPhoto(entity, MaxPhotosPerAnswer);
+            }
+
+            exercise.SubmitAnswer(
+                dto.MainAnswer,
+                dto.FollowUpAnswer,
+                dto.Reflection,
+                submittedAt);
+
+            dailySession.RecordExercise(
+                exercise.Id,
+                ExerciseType.DistancedJournal,
+                submittedAt);
+
+            await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
+            await _dailySessionRepository.SaveChangesAsync(cancellationToken);
+
+            var feedback = hasPhotos
+                ? null
+                : await ComputeFeedbackAsync(
+                    exercise.UserId,
+                    dto.MainAnswer!,
+                    dto.FollowUpAnswer!,
+                    cancellationToken);
+
+            return new SubmitDistancedJournalResultDto(
+                MapExercise(exercise),
+                feedback);
+        }
+
+        public async Task<(Stream Stream, string ContentType, string FileName)> GetPhotoAsync(
+            Guid userId,
+            Guid exerciseId,
+            Guid photoId,
+            CancellationToken cancellationToken = default)
+        {
+            var exercise = await _exerciseRepository.GetByIdAsync(exerciseId, cancellationToken);
+            if (exercise is null)
+                throw new InvalidOperationException("Distanced journal exercise was not found.");
+            if (exercise.UserId != userId)
+                throw new UnauthorizedAccessException("Exercise does not belong to the current user.");
+
+            var photo = exercise.Photos.FirstOrDefault(p => p.Id == photoId);
+            if (photo is null)
+                throw new InvalidOperationException("Photo was not found.");
+
+            var stream = await _photoStorage.OpenReadAsync(photo.ObjectKey, cancellationToken);
+            return (stream, photo.ContentType, photo.FileName);
         }
 
         public async Task<DistancedJournalExerciseDto> AddReflectionAsync(
@@ -211,7 +325,8 @@ namespace AngularNetBase.Practice.Services
                 exercise.Answer?.FollowUpAnswer,
                 exercise.Answer?.Reflection,
                 exercise.Answer?.SubmittedAt,
-                exercise.IsCompleted());
+                exercise.IsCompleted(),
+                BuildPhotoUrls(exercise));
         }
 
         private async Task<DailySession> GetOrCreateTodaySessionAsync(
@@ -246,5 +361,31 @@ namespace AngularNetBase.Practice.Services
 
             return MapChallenge(challenge);
         }
+
+        private static IReadOnlyCollection<string> BuildPhotoUrls(DistancedJournalExercise exercise)
+        {
+            return exercise.Photos
+                .Select(p => $"/api/DistancedJournals/{exercise.Id}/photos/{p.Id}")
+                .ToList();
+        }
+
+        private static void ValidateTextAnswer(string? mainAnswer, string? followUpAnswer)
+        {
+            if (string.IsNullOrWhiteSpace(mainAnswer) || string.IsNullOrWhiteSpace(followUpAnswer))
+                throw new ArgumentException("Main and follow-up answers must be provided together.");
+        }
+
+        private async Task<ThirdPersonFeedbackType> ComputeFeedbackAsync(
+            Guid userId,
+            string mainAnswer,
+            string followUpAnswer,
+            CancellationToken cancellationToken)
+        {
+            var fullText = $"{mainAnswer} {followUpAnswer}";
+            var firstName = await _userProfileReader.GetFirstNameAsync(userId, cancellationToken);
+            var metric = _thirdPersonAnalyzer.Analyze(fullText, "sr", firstName);
+            return _thirdPersonAnalyzer.GetFeedback(metric).FeedbackType;
+        }
+
     }
 }

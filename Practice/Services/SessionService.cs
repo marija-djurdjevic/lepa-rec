@@ -268,7 +268,10 @@ namespace AngularNetBase.Practice.Services
                 challenge.Content,
                 challenge.FollowUpQuestion,
                 exercise.Answer.MainAnswer,
-                exercise.Answer.FollowUpAnswer);
+                exercise.Answer.FollowUpAnswer,
+                exercise.Photos
+                    .Select(p => $"/api/DistancedJournals/{exercise.Id}/photos/{p.Id}")
+                    .ToList());
         }
 
         private async Task<IReadOnlyCollection<DistancedJournalChallengeDto>> BuildDistancedJournalChoicesForTodayAsync(

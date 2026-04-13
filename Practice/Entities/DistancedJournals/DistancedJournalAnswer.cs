@@ -6,31 +6,29 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
 {
     public class DistancedJournalAnswer
     {
-        public string MainAnswer { get; private set; }
-        public string FollowUpAnswer { get; private set; }
+        public string? MainAnswer { get; private set; }
+        public string? FollowUpAnswer { get; private set; }
         public string? Reflection { get; private set; }
         public DateTime SubmittedAt { get; private set; }
 
         private DistancedJournalAnswer()
         {
-            MainAnswer = string.Empty;
-            FollowUpAnswer = string.Empty;
         }
 
         public DistancedJournalAnswer(
-            string mainAnswer,
-            string followUpAnswer,
+            string? mainAnswer,
+            string? followUpAnswer,
             string? reflection,
             DateTime submittedAt)
         {
-            if (string.IsNullOrWhiteSpace(mainAnswer))
-                throw new ArgumentException("Main answer must be provided.");
+            var hasMain = !string.IsNullOrWhiteSpace(mainAnswer);
+            var hasFollowUp = !string.IsNullOrWhiteSpace(followUpAnswer);
 
-            if (string.IsNullOrWhiteSpace(followUpAnswer))
-                throw new ArgumentException("Follow-up answer must be provided.");
+            if (hasMain != hasFollowUp)
+                throw new ArgumentException("Main and follow-up answers must be provided together.");
 
-            MainAnswer = mainAnswer.Trim();
-            FollowUpAnswer = followUpAnswer.Trim();
+            MainAnswer = hasMain ? mainAnswer!.Trim() : null;
+            FollowUpAnswer = hasFollowUp ? followUpAnswer!.Trim() : null;
             Reflection = string.IsNullOrWhiteSpace(reflection) ? null : reflection.Trim();
             SubmittedAt = submittedAt;
         }
