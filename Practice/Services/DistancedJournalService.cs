@@ -3,6 +3,7 @@ using AngularNetBase.Practice.Entities.DistancedJournals;
 using AngularNetBase.Practice.Entities.DistancedJournals.Analysis;
 using AngularNetBase.Practice.Entities.Sessions;
 using AngularNetBase.Shared.Core.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -155,8 +156,12 @@ namespace AngularNetBase.Practice.Services
                 ExerciseType.DistancedJournal,
                 submittedAt);
 
-            await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
-            await _dailySessionRepository.SaveChangesAsync(cancellationToken);
+            await SaveSessionWithRetryAsync(
+                dailySession,
+                exercise.Id,
+                ExerciseType.DistancedJournal,
+                submittedAt,
+                cancellationToken);
 
             var feedback = await ComputeFeedbackAsync(
                 exercise.UserId,
@@ -241,8 +246,12 @@ namespace AngularNetBase.Practice.Services
                 ExerciseType.DistancedJournal,
                 submittedAt);
 
-            await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
-            await _dailySessionRepository.SaveChangesAsync(cancellationToken);
+            await SaveSessionWithRetryAsync(
+                dailySession,
+                exercise.Id,
+                ExerciseType.DistancedJournal,
+                submittedAt,
+                cancellationToken);
 
             ThirdPersonFeedbackType? feedback = hasPhotos
                 ? null
@@ -300,8 +309,12 @@ namespace AngularNetBase.Practice.Services
                 ExerciseType.DistancedJournalReflection,
                 _dateTimeProvider.UtcNow);
 
-            await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
-            await _dailySessionRepository.SaveChangesAsync(cancellationToken);
+            await SaveSessionWithRetryAsync(
+                dailySession,
+                exercise.Id,
+                ExerciseType.DistancedJournalReflection,
+                _dateTimeProvider.UtcNow,
+                cancellationToken);
 
             return MapExercise(exercise);
         }
@@ -373,6 +386,30 @@ namespace AngularNetBase.Practice.Services
         {
             if (string.IsNullOrWhiteSpace(mainAnswer) || string.IsNullOrWhiteSpace(followUpAnswer))
                 throw new ArgumentException("Main and follow-up answers must be provided together.");
+        }
+
+        private async Task SaveSessionWithRetryAsync(
+            DailySession session,
+            Guid exerciseId,
+            ExerciseType exerciseType,
+            DateTime timestamp,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                await _dailySessionRepository.UpdateAsync(session, cancellationToken);
+                await _dailySessionRepository.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                var fresh = await _dailySessionRepository.GetByIdAsync(session.Id, cancellationToken);
+                if (fresh is null)
+                    throw;
+
+                fresh.RecordExercise(exerciseId, exerciseType, timestamp);
+                await _dailySessionRepository.UpdateAsync(fresh, cancellationToken);
+                await _dailySessionRepository.SaveChangesAsync(cancellationToken);
+            }
         }
 
         private async Task<ThirdPersonFeedbackType> ComputeFeedbackAsync(
