@@ -6,6 +6,7 @@ using AngularNetBase.Practice.Entities.Sessions;
 using AngularNetBase.Practice.Entities.Skills;
 using AngularNetBase.Practice.Infrastructure;
 using AngularNetBase.Practice.Infrastructure.Repositories;
+using AngularNetBase.Practice.Infrastructure.Storage;
 using AngularNetBase.Practice.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -33,6 +34,12 @@ public static class PracticeModuleRegistration
         services.AddScoped<IAffirmationValueService, AffirmationValueService>();
         services.AddScoped<IGrowthMessageRepository, GrowthMessageRepository>();
         services.AddScoped<IGrowthMessageService, GrowthMessageService>();
+        services.AddScoped<IJournalPhotoStorage>(sp =>
+        {
+            var config = sp.GetRequiredService<IConfiguration>();
+            var options = config.GetSection("Minio").Get<MinioOptions>() ?? new MinioOptions();
+            return new MinioJournalPhotoStorage(options);
+        });
         services.AddScoped<IDistancedJournalService, DistancedJournalService>();
         services.AddScoped<IDistancedJournalExerciseRepository, DistancedJournalExerciseRepository>();
         services.AddScoped<IDistancedJournalChallengeRepository, DistancedJournalChallengeRepository>();

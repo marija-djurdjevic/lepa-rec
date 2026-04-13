@@ -7,5 +7,5 @@ namespace AngularNetBase.Practice.Dtos.DistancedJournals
 {
     public record SubmitDistancedJournalResultDto(
         DistancedJournalExerciseDto Exercise,
-        ThirdPersonFeedbackType FeedbackType);
+        ThirdPersonFeedbackType? FeedbackType);
 }

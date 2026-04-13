@@ -8,6 +8,7 @@ namespace AngularNetBase.Practice.Dtos.Sessions
         Guid ExerciseId,
         string ChallengeContent,
         string ChallengeFollowUpQuestion,
-        string PreviousMainAnswer,
-        string PreviousFollowUpAnswer);
+        string? PreviousMainAnswer,
+        string? PreviousFollowUpAnswer,
+        IReadOnlyCollection<string> PreviousPhotoUrls);
 }

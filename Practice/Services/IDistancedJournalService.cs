@@ -33,13 +33,25 @@ namespace AngularNetBase.Practice.Services
             CancellationToken cancellationToken = default);
 
         Task<SubmitDistancedJournalResultDto> SubmitAnswerAsync(
-        Guid userId,
-        SubmitDistancedJournalAnswerDto dto,
-        CancellationToken cancellationToken = default);
+            Guid userId,
+            SubmitDistancedJournalAnswerDto dto,
+            CancellationToken cancellationToken = default);
+
+        Task<SubmitDistancedJournalResultDto> SubmitAnswerWithPhotosAsync(
+            Guid userId,
+            SubmitDistancedJournalAnswerDto dto,
+            IReadOnlyCollection<PhotoUpload> photos,
+            CancellationToken cancellationToken = default);
 
         Task<DistancedJournalExerciseDto> AddReflectionAsync(
             Guid userId,
             AddDistancedJournalReflectionDto dto,
+            CancellationToken cancellationToken = default);
+
+        Task<(Stream Stream, string ContentType, string FileName)> GetPhotoAsync(
+            Guid userId,
+            Guid exerciseId,
+            Guid photoId,
             CancellationToken cancellationToken = default);
 
         Task<DistancedJournalChallengeDto> GetRandomChallengeAsync(

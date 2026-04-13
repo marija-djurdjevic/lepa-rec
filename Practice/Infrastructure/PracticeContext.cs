@@ -263,6 +263,39 @@ namespace AngularNetBase.Practice.Infrastructure
                     answer.Property(a => a.SubmittedAt)
                         .HasColumnName("SubmittedAt");
                 });
+
+                entity.OwnsMany(e => e.Photos, photo =>
+                {
+                    photo.ToTable("DistancedJournalPhotos");
+
+                    photo.WithOwner().HasForeignKey("DistancedJournalExerciseId");
+
+                    photo.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    photo.HasKey("Id");
+
+                    photo.Property(p => p.ObjectKey)
+                        .IsRequired()
+                        .HasMaxLength(500);
+
+                    photo.Property(p => p.FileName)
+                        .IsRequired()
+                        .HasMaxLength(255);
+
+                    photo.Property(p => p.ContentType)
+                        .IsRequired()
+                        .HasMaxLength(100);
+
+                    photo.Property(p => p.SizeBytes)
+                        .IsRequired();
+
+                    photo.Property(p => p.UploadedAt)
+                        .IsRequired();
+                });
+
+                entity.Navigation(e => e.Photos)
+                    .UsePropertyAccessMode(PropertyAccessMode.Field);
             });
 
             modelBuilder.Entity<Skill>(entity =>
