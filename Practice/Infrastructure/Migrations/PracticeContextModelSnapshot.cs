@@ -46,7 +46,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+            global::Npgsql.EntityFrameworkCore.PostgreSQL.NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
 
 
@@ -73,7 +73,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::Npgsql.EntityFrameworkCore.PostgreSQL.NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
@@ -122,7 +122,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::Npgsql.EntityFrameworkCore.PostgreSQL.NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
@@ -183,7 +183,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::Npgsql.EntityFrameworkCore.PostgreSQL.NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
@@ -222,7 +222,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::Npgsql.EntityFrameworkCore.PostgreSQL.NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
@@ -270,7 +270,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                         .HasColumnType("character varying(20)");
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::Npgsql.EntityFrameworkCore.PostgreSQL.NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
@@ -331,7 +331,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::Npgsql.EntityFrameworkCore.PostgreSQL.NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
@@ -376,7 +376,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::Npgsql.EntityFrameworkCore.PostgreSQL.NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
@@ -429,7 +429,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::Npgsql.EntityFrameworkCore.PostgreSQL.NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
@@ -546,7 +546,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::Npgsql.EntityFrameworkCore.PostgreSQL.NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
@@ -655,7 +655,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::Npgsql.EntityFrameworkCore.PostgreSQL.NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
@@ -700,7 +700,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::Npgsql.EntityFrameworkCore.PostgreSQL.NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
