@@ -55,6 +55,20 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
 
             if (tracked is not null)
             {
+                var eventEntries = _context.ChangeTracker
+                    .Entries<SessionEvent>()
+                    .Where(entry =>
+                    {
+                        var fk = entry.Property("DailySessionId").CurrentValue;
+                        return fk is Guid sessionId && sessionId == id;
+                    })
+                    .ToList();
+
+                foreach (var entry in eventEntries)
+                {
+                    entry.State = EntityState.Detached;
+                }
+
                 tracked.State = EntityState.Detached;
             }
 
