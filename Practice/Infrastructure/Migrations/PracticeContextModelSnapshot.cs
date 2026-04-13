@@ -46,7 +46,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-            global::Microsoft.EntityFrameworkCore.NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+            global::Npgsql.EntityFrameworkCore.PostgreSQL.NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
 
 
