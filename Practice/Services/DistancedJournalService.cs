@@ -244,7 +244,7 @@ namespace AngularNetBase.Practice.Services
             await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
             await _dailySessionRepository.SaveChangesAsync(cancellationToken);
 
-            var feedback = hasPhotos
+            ThirdPersonFeedbackType? feedback = hasPhotos
                 ? null
                 : await ComputeFeedbackAsync(
                     exercise.UserId,

@@ -6,7 +6,7 @@ namespace AngularNetBase.Practice.Infrastructure.Storage
 {
     public class MinioJournalPhotoStorage : IJournalPhotoStorage
     {
-        private readonly MinioClient _client;
+        private readonly IMinioClient _client;
         private readonly MinioOptions _options;
 
         public MinioJournalPhotoStorage(MinioOptions options)
