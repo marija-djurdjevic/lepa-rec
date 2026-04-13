@@ -406,6 +406,13 @@ namespace AngularNetBase.Practice.Services
                 if (fresh is null)
                     throw;
 
+                var alreadyRecorded = fresh.Events
+                    .OfType<ExerciseRecord>()
+                    .Any(e => e.ExerciseId == exerciseId && e.Type == exerciseType);
+
+                if (alreadyRecorded)
+                    return;
+
                 fresh.RecordExercise(exerciseId, exerciseType, timestamp);
                 await _dailySessionRepository.UpdateAsync(fresh, cancellationToken);
                 await _dailySessionRepository.SaveChangesAsync(cancellationToken);
