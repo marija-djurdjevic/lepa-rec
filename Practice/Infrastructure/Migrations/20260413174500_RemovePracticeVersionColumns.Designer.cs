@@ -7,6 +7,8 @@ using AngularNetBase.Practice.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+
 
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
@@ -25,12 +27,13 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 {
 
     [DbContext(typeof(PracticeContext))]
+    [Migration("20260413174500_RemovePracticeVersionColumns")]
 
-    partial class PracticeContextModelSnapshot : ModelSnapshot
+    partial class RemovePracticeVersionColumns : Migration
 
     {
 
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
 
         {
 

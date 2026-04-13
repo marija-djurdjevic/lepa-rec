@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System;
 using AngularNetBase.Practice.Entities.Scheduling;
+using AngularNetBase.Shared.Core.Domain;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 namespace AngularNetBase.Practice.Infrastructure
 {
@@ -446,6 +448,25 @@ namespace AngularNetBase.Practice.Infrastructure
                 entity.Navigation(e => e.Answers)
                     .UsePropertyAccessMode(PropertyAccessMode.Field);
             });
+
+            ApplyXminConcurrency(modelBuilder);
+        }
+
+        private static void ApplyXminConcurrency(ModelBuilder modelBuilder)
+        {
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                var clrType = entityType.ClrType;
+                if (clrType is null)
+                    continue;
+
+                if (!typeof(Entity<Guid>).IsAssignableFrom(clrType))
+                    continue;
+
+                var builder = modelBuilder.Entity(clrType);
+                builder.Ignore(nameof(Entity<Guid>.Version));
+                builder.UseXminAsConcurrencyToken();
+            }
         }
     }
 }
