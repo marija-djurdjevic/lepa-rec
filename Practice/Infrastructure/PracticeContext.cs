@@ -272,10 +272,10 @@ namespace AngularNetBase.Practice.Infrastructure
 
                     photo.WithOwner().HasForeignKey("DistancedJournalExerciseId");
 
-                    photo.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
+                    photo.HasKey(p => p.Id);
 
-                    photo.HasKey("Id");
+                    photo.Property(p => p.Id)
+                        .ValueGeneratedNever();
 
                     photo.Property(p => p.ObjectKey)
                         .IsRequired()
