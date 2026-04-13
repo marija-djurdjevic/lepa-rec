@@ -49,7 +49,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+            global::Microsoft.EntityFrameworkCore.NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
 
 
@@ -76,7 +76,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::AngularNetBase.Practice.Infrastructure.Extensions.XminConcurrencyExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
@@ -125,7 +125,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::AngularNetBase.Practice.Infrastructure.Extensions.XminConcurrencyExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
@@ -186,7 +186,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::AngularNetBase.Practice.Infrastructure.Extensions.XminConcurrencyExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
@@ -225,7 +225,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::AngularNetBase.Practice.Infrastructure.Extensions.XminConcurrencyExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
@@ -273,7 +273,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                         .HasColumnType("character varying(20)");
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::AngularNetBase.Practice.Infrastructure.Extensions.XminConcurrencyExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
@@ -334,7 +334,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::AngularNetBase.Practice.Infrastructure.Extensions.XminConcurrencyExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
@@ -379,7 +379,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::AngularNetBase.Practice.Infrastructure.Extensions.XminConcurrencyExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
@@ -432,7 +432,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::AngularNetBase.Practice.Infrastructure.Extensions.XminConcurrencyExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
@@ -549,7 +549,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::AngularNetBase.Practice.Infrastructure.Extensions.XminConcurrencyExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
@@ -658,7 +658,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::AngularNetBase.Practice.Infrastructure.Extensions.XminConcurrencyExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 
@@ -703,7 +703,7 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
 
 
-                    NpgsqlModelBuilderExtensions.UseXminAsConcurrencyToken(b);
+                    global::AngularNetBase.Practice.Infrastructure.Extensions.XminConcurrencyExtensions.UseXminAsConcurrencyToken(b);
 
                     b.HasKey("Id");
 

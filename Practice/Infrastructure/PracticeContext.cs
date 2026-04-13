@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System;
 using AngularNetBase.Practice.Entities.Scheduling;
 using AngularNetBase.Shared.Core.Domain;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
+using AngularNetBase.Practice.Infrastructure.Extensions;
 
 namespace AngularNetBase.Practice.Infrastructure
 {
@@ -272,10 +272,10 @@ namespace AngularNetBase.Practice.Infrastructure
 
                     photo.WithOwner().HasForeignKey("DistancedJournalExerciseId");
 
-                    photo.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
+                    photo.HasKey(p => p.Id);
 
-                    photo.HasKey("Id");
+                    photo.Property(p => p.Id)
+                        .ValueGeneratedNever();
 
                     photo.Property(p => p.ObjectKey)
                         .IsRequired()
