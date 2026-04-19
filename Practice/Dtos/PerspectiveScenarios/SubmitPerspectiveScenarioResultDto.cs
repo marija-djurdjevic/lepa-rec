@@ -6,5 +6,5 @@ namespace AngularNetBase.Practice.Dtos.PerspectiveScenarios
 {
     public record SubmitPerspectiveScenarioResultDto(
         PerspectiveScenarioExerciseDto Exercise,
-        string Reveal);
+        IReadOnlyCollection<PerspectiveScenarioRevealDto> Reveals);
 }

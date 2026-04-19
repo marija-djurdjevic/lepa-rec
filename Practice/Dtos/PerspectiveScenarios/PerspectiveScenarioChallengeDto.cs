@@ -11,7 +11,6 @@ namespace AngularNetBase.Practice.Dtos.PerspectiveScenarios
         int ActorCount,
         PerspectiveScenarioContext Context,
         string ScenarioText,
-        string Reveal,
         ChallengeLevel ChallengeLevel,
         IReadOnlyCollection<PerspectiveScenarioQuestionDto> Questions);
 }

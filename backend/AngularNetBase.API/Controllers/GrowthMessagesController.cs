@@ -38,10 +38,12 @@ namespace AngularNetBase.API.Controllers
         [HttpGet("random")]
         public async Task<IActionResult> GetRandomMessage(
             [FromQuery] GrowthMessageType? type,
+            [FromQuery] Guid? selectedStatementId,
             CancellationToken cancellationToken)
         {
             var message = await _growthMessageService.GetRandomMessageAsync(
                 type ?? GrowthMessageType.Begin,
+                selectedStatementId,
                 cancellationToken);
             return Ok(message);
         }

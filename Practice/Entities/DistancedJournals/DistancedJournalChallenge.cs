@@ -10,6 +10,7 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
         public string Content { get; private set; }
         public string FollowUpQuestion { get; private set; }
         public ChallengeLevel ChallengeLevel { get; private set; }
+        public Guid? SkillId { get; private set; }
 
         private DistancedJournalChallenge() : base()
         {
@@ -17,7 +18,12 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
             FollowUpQuestion = string.Empty;
         }
 
-        public DistancedJournalChallenge(Guid id, string content, string followUpQuestion, ChallengeLevel challengeLevel)
+        public DistancedJournalChallenge(
+            Guid id,
+            string content,
+            string followUpQuestion,
+            ChallengeLevel challengeLevel,
+            Guid? skillId = null)
             : base(id)
         {
             if (id == Guid.Empty)
@@ -32,9 +38,14 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
             Content = content.Trim();
             FollowUpQuestion = followUpQuestion.Trim();
             ChallengeLevel = challengeLevel;
+            SkillId = skillId;
         }
 
-        public void Update(string content, string followUpQuestion, ChallengeLevel challengeLevel)
+        public void Update(
+            string content,
+            string followUpQuestion,
+            ChallengeLevel challengeLevel,
+            Guid? skillId = null)
         {
             if (string.IsNullOrWhiteSpace(content))
                 throw new ArgumentException("Content must be provided.");
@@ -45,6 +56,7 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
             Content = content.Trim();
             FollowUpQuestion = followUpQuestion.Trim();
             ChallengeLevel = challengeLevel;
+            SkillId = skillId;
         }
     }
 }
