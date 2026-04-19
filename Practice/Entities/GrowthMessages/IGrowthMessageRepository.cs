@@ -10,6 +10,13 @@ namespace AngularNetBase.Practice.Entities.GrowthMessages
         Task<GrowthMessage?> GetRandomActiveMessageAsync(
             GrowthMessageType type,
             CancellationToken cancellationToken = default);
+        Task<GrowthMessage?> GetRandomActiveMessageByAffirmationValueAsync(
+            GrowthMessageType type,
+            Guid affirmationValueId,
+            CancellationToken cancellationToken = default);
+        Task<GrowthMessage?> GetRandomActiveMessageWithoutAffirmationValueAsync(
+            GrowthMessageType type,
+            CancellationToken cancellationToken = default);
         Task AddAsync(GrowthMessage growthMessage, CancellationToken cancellationToken = default);
         Task UpdateAsync(GrowthMessage growthMessage, CancellationToken cancellationToken = default);
         Task SaveChangesAsync(CancellationToken cancellationToken = default);

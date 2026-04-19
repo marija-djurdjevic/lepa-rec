@@ -48,7 +48,8 @@ namespace AngularNetBase.Practice.Services
                 Guid.NewGuid(),
                 dto.Content,
                 dto.FollowUpQuestion,
-                dto.ChallengeLevel);
+                dto.ChallengeLevel,
+                dto.SkillId);
 
             await _challengeRepository.AddAsync(challenge, cancellationToken);
             await _challengeRepository.SaveChangesAsync(cancellationToken);
@@ -325,7 +326,8 @@ namespace AngularNetBase.Practice.Services
                 challenge.Id,
                 challenge.Content,
                 challenge.FollowUpQuestion,
-                challenge.ChallengeLevel);
+                challenge.ChallengeLevel,
+                challenge.SkillId);
         }
 
         private static DistancedJournalExerciseDto MapExercise(DistancedJournalExercise exercise)

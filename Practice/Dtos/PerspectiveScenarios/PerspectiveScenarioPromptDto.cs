@@ -12,5 +12,5 @@ namespace AngularNetBase.Practice.Dtos.PerspectiveScenarios
         PerspectiveScenarioContext Context,
         string ScenarioText,
         ChallengeLevel ChallengeLevel,
-        IReadOnlyCollection<PerspectiveScenarioQuestionDto> Questions);
+        IReadOnlyCollection<PerspectiveScenarioPromptQuestionDto> Questions);
 }

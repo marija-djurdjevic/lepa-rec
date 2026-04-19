@@ -29,6 +29,13 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task<ValueStatement?> GetStatementByIdAsync(Guid statementId, CancellationToken cancellationToken = default)
+        {
+            return await _context.AffirmationValues
+                .SelectMany(a => a.Statements)
+                .FirstOrDefaultAsync(s => s.Id == statementId, cancellationToken);
+        }
+
         public async Task AddAsync(AffirmationValue affirmationValue, CancellationToken cancellationToken = default)
         {
             await _context.AffirmationValues.AddAsync(affirmationValue, cancellationToken);
@@ -48,10 +55,10 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
         public async Task<IReadOnlyList<ValueStatement>> GetRandomActiveStatementsAsync(int count, CancellationToken cancellationToken = default)
         {
             return await _context.AffirmationValues
-                .SelectMany(a => a.Statements) 
-                .Where(s => s.IsActive)        
-                .OrderBy(r => Guid.NewGuid())  
-                .Take(count)                   
+                .SelectMany(a => a.Statements)
+                .Where(s => s.IsActive)
+                .OrderBy(r => Guid.NewGuid())
+                .Take(count)
                 .ToListAsync(cancellationToken);
         }
     }

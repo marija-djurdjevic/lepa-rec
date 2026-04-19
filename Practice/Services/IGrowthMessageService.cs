@@ -9,6 +9,7 @@ namespace AngularNetBase.Practice.Services
         Task ToggleMessageStatusAsync(Guid id, bool activate, CancellationToken cancellationToken = default);
         Task<GrowthMessageDto> GetRandomMessageAsync(
             GrowthMessageType type,
+            Guid? selectedStatementId = null,
             CancellationToken cancellationToken = default);
     }
 }

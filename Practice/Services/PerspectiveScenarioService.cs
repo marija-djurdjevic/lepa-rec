@@ -50,9 +50,8 @@ namespace AngularNetBase.Practice.Services
                 dto.Context,
                 dto.ActorCount,
                 dto.ScenarioText,
-                dto.Reveal,
                 dto.ChallengeLevel,
-                dto.Questions.Select(x => (Guid.NewGuid(), x.SkillId, x.QuestionText)));
+                dto.Questions.Select(x => (Guid.NewGuid(), x.SkillId, x.Order, x.QuestionText, x.Reveal)));
 
             await _challengeRepository.AddAsync(challenge, cancellationToken);
             await _challengeRepository.SaveChangesAsync(cancellationToken);
@@ -180,7 +179,10 @@ namespace AngularNetBase.Practice.Services
 
             return new SubmitPerspectiveScenarioResultDto(
                 MapExercise(exercise),
-                challenge.Reveal);
+                challenge.Questions
+                    .OrderBy(x => x.Order)
+                    .Select(MapReveal)
+                    .ToList());
         }
 
         private static void EnsureAnswersMatchChallengeQuestions(
@@ -211,9 +213,8 @@ namespace AngularNetBase.Practice.Services
                 challenge.ActorCount,
                 challenge.Context,
                 challenge.ScenarioText,
-                challenge.Reveal,
                 challenge.ChallengeLevel,
-                challenge.Questions.Select(MapQuestion).ToList());
+                challenge.Questions.OrderBy(x => x.Order).Select(MapQuestion).ToList());
         }
 
         private static PerspectiveScenarioPromptDto MapPrompt(PerspectiveScenarioChallenge challenge)
@@ -224,7 +225,7 @@ namespace AngularNetBase.Practice.Services
                 challenge.Context,
                 challenge.ScenarioText,
                 challenge.ChallengeLevel,
-                challenge.Questions.Select(MapQuestion).ToList());
+                challenge.Questions.OrderBy(x => x.Order).Select(MapPromptQuestion).ToList());
         }
 
         private static PerspectiveScenarioQuestionDto MapQuestion(PerspectiveScenarioQuestion question)
@@ -232,7 +233,26 @@ namespace AngularNetBase.Practice.Services
             return new PerspectiveScenarioQuestionDto(
                 question.Id,
                 question.SkillId,
+                question.Order,
+                question.QuestionText,
+                question.Reveal);
+        }
+
+        private static PerspectiveScenarioPromptQuestionDto MapPromptQuestion(PerspectiveScenarioQuestion question)
+        {
+            return new PerspectiveScenarioPromptQuestionDto(
+                question.Id,
+                question.SkillId,
+                question.Order,
                 question.QuestionText);
+        }
+
+        private static PerspectiveScenarioRevealDto MapReveal(PerspectiveScenarioQuestion question)
+        {
+            return new PerspectiveScenarioRevealDto(
+                question.Id,
+                question.Order,
+                question.Reveal);
         }
 
         private static PerspectiveScenarioExerciseDto MapExercise(PerspectiveScenarioExercise exercise)

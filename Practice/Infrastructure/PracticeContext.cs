@@ -210,6 +210,14 @@ namespace AngularNetBase.Practice.Infrastructure
                     .HasMaxLength(20)
                     .IsRequired();
 
+                entity.Property(e => e.AffirmationValueId)
+                    .IsRequired(false);
+
+                entity.HasOne<AffirmationValue>()
+                    .WithMany()
+                    .HasForeignKey(e => e.AffirmationValueId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
                 entity.Property(e => e.IsActive)
                     .IsRequired();
             });
@@ -232,6 +240,14 @@ namespace AngularNetBase.Practice.Infrastructure
                     .HasConversion<string>()
                     .HasMaxLength(20)
                     .IsRequired();
+
+                entity.Property(e => e.SkillId)
+                    .IsRequired(false);
+
+                entity.HasOne<Skill>()
+                    .WithMany()
+                    .HasForeignKey(e => e.SkillId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<DistancedJournalExercise>(entity =>
@@ -370,10 +386,6 @@ namespace AngularNetBase.Practice.Infrastructure
                     .IsRequired()
                     .HasMaxLength(2000);
 
-                entity.Property(e => e.Reveal)
-                    .IsRequired()
-                    .HasMaxLength(2000);
-
                 entity.Property(e => e.Context)
                     .HasConversion<string>()
                     .HasMaxLength(20)
@@ -408,6 +420,16 @@ namespace AngularNetBase.Practice.Infrastructure
                 entity.Property(e => e.QuestionText)
                     .IsRequired()
                     .HasMaxLength(1000);
+
+                entity.Property(e => e.Order)
+                    .IsRequired();
+
+                entity.Property(e => e.Reveal)
+                    .IsRequired()
+                    .HasMaxLength(2000);
+
+                entity.HasIndex(e => new { e.PerspectiveScenarioChallengeId, e.Order })
+                    .IsUnique();
             });
 
             modelBuilder.Entity<PerspectiveScenarioExercise>(entity =>

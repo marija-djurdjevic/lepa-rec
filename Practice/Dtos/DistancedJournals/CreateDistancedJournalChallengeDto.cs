@@ -5,8 +5,9 @@ using System.Text;
 
 namespace AngularNetBase.Practice.Dtos.DistancedJournals
 {
-    public record CreateDistancedJournalChallengeDto(
+public record CreateDistancedJournalChallengeDto(
     string Content,
     string FollowUpQuestion,
-    ChallengeLevel ChallengeLevel);
+    ChallengeLevel ChallengeLevel,
+    Guid? SkillId = null);
 }

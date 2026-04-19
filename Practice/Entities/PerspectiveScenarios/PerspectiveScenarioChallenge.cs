@@ -12,7 +12,6 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
         public PerspectiveScenarioContext Context { get; private set; }
         public int ActorCount { get; private set; }
         public string ScenarioText { get; private set; } = string.Empty;
-        public string Reveal { get; private set; } = string.Empty;
 
         public IReadOnlyCollection<PerspectiveScenarioQuestion> Questions => _questions;
 
@@ -23,9 +22,8 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
             PerspectiveScenarioContext context,
             int actorCount,
             string scenarioText,
-            string reveal,
             ChallengeLevel challengeLevel,
-            IEnumerable<(Guid Id, Guid SkillId, string QuestionText)> questions) : base(id)
+            IEnumerable<(Guid Id, Guid SkillId, int Order, string QuestionText, string Reveal)> questions) : base(id)
         {
             if (id == Guid.Empty)
                 throw new ArgumentException("Id must be a valid GUID.", nameof(id));
@@ -35,9 +33,6 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
 
             if (string.IsNullOrWhiteSpace(scenarioText))
                 throw new ArgumentException("Scenario text must be provided.", nameof(scenarioText));
-
-            if (string.IsNullOrWhiteSpace(reveal))
-                throw new ArgumentException("Reveal must be provided.", nameof(reveal));
 
             var questionList = questions?.ToList()
                 ?? throw new ArgumentNullException(nameof(questions));
@@ -50,11 +45,16 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
             if (questionList.Select(x => x.Id).Distinct().Count() != questionList.Count)
                 throw new ArgumentException("Question ids must be unique.", nameof(questions));
 
+            if (questionList.Any(x => x.Order < 1))
+                throw new ArgumentException("Question order must start at 1 and be positive.", nameof(questions));
+
+            if (questionList.Select(x => x.Order).Distinct().Count() != questionList.Count)
+                throw new ArgumentException("Question order must be unique within challenge.", nameof(questions));
+
             ChallengeLevel = challengeLevel;
             Context = context;
             ActorCount = actorCount;
             ScenarioText = scenarioText.Trim();
-            Reveal = reveal.Trim();
 
             foreach (var question in questionList)
             {
@@ -62,11 +62,13 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
                     question.Id,
                     id,
                     question.SkillId,
-                    question.QuestionText));
+                    question.Order,
+                    question.QuestionText,
+                    question.Reveal));
             }
         }
 
-        public PerspectiveScenarioQuestion AddQuestion(Guid questionId, Guid skillId, string questionText)
+        public PerspectiveScenarioQuestion AddQuestion(Guid questionId, Guid skillId, int order, string questionText, string reveal)
         {
             if (questionId == Guid.Empty)
                 throw new ArgumentException("Question id must be provided.", nameof(questionId));
@@ -74,11 +76,16 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
             if (_questions.Any(x => x.Id == questionId))
                 throw new InvalidOperationException("Question id already exists in this challenge.");
 
+            if (_questions.Any(x => x.Order == order))
+                throw new InvalidOperationException("Question order already exists in this challenge.");
+
             var question = new PerspectiveScenarioQuestion(
                 questionId,
                 Id,
                 skillId,
-                questionText);
+                order,
+                questionText,
+                reveal);
 
             _questions.Add(question);
             EnsureQuestionCountStillMatchesDifficulty();

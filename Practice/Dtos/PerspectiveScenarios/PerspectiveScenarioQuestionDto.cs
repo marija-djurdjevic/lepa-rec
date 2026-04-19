@@ -7,5 +7,7 @@ namespace AngularNetBase.Practice.Dtos.PerspectiveScenarios
     public record PerspectiveScenarioQuestionDto(
         Guid Id,
         Guid SkillId,
-        string QuestionText);
+        int Order,
+        string QuestionText,
+        string Reveal);
 }

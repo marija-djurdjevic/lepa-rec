@@ -31,6 +31,27 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
+        public async Task<GrowthMessage?> GetRandomActiveMessageByAffirmationValueAsync(
+            GrowthMessageType type,
+            Guid affirmationValueId,
+            CancellationToken cancellationToken = default)
+        {
+            return await _context.GrowthMessages
+                .Where(m => m.IsActive && m.Type == type && m.AffirmationValueId == affirmationValueId)
+                .OrderBy(r => Guid.NewGuid())
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<GrowthMessage?> GetRandomActiveMessageWithoutAffirmationValueAsync(
+            GrowthMessageType type,
+            CancellationToken cancellationToken = default)
+        {
+            return await _context.GrowthMessages
+                .Where(m => m.IsActive && m.Type == type && m.AffirmationValueId == null)
+                .OrderBy(r => Guid.NewGuid())
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
         public async Task AddAsync(GrowthMessage growthMessage, CancellationToken cancellationToken = default)
         {
             await _context.GrowthMessages.AddAsync(growthMessage, cancellationToken);

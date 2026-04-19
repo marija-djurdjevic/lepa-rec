@@ -298,7 +298,8 @@ namespace AngularNetBase.Practice.Services
                     challenge.Id,
                     challenge.Content,
                     challenge.FollowUpQuestion,
-                    challenge.ChallengeLevel));
+                    challenge.ChallengeLevel,
+                    challenge.SkillId));
             }
 
             if (choices.Count < 2)
@@ -332,7 +333,8 @@ namespace AngularNetBase.Practice.Services
                     first.Id,
                     first.Content,
                     first.FollowUpQuestion,
-                    first.ChallengeLevel)
+                    first.ChallengeLevel,
+                    first.SkillId)
             };
 
             var remaining = available.Where(x => x.Id != first.Id).ToList();
@@ -343,7 +345,8 @@ namespace AngularNetBase.Practice.Services
                     second.Id,
                     second.Content,
                     second.FollowUpQuestion,
-                    second.ChallengeLevel));
+                    second.ChallengeLevel,
+                    second.SkillId));
             }
 
             return results;
@@ -421,9 +424,11 @@ namespace AngularNetBase.Practice.Services
                 challenge.ScenarioText,
                 challenge.ChallengeLevel,
                 challenge.Questions
-                    .Select(q => new PerspectiveScenarioQuestionDto(
+                    .OrderBy(q => q.Order)
+                    .Select(q => new PerspectiveScenarioPromptQuestionDto(
                         q.Id,
                         q.SkillId,
+                        q.Order,
                         q.QuestionText))
                     .ToList());
         }

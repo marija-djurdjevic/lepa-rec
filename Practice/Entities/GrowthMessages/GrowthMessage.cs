@@ -10,6 +10,7 @@ namespace AngularNetBase.Practice.Entities.GrowthMessages
     {
         public string Text { get; private set; } = string.Empty;
         public GrowthMessageType Type { get; private set; }
+        public Guid? AffirmationValueId { get; private set; }
 
         public bool IsActive { get; private set; }
 
@@ -19,7 +20,8 @@ namespace AngularNetBase.Practice.Entities.GrowthMessages
             Guid id,
             string text,
             GrowthMessageType type = GrowthMessageType.Begin,
-            bool isActive = true) : base(id)
+            bool isActive = true,
+            Guid? affirmationValueId = null) : base(id)
         {
             if (string.IsNullOrWhiteSpace(text))
                 throw new ArgumentException("Growth message text is required.", nameof(text));
@@ -27,6 +29,7 @@ namespace AngularNetBase.Practice.Entities.GrowthMessages
             Text = text.Trim();
             Type = type;
             IsActive = isActive;
+            AffirmationValueId = affirmationValueId;
         }
 
         public void Activate()
