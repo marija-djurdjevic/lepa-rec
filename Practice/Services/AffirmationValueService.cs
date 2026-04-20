@@ -30,7 +30,7 @@ namespace AngularNetBase.Practice.Services
             var affirmationValue = await _repository.GetByIdAsync(affirmationValueId, cancellationToken)
                 ?? throw new InvalidOperationException($"Affirmation value sa ID-jem {affirmationValueId} nije pronađen.");
 
-            var statement = affirmationValue.AddStatement(Guid.NewGuid(), dto.Text, dto.IsActive);
+            var statement = affirmationValue.AddStatement(Guid.NewGuid(), dto.Text, dto.IsActive, dto.TextEn);
 
             await _repository.UpdateAsync(affirmationValue, cancellationToken);
             await _repository.SaveChangesAsync(cancellationToken);
@@ -51,15 +51,23 @@ namespace AngularNetBase.Practice.Services
             await _repository.UpdateAsync(affirmationValue, cancellationToken);
             await _repository.SaveChangesAsync(cancellationToken);
         }
-        public async Task<IReadOnlyList<PrimerStatementDto>> GetPrimerStatementsAsync(CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<PrimerStatementDto>> GetPrimerStatementsAsync(string? language = null, CancellationToken cancellationToken = default)
         {
+            var isEnglish = IsEnglish(language);
             var statements = await _repository.GetRandomActiveStatementsAsync(4, cancellationToken);
 
             if (statements.Count < 4) throw new InvalidOperationException("Nema dovoljno aktivnih izjava.");
 
             return statements
-                .Select(s => new PrimerStatementDto(s.Id, s.Text))
+                .Select(s => new PrimerStatementDto(s.Id, SelectLocalized(s.Text, s.TextEn, isEnglish)))
                 .ToList();
         }
+
+        private static bool IsEnglish(string? language)
+            => !string.IsNullOrWhiteSpace(language)
+                && language.StartsWith("en", StringComparison.OrdinalIgnoreCase);
+
+        private static string SelectLocalized(string sr, string? en, bool isEnglish)
+            => isEnglish && !string.IsNullOrWhiteSpace(en) ? en : sr;
     }
 }

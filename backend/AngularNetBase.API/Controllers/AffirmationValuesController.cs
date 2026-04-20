@@ -49,9 +49,9 @@ namespace AngularNetBase.API.Controllers
         }
 
         [HttpGet("random-statements")]
-        public async Task<IActionResult> GetRandomPrimerStatements(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetRandomPrimerStatements([FromQuery] string? lang, CancellationToken cancellationToken)
         {
-            var statements = await _affirmationValueService.GetPrimerStatementsAsync(cancellationToken);
+            var statements = await _affirmationValueService.GetPrimerStatementsAsync(lang, cancellationToken);
 
             return Ok(statements);
         }

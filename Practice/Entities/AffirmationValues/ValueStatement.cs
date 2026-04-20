@@ -10,12 +10,13 @@ namespace AngularNetBase.Practice.Entities.AffirmationValues
         public Guid AffirmationValueId { get; private set; }
 
         public string Text { get; private set; } = string.Empty;
+        public string? TextEn { get; private set; }
 
         public bool IsActive { get; private set; }
 
         private ValueStatement() : base() { }
 
-        internal ValueStatement(Guid id, Guid affirmationValueId, string text, bool isActive) : base(id)
+        internal ValueStatement(Guid id, Guid affirmationValueId, string text, bool isActive, string? textEn = null) : base(id)
         {
             if (affirmationValueId == Guid.Empty)
                 throw new ArgumentException("Affirmation value id cannot be empty.", nameof(affirmationValueId));
@@ -25,6 +26,7 @@ namespace AngularNetBase.Practice.Entities.AffirmationValues
 
             AffirmationValueId = affirmationValueId;
             Text = text.Trim();
+            TextEn = string.IsNullOrWhiteSpace(textEn) ? null : textEn.Trim();
             IsActive = isActive;
         }
 

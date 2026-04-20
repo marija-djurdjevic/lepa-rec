@@ -10,6 +10,6 @@ namespace AngularNetBase.Practice.Services
         Task<Guid> CreateAffirmationValueAsync(CreateAffirmationValueDto dto, CancellationToken cancellationToken = default);
         Task<Guid> AddStatementAsync(Guid affirmationValueId, AddStatementDto dto, CancellationToken cancellationToken = default);
         Task ToggleStatementStatusAsync(Guid affirmationValueId, Guid statementId, bool activate, CancellationToken cancellationToken = default);
-        Task<IReadOnlyList<PrimerStatementDto>> GetPrimerStatementsAsync(CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<PrimerStatementDto>> GetPrimerStatementsAsync(string? language = null, CancellationToken cancellationToken = default);
     }
 }

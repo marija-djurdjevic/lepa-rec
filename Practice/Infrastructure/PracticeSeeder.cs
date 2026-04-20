@@ -17,89 +17,89 @@ namespace AngularNetBase.Practice.Infrastructure
             context.AffirmationValues.RemoveRange(context.AffirmationValues);
             await context.SaveChangesAsync();
 
-            var affirmationData = new (int LegacyId, string Name, string[] Statements)[]
+            var affirmationData = new (int LegacyId, string Name, (string Sr, string En)[] Statements)[]
             {
                 (-1, "Empatija", new[]
                 {
-                    "Danas pokušavam da vidim svet tuđim očima.",
+                    ("Danas pokušavam da vidim svet tuđim očima.", "Today I try to see the world through someone else's eyes."),
                 }),
                 (-2, "Poniznost", new[]
                 {
-                    "Ne moram da budem u pravu da bih bio/la vredna.",
+                    ("Ne moram da budem u pravu da bih bio/la vredna.", "I do not have to be right to be worthy."),
                 }),
                 (-3, "Povezanost", new[]
                 {
-                    "Danas tražim ono što me povezuje s nekim ko je drugačiji od mene.",
+                    ("Danas tražim ono što me povezuje s nekim ko je drugačiji od mene.", "Today I look for what connects me with someone who is different from me."),
                 }),
                 (-4, "Radoznalost", new[]
                 {
-                    "Danas biram da pitam umesto da pretpostavim.",
-                    "Svaka osoba ima perspektivu koju ja nisam razmatrao/la.",
-                    "Radoznalost prema drugima počinje jednim iskrenim pitanjem.",
-                    "Danas tražim priču iza mišljenja.",
+                    ("Danas biram da pitam umesto da pretpostavim.", "Today I choose to ask instead of assume."),
+                    ("Svaka osoba ima perspektivu koju ja nisam razmatrao/la.", "Every person has a perspective I have not considered."),
+                    ("Radoznalost prema drugima počinje jednim iskrenim pitanjem.", "Curiosity about others starts with one sincere question."),
+                    ("Danas tražim priču iza mišljenja.", "Today I look for the story behind the opinion."),
                 }),
                 (-5, "Autonomija", new[]
                 {
-                    "Biram da rastem zato što to želim, ne zato što moram.",
-                    "Moj razvoj pripada meni i ja određujem ritam.",
-                    "Danas radim ono što je u skladu s mojim vrednostima.",
-                    "Ne moram da se složim da bih razumeo/la.",
-                    "Biram da budem otvoren/a jer sam to odlučio/la, ne jer se to očekuje.",
+                    ("Biram da rastem zato što to želim, ne zato što moram.", "I choose to grow because I want to, not because I must."),
+                    ("Moj razvoj pripada meni i ja određujem ritam.", "My development belongs to me, and I set the pace."),
+                    ("Danas radim ono što je u skladu s mojim vrednostima.", "Today I do what aligns with my values."),
+                    ("Ne moram da se složim da bih razumeo/la.", "I do not have to agree in order to understand."),
+                    ("Biram da budem otvoren/a jer sam to odlučio/la, ne jer se to očekuje.", "I choose to stay open because I decided to, not because it is expected."),
                 }),
                 (-6, "Pravičnost", new[]
                 {
-                    "Kontekst u kome neko živi oblikuje ono što može da postigne.",
-                    "Danas se pitam šta bih ja uradio/la na tuđem mestu, s tuđim resursima i ograničenjima.",
-                    "Razumevanje počinje kad uvažim da su startne pozicije različite.",
-                    "Svačija realnost je oblikovana prilikama koje je imao.",
-                    "Danas biram da ne sudim pre nego što razumem pozadinu.",
-                    "Pravičnost je kad vidim celu sliku, ne samo svoj deo.",
+                    ("Kontekst u kome neko živi oblikuje ono što može da postigne.", "The context someone lives in shapes what they can achieve."),
+                    ("Danas se pitam šta bih ja uradio/la na tuđem mestu, s tuđim resursima i ograničenjima.", "Today I ask what I would do in someone else's position, with their resources and limits."),
+                    ("Razumevanje počinje kad uvažim da su startne pozicije različite.", "Understanding begins when I acknowledge that starting points are different."),
+                    ("Svačija realnost je oblikovana prilikama koje je imao.", "Everyone's reality is shaped by the opportunities they had."),
+                    ("Danas biram da ne sudim pre nego što razumem pozadinu.", "Today I choose not to judge before I understand the background."),
+                    ("Pravičnost je kad vidim celu sliku, ne samo svoj deo.", "Fairness is seeing the whole picture, not only my part."),
                 }),
                 (-7, "Velikodušnost", new[]
                 {
-                    "Danas biram da pretpostavim dobru nameru.",
-                    "Danas tumačim tuđe reči blagonaklono dok ne saznam više.",
-                    "Jedna velikodušna misao može da promeni ceo utisak o nekome.",
-                    "Biram da vidim osobu iza postupka.",
-                    "Nekad je najmudrije dati nekome drugu šansu.",
-                    "Danas biram razumevanje pre reagovanja.",
-                    "Lako je osuditi, a vredno je pokušati da razumem.",
+                    ("Danas biram da pretpostavim dobru nameru.", "Today I choose to assume good intent."),
+                    ("Danas tumačim tuđe reči blagonaklono dok ne saznam više.", "Today I interpret others' words kindly until I know more."),
+                    ("Jedna velikodušna misao može da promeni ceo utisak o nekome.", "One generous thought can change my whole impression of someone."),
+                    ("Biram da vidim osobu iza postupka.", "I choose to see the person behind the action."),
+                    ("Nekad je najmudrije dati nekome drugu šansu.", "Sometimes the wisest choice is to give someone a second chance."),
+                    ("Danas biram razumevanje pre reagovanja.", "Today I choose understanding before reacting."),
+                    ("Lako je osuditi, a vredno je pokušati da razumem.", "It is easy to judge, but worth trying to understand."),
                 }),
                 (-8, "Hrabrost", new[]
                 {
-                    "Danas biram da ostanem otvoren/a čak i kad je nelagodno.",
-                    "Danas ne bežim od mišljenja koje me uznemirava.",
-                    "Rast počinje tamo gde prestaje zona komfora.",
-                    "Biram da saslušam ono što je teško čuti.",
-                    "Snaga je u tome da izdržim nesigurnost bez da odustanem.",
-                    "Danas se ne branim, već slušam.",
-                    "Hrabrost je priznati sebi da sam možda pogrešio/la.",
-                    "Jedan neugodan razgovor danas može otvoriti nova vrata sutra.",
+                    ("Danas biram da ostanem otvoren/a čak i kad je nelagodno.", "Today I choose to stay open even when it feels uncomfortable."),
+                    ("Danas ne bežim od mišljenja koje me uznemirava.", "Today I do not run from opinions that unsettle me."),
+                    ("Rast počinje tamo gde prestaje zona komfora.", "Growth begins where the comfort zone ends."),
+                    ("Biram da saslušam ono što je teško čuti.", "I choose to hear what is hard to hear."),
+                    ("Snaga je u tome da izdržim nesigurnost bez da odustanem.", "Strength is tolerating uncertainty without giving up."),
+                    ("Danas se ne branim, već slušam.", "Today I do not defend myself; I listen."),
+                    ("Hrabrost je priznati sebi da sam možda pogrešio/la.", "Courage is admitting to myself that I might be wrong."),
+                    ("Jedan neugodan razgovor danas može otvoriti nova vrata sutra.", "One uncomfortable conversation today can open new doors tomorrow."),
                 }),
                 (-9, "Mudrost", new[]
                 {
-                    "Danas biram da sagledam celu sliku pre nego što zaključim.",
-                    "Pre nego što odlučim, pitam se šta bih savetovao/la prijatelju.",
-                    "Danas biram da razmišljam sporije i šire.",
-                    "Situacija izgleda drugačije kad je pogledam iz daljine.",
-                    "Danas tražim ono što mi nije očigledno na prvi pogled.",
-                    "Žuran odgovor retko je mudar odgovor.",
-                    "Biram da zadržim više mogućnosti otvorenim pre nego što zaključim.",
-                    "Mudrost je znati da moja perspektiva nije jedina koja važi.",
-                    "Danas gledam svoje probleme kao da pomažem nekom drugom.",
+                    ("Danas biram da sagledam celu sliku pre nego što zaključim.", "Today I choose to see the whole picture before I conclude."),
+                    ("Pre nego što odlučim, pitam se šta bih savetovao/la prijatelju.", "Before I decide, I ask what advice I would give a friend."),
+                    ("Danas biram da razmišljam sporije i šire.", "Today I choose to think more slowly and more broadly."),
+                    ("Situacija izgleda drugačije kad je pogledam iz daljine.", "A situation looks different when I view it from a distance."),
+                    ("Danas tražim ono što mi nije očigledno na prvi pogled.", "Today I look for what is not obvious at first glance."),
+                    ("Žuran odgovor retko je mudar odgovor.", "A rushed answer is rarely a wise answer."),
+                    ("Biram da zadržim više mogućnosti otvorenim pre nego što zaključim.", "I choose to keep multiple possibilities open before I conclude."),
+                    ("Mudrost je znati da moja perspektiva nije jedina koja važi.", "Wisdom is knowing my perspective is not the only valid one."),
+                    ("Danas gledam svoje probleme kao da pomažem nekom drugom.", "Today I look at my problems as if I were helping someone else."),
                 }),
                 (-10, "Rast", new[]
                 {
-                    "Mali koraci danas donose velike rezultate sutra.",
-                    "Svaka greška je prilika da naučim nešto novo.",
-                    "Danas vežbam veštinu koju juče nisam imao/la.",
-                    "Trud danas gradi sposobnost za sutra.",
-                    "Danas biram napredak, ne savršenstvo.",
-                    "Ono što mi je teško sada, biće lakše s vežbom.",
-                    "Fokusiram se na proces, ne na rezultat.",
-                    "Svaki pokušaj me čini boljim/om nego juče.",
-                    "Razvoj je niz malih odluka, ne jedan veliki skok.",
-                    "Danas biram da pokušam, čak i kad nisam siguran/na.",
+                    ("Mali koraci danas donose velike rezultate sutra.", "Small steps today bring big results tomorrow."),
+                    ("Svaka greška je prilika da naučim nešto novo.", "Every mistake is a chance to learn something new."),
+                    ("Danas vežbam veštinu koju juče nisam imao/la.", "Today I practice a skill I did not have yesterday."),
+                    ("Trud danas gradi sposobnost za sutra.", "Effort today builds ability for tomorrow."),
+                    ("Danas biram napredak, ne savršenstvo.", "Today I choose progress, not perfection."),
+                    ("Ono što mi je teško sada, biće lakše s vežbom.", "What is hard for me now will become easier with practice."),
+                    ("Fokusiram se na proces, ne na rezultat.", "I focus on the process, not the result."),
+                    ("Svaki pokušaj me čini boljim/om nego juče.", "Every attempt makes me better than yesterday."),
+                    ("Razvoj je niz malih odluka, ne jedan veliki skok.", "Growth is a series of small decisions, not one giant leap."),
+                    ("Danas biram da pokušam, čak i kad nisam siguran/na.", "Today I choose to try, even when I am not sure."),
                 }),
             };
 
@@ -110,7 +110,7 @@ namespace AngularNetBase.Practice.Infrastructure
                 var value = new AffirmationValue(affirmationId, entry.Name);
                 foreach (var statement in entry.Statements)
                 {
-                    value.AddStatement(Guid.NewGuid(), statement);
+                    value.AddStatement(Guid.NewGuid(), statement.Sr, textEn: statement.En);
                 }
                 context.AffirmationValues.Add(value);
                 affirmationIdsByLegacy[entry.LegacyId] = affirmationId;
