@@ -190,6 +190,75 @@ namespace AngularNetBase.Practice.Services
                     .ToList());
         }
 
+        public async Task<AnswerPerspectiveScenarioQuestionResultDto> AnswerQuestionAndGetRevealAsync(
+            Guid userId,
+            AnswerPerspectiveScenarioQuestionDto dto,
+            string? language = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (dto.ExerciseId == Guid.Empty)
+                throw new ArgumentException("ExerciseId must be provided.", nameof(dto));
+
+            if (dto.QuestionId == Guid.Empty)
+                throw new ArgumentException("QuestionId must be provided.", nameof(dto));
+
+            if (string.IsNullOrWhiteSpace(dto.AnswerText))
+                throw new ArgumentException("AnswerText must be provided.", nameof(dto));
+
+            var exercise = await _exerciseRepository.GetByIdAsync(dto.ExerciseId, cancellationToken);
+            if (exercise is null)
+                throw new InvalidOperationException("Perspective scenario exercise was not found.");
+            if (exercise.UserId != userId)
+                throw new UnauthorizedAccessException("Exercise does not belong to the current user.");
+
+            var challenge = await _challengeRepository.GetByIdAsync(exercise.ChallengeId, cancellationToken);
+            if (challenge is null)
+                throw new InvalidOperationException("Perspective scenario challenge was not found.");
+
+            var question = challenge.Questions.FirstOrDefault(q => q.Id == dto.QuestionId);
+            if (question is null)
+                throw new InvalidOperationException("Question does not belong to exercise challenge.");
+
+            var existingAnswer = exercise.Answers.FirstOrDefault(x => x.QuestionId == dto.QuestionId);
+
+            if (!exercise.IsCompleted())
+            {
+                exercise.SubmitOrUpdateAnswer(new ScenarioAnswer(dto.QuestionId, dto.AnswerText));
+            }
+            else if (existingAnswer is null)
+            {
+                throw new InvalidOperationException("Exercise has already been completed.");
+            }
+
+            var totalQuestions = challenge.Questions.Count;
+            var answeredQuestionsCount = exercise.Answers.Select(x => x.QuestionId).Distinct().Count();
+            var shouldComplete = !exercise.IsCompleted() && answeredQuestionsCount >= totalQuestions;
+
+            if (shouldComplete)
+            {
+                var completedAt = _dateTimeProvider.UtcNow;
+                exercise.MarkSubmitted(completedAt);
+
+                var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
+                dailySession.RecordExercise(
+                    exercise.Id,
+                    ExerciseType.PerspectiveScenario,
+                    completedAt);
+
+                await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
+            }
+
+            await _exerciseRepository.UpdateAsync(exercise, cancellationToken);
+            await _exerciseRepository.SaveChangesAsync(cancellationToken);
+
+            return new AnswerPerspectiveScenarioQuestionResultDto(
+                MapExercise(exercise),
+                MapReveal(question, language),
+                exercise.IsCompleted(),
+                answeredQuestionsCount,
+                totalQuestions);
+        }
+
         private static void EnsureAnswersMatchChallengeQuestions(
             PerspectiveScenarioChallenge challenge,
             IReadOnlyCollection<SubmitPerspectiveScenarioAnswerItemDto> answers)

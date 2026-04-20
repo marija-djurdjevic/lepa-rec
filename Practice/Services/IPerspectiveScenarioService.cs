@@ -44,5 +44,11 @@ namespace AngularNetBase.Practice.Services
             SubmitPerspectiveScenarioAnswerDto dto,
             string? language = null,
             CancellationToken cancellationToken = default);
+
+        Task<AnswerPerspectiveScenarioQuestionResultDto> AnswerQuestionAndGetRevealAsync(
+            Guid userId,
+            AnswerPerspectiveScenarioQuestionDto dto,
+            string? language = null,
+            CancellationToken cancellationToken = default);
     }
 }
