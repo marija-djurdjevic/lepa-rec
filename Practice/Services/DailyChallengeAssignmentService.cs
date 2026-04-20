@@ -34,7 +34,7 @@ namespace AngularNetBase.Practice.Services
 
         public async Task<DailyChallengeAssignment> GetOrCreateTodayAssignmentAsync(CancellationToken cancellationToken = default)
         {
-            var today = _dateTimeProvider.UtcNow.Date;
+            var today = _dateTimeProvider.BusinessDate;
             return await GetOrCreateAssignmentForDateAsync(today, cancellationToken);
         }
 

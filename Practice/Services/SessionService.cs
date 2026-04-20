@@ -115,7 +115,7 @@ namespace AngularNetBase.Practice.Services
                 throw new ArgumentException("UserId must be provided.");
 
             var isEnglish = IsEnglishLanguage(lang);
-            var today = _dateTimeProvider.UtcNow.Date;
+            var today = _dateTimeProvider.BusinessDate;
             var assignment = await _dailyChallengeAssignmentService.GetOrCreateTodayAssignmentAsync(cancellationToken);
 
             var todaySession = await _sessionRepository.GetByUserAndDateAsync(
@@ -198,7 +198,7 @@ namespace AngularNetBase.Practice.Services
             Guid userId,
             CancellationToken cancellationToken)
         {
-            var today = _dateTimeProvider.UtcNow.Date;
+            var today = _dateTimeProvider.BusinessDate;
 
             var session = await _sessionRepository.GetByUserAndDateAsync(
                 userId,
