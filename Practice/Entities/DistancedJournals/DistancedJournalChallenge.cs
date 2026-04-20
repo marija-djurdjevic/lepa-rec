@@ -8,7 +8,9 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
     public class DistancedJournalChallenge : Entity<Guid>
     {
         public string Content { get; private set; }
+        public string? ContentEn { get; private set; }
         public string FollowUpQuestion { get; private set; }
+        public string? FollowUpQuestionEn { get; private set; }
         public ChallengeLevel ChallengeLevel { get; private set; }
         public Guid? SkillId { get; private set; }
 
@@ -23,7 +25,9 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
             string content,
             string followUpQuestion,
             ChallengeLevel challengeLevel,
-            Guid? skillId = null)
+            Guid? skillId = null,
+            string? contentEn = null,
+            string? followUpQuestionEn = null)
             : base(id)
         {
             if (id == Guid.Empty)
@@ -36,7 +40,9 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
                 throw new ArgumentException("Follow-up question must be provided.");
 
             Content = content.Trim();
+            ContentEn = NormalizeOptional(contentEn);
             FollowUpQuestion = followUpQuestion.Trim();
+            FollowUpQuestionEn = NormalizeOptional(followUpQuestionEn);
             ChallengeLevel = challengeLevel;
             SkillId = skillId;
         }
@@ -45,7 +51,9 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
             string content,
             string followUpQuestion,
             ChallengeLevel challengeLevel,
-            Guid? skillId = null)
+            Guid? skillId = null,
+            string? contentEn = null,
+            string? followUpQuestionEn = null)
         {
             if (string.IsNullOrWhiteSpace(content))
                 throw new ArgumentException("Content must be provided.");
@@ -54,9 +62,19 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
                 throw new ArgumentException("Follow-up question must be provided.");
 
             Content = content.Trim();
+            ContentEn = NormalizeOptional(contentEn);
             FollowUpQuestion = followUpQuestion.Trim();
+            FollowUpQuestionEn = NormalizeOptional(followUpQuestionEn);
             ChallengeLevel = challengeLevel;
             SkillId = skillId;
+        }
+
+        private static string? NormalizeOptional(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+
+            return value.Trim();
         }
     }
 }

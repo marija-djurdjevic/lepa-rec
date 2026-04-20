@@ -9,5 +9,7 @@ public record CreateDistancedJournalChallengeDto(
     string Content,
     string FollowUpQuestion,
     ChallengeLevel ChallengeLevel,
-    Guid? SkillId = null);
+    Guid? SkillId = null,
+    string? ContentEn = null,
+    string? FollowUpQuestionEn = null);
 }

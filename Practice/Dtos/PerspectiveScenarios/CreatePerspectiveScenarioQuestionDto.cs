@@ -8,5 +8,7 @@ namespace AngularNetBase.Practice.Dtos.PerspectiveScenarios
         Guid SkillId,
         int Order,
         string QuestionText,
-        string Reveal);
+        string Reveal,
+        string? QuestionTextEn = null,
+        string? RevealEn = null);
 }

@@ -27,18 +27,20 @@ namespace AngularNetBase.API.Controllers
 
         [HttpGet("challenges")]
         public async Task<ActionResult<IEnumerable<PerspectiveScenarioChallengeDto>>> GetAllChallenges(
+            [FromQuery] string? lang,
             CancellationToken cancellationToken)
         {
-            var result = await _perspectiveScenarioService.GetAllChallengesAsync(cancellationToken);
+            var result = await _perspectiveScenarioService.GetAllChallengesAsync(lang, cancellationToken);
             return Ok(result);
         }
 
         [HttpGet("challenges/level/{challengeLevel}")]
         public async Task<ActionResult<IEnumerable<PerspectiveScenarioChallengeDto>>> GetChallengesByLevel(
             ChallengeLevel challengeLevel,
+            [FromQuery] string? lang,
             CancellationToken cancellationToken)
         {
-            var result = await _perspectiveScenarioService.GetChallengesByLevelAsync(challengeLevel, cancellationToken);
+            var result = await _perspectiveScenarioService.GetChallengesByLevelAsync(challengeLevel, lang, cancellationToken);
             return Ok(result);
         }
 
@@ -92,13 +94,14 @@ namespace AngularNetBase.API.Controllers
         [HttpPost("submit")]
         public async Task<ActionResult<SubmitPerspectiveScenarioResultDto>> SubmitAnswers(
             [FromBody] SubmitPerspectiveScenarioAnswerDto dto,
+            [FromQuery] string? lang,
             CancellationToken cancellationToken)
         {
             var userId = GetUserId();
 
             try
             {
-                var result = await _perspectiveScenarioService.SubmitAnswersAsync(userId, dto, cancellationToken);
+                var result = await _perspectiveScenarioService.SubmitAnswersAsync(userId, dto, lang, cancellationToken);
                 return Ok(result);
             }
             catch (UnauthorizedAccessException)
@@ -110,9 +113,10 @@ namespace AngularNetBase.API.Controllers
         [HttpGet("challenges/random/{level}")]
         public async Task<ActionResult<PerspectiveScenarioPromptDto>> GetRandomChallenge(
             ChallengeLevel level,
+            [FromQuery] string? lang,
             CancellationToken cancellationToken)
         {
-            var result = await _perspectiveScenarioService.GetRandomChallengeAsync(level, cancellationToken);
+            var result = await _perspectiveScenarioService.GetRandomChallengeAsync(level, lang, cancellationToken);
             return Ok(result);
         }
     }

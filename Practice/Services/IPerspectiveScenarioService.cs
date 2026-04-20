@@ -13,14 +13,17 @@ namespace AngularNetBase.Practice.Services
             CancellationToken cancellationToken = default);
 
         Task<IEnumerable<PerspectiveScenarioChallengeDto>> GetAllChallengesAsync(
+            string? language = null,
             CancellationToken cancellationToken = default);
 
         Task<IEnumerable<PerspectiveScenarioChallengeDto>> GetChallengesByLevelAsync(
             ChallengeLevel challengeLevel,
+            string? language = null,
             CancellationToken cancellationToken = default);
 
         Task<PerspectiveScenarioPromptDto> GetRandomChallengeAsync(
             ChallengeLevel level,
+            string? language = null,
             CancellationToken cancellationToken = default);
 
         Task<PerspectiveScenarioExerciseDto> StartExerciseAsync(
@@ -39,6 +42,7 @@ namespace AngularNetBase.Practice.Services
         Task<SubmitPerspectiveScenarioResultDto> SubmitAnswersAsync(
             Guid userId,
             SubmitPerspectiveScenarioAnswerDto dto,
+            string? language = null,
             CancellationToken cancellationToken = default);
     }
 }

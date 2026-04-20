@@ -49,30 +49,34 @@ namespace AngularNetBase.Practice.Services
                 dto.Content,
                 dto.FollowUpQuestion,
                 dto.ChallengeLevel,
-                dto.SkillId);
+                dto.SkillId,
+                dto.ContentEn,
+                dto.FollowUpQuestionEn);
 
             await _challengeRepository.AddAsync(challenge, cancellationToken);
             await _challengeRepository.SaveChangesAsync(cancellationToken);
 
-            return MapChallenge(challenge);
+            return MapChallenge(challenge, null);
         }
 
         public async Task<IEnumerable<DistancedJournalChallengeDto>> GetAllChallengesAsync(
+            string? language = null,
             CancellationToken cancellationToken = default)
         {
             var challenges = await _challengeRepository.GetAllAsync(cancellationToken);
-            return challenges.Select(MapChallenge);
+            return challenges.Select(challenge => MapChallenge(challenge, language));
         }
 
         public async Task<IEnumerable<DistancedJournalChallengeDto>> GetChallengesByLevelAsync(
             ChallengeLevel challengeLevel,
+            string? language = null,
             CancellationToken cancellationToken = default)
         {
             var challenges = await _challengeRepository.GetByChallengeLevelAsync(
                 challengeLevel,
                 cancellationToken);
 
-            return challenges.Select(MapChallenge);
+            return challenges.Select(challenge => MapChallenge(challenge, language));
         }
 
         public async Task<DistancedJournalExerciseDto> StartExerciseAsync(
@@ -320,12 +324,13 @@ namespace AngularNetBase.Practice.Services
             return MapExercise(exercise);
         }
 
-        private static DistancedJournalChallengeDto MapChallenge(DistancedJournalChallenge challenge)
+        private static DistancedJournalChallengeDto MapChallenge(DistancedJournalChallenge challenge, string? language)
         {
+            var isEnglish = IsEnglish(language);
             return new DistancedJournalChallengeDto(
                 challenge.Id,
-                challenge.Content,
-                challenge.FollowUpQuestion,
+                SelectLocalized(challenge.Content, challenge.ContentEn, isEnglish),
+                SelectLocalized(challenge.FollowUpQuestion, challenge.FollowUpQuestionEn, isEnglish),
                 challenge.ChallengeLevel,
                 challenge.SkillId);
         }
@@ -367,6 +372,7 @@ namespace AngularNetBase.Practice.Services
 
         public async Task<DistancedJournalChallengeDto> GetRandomChallengeAsync(
             ChallengeLevel level,
+            string? language = null,
             CancellationToken cancellationToken = default)
         {
             var challenge = await _challengeRepository.GetRandomByLevelAsync(level, cancellationToken);
@@ -374,7 +380,21 @@ namespace AngularNetBase.Practice.Services
             if (challenge is null)
                 throw new InvalidOperationException("No challenges found for the selected level.");
 
-            return MapChallenge(challenge);
+            return MapChallenge(challenge, language);
+        }
+
+        private static bool IsEnglish(string? language)
+        {
+            return !string.IsNullOrWhiteSpace(language)
+                && language.StartsWith("en", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string SelectLocalized(string sr, string? en, bool isEnglish)
+        {
+            if (isEnglish && !string.IsNullOrWhiteSpace(en))
+                return en;
+
+            return sr;
         }
 
         private static IReadOnlyCollection<string> BuildPhotoUrls(DistancedJournalExercise exercise)

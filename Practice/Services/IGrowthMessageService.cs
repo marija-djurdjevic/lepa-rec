@@ -10,6 +10,7 @@ namespace AngularNetBase.Practice.Services
         Task<GrowthMessageDto> GetRandomMessageAsync(
             GrowthMessageType type,
             Guid? selectedStatementId = null,
+            string? language = null,
             CancellationToken cancellationToken = default);
     }
 }
