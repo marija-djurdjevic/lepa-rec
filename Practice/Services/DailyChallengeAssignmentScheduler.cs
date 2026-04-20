@@ -88,7 +88,7 @@ namespace AngularNetBase.Practice.Services
             using var scope = _scopeFactory.CreateScope();
             var dateTimeProvider = scope.ServiceProvider.GetRequiredService<IDateTimeProvider>();
             var assignmentService = scope.ServiceProvider.GetRequiredService<IDailyChallengeAssignmentService>();
-            await assignmentService.EnsureAssignmentForDateAsync(dateTimeProvider.UtcNow.Date, stoppingToken);
+            await assignmentService.EnsureAssignmentForDateAsync(dateTimeProvider.BusinessDate, stoppingToken);
         }
     }
 }

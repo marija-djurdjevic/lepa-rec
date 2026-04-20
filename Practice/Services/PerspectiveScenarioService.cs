@@ -294,7 +294,7 @@ namespace AngularNetBase.Practice.Services
             Guid userId,
             CancellationToken cancellationToken)
         {
-            var today = _dateTimeProvider.UtcNow.Date;
+            var today = _dateTimeProvider.BusinessDate;
 
             var session = await _dailySessionRepository.GetByUserAndDateAsync(
                 userId,
