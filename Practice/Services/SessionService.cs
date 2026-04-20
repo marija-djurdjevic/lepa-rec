@@ -108,11 +108,13 @@ namespace AngularNetBase.Practice.Services
 
         public async Task<TodayPracticePlanDto> GetTodayPracticePlanAsync(
             Guid userId,
+            string? lang = null,
             CancellationToken cancellationToken = default)
         {
             if (userId == Guid.Empty)
                 throw new ArgumentException("UserId must be provided.");
 
+            var isEnglish = IsEnglishLanguage(lang);
             var today = _dateTimeProvider.UtcNow.Date;
             var assignment = await _dailyChallengeAssignmentService.GetOrCreateTodayAssignmentAsync(cancellationToken);
 
@@ -141,6 +143,7 @@ namespace AngularNetBase.Practice.Services
             {
                 return await BuildPlanBasedOnDistancedJournalTodayAsync(
                     hasDistancedJournalToday,
+                    isEnglish,
                     assignment,
                     cancellationToken);
             }
@@ -158,6 +161,7 @@ namespace AngularNetBase.Practice.Services
             {
                 return await BuildPlanBasedOnDistancedJournalTodayAsync(
                     hasDistancedJournalToday,
+                    isEnglish,
                     assignment,
                     cancellationToken);
             }
@@ -168,6 +172,7 @@ namespace AngularNetBase.Practice.Services
                     yesterdayExerciseRecords,
                     hasDistancedJournalReflectionToday,
                     hasPerspectiveScenarioToday,
+                    isEnglish,
                     assignment,
                     cancellationToken);
             }
@@ -176,6 +181,7 @@ namespace AngularNetBase.Practice.Services
             {
                 return await BuildPlanBasedOnDistancedJournalTodayAsync(
                     hasDistancedJournalToday,
+                    isEnglish,
                     assignment,
                     cancellationToken);
             }
@@ -185,7 +191,7 @@ namespace AngularNetBase.Practice.Services
                 return BuildPlanWithDistancedJournalCompletedOnly();
             }
 
-            return await BuildPlanWithDistancedJournalChoicesAsync(assignment, cancellationToken);
+            return await BuildPlanWithDistancedJournalChoicesAsync(assignment, isEnglish, cancellationToken);
         }
 
         private async Task<DailySession> GetOrCreateTodaySessionEntityAsync(
@@ -239,6 +245,7 @@ namespace AngularNetBase.Practice.Services
 
         private async Task<DistancedJournalReflectionPromptDto?> BuildReflectionPromptFromYesterdayAsync(
             List<ExerciseRecord> exerciseRecords,
+            bool isEnglish,
             CancellationToken cancellationToken)
         {
             var lastDistancedJournalRecord = exerciseRecords
@@ -265,8 +272,8 @@ namespace AngularNetBase.Practice.Services
 
             return new DistancedJournalReflectionPromptDto(
                 exercise.Id,
-                challenge.Content,
-                challenge.FollowUpQuestion,
+                Localize(challenge.Content, challenge.ContentEn, isEnglish),
+                Localize(challenge.FollowUpQuestion, challenge.FollowUpQuestionEn, isEnglish),
                 exercise.Answer.MainAnswer,
                 exercise.Answer.FollowUpAnswer,
                 exercise.Photos
@@ -276,6 +283,7 @@ namespace AngularNetBase.Practice.Services
 
         private async Task<IReadOnlyCollection<DistancedJournalChallengeDto>> BuildDistancedJournalChoicesForTodayAsync(
             DailyChallengeAssignment assignment,
+            bool isEnglish,
             CancellationToken cancellationToken)
         {
             var choices = new List<DistancedJournalChallengeDto>();
@@ -296,8 +304,8 @@ namespace AngularNetBase.Practice.Services
 
                 choices.Add(new DistancedJournalChallengeDto(
                     challenge.Id,
-                    challenge.Content,
-                    challenge.FollowUpQuestion,
+                    Localize(challenge.Content, challenge.ContentEn, isEnglish),
+                    Localize(challenge.FollowUpQuestion, challenge.FollowUpQuestionEn, isEnglish),
                     challenge.ChallengeLevel,
                     challenge.SkillId));
             }
@@ -306,6 +314,7 @@ namespace AngularNetBase.Practice.Services
             {
                 var fallback = await BuildFallbackDistancedJournalChoicesAsync(
                     choices.Select(x => x.Id).ToHashSet(),
+                    isEnglish,
                     cancellationToken);
 
                 choices.AddRange(fallback);
@@ -316,6 +325,7 @@ namespace AngularNetBase.Practice.Services
 
         private async Task<IReadOnlyCollection<DistancedJournalChallengeDto>> BuildFallbackDistancedJournalChoicesAsync(
             HashSet<Guid> excludeIds,
+            bool isEnglish,
             CancellationToken cancellationToken)
         {
             var challenges = await _distancedJournalChallengeRepository.GetAllAsync(cancellationToken);
@@ -331,8 +341,8 @@ namespace AngularNetBase.Practice.Services
             {
                 new DistancedJournalChallengeDto(
                     first.Id,
-                    first.Content,
-                    first.FollowUpQuestion,
+                    Localize(first.Content, first.ContentEn, isEnglish),
+                    Localize(first.FollowUpQuestion, first.FollowUpQuestionEn, isEnglish),
                     first.ChallengeLevel,
                     first.SkillId)
             };
@@ -343,8 +353,8 @@ namespace AngularNetBase.Practice.Services
                 var second = remaining[Random.Shared.Next(remaining.Count)];
                 results.Add(new DistancedJournalChallengeDto(
                     second.Id,
-                    second.Content,
-                    second.FollowUpQuestion,
+                    Localize(second.Content, second.ContentEn, isEnglish),
+                    Localize(second.FollowUpQuestion, second.FollowUpQuestionEn, isEnglish),
                     second.ChallengeLevel,
                     second.SkillId));
             }
@@ -354,6 +364,7 @@ namespace AngularNetBase.Practice.Services
 
         private async Task<IReadOnlyCollection<PerspectiveScenarioPromptDto>> BuildPerspectiveScenarioChoicesForTodayAsync(
             DailyChallengeAssignment assignment,
+            bool isEnglish,
             CancellationToken cancellationToken)
         {
             var choices = new List<PerspectiveScenarioPromptDto>();
@@ -372,13 +383,14 @@ namespace AngularNetBase.Practice.Services
                 if (challenge is null)
                     continue;
 
-                choices.Add(MapPerspectiveScenarioPrompt(challenge));
+                choices.Add(MapPerspectiveScenarioPrompt(challenge, isEnglish));
             }
 
             if (choices.Count < 2)
             {
                 var fallback = await BuildPerspectiveScenarioChoicesFallbackAsync(
                     choices.Select(x => x.Id).ToHashSet(),
+                    isEnglish,
                     cancellationToken);
 
                 choices.AddRange(fallback);
@@ -389,6 +401,7 @@ namespace AngularNetBase.Practice.Services
 
         private async Task<IReadOnlyCollection<PerspectiveScenarioPromptDto>> BuildPerspectiveScenarioChoicesFallbackAsync(
             HashSet<Guid> excludeIds,
+            bool isEnglish,
             CancellationToken cancellationToken)
         {
             var challenges = await _perspectiveScenarioChallengeRepository.GetAllAsync(cancellationToken);
@@ -402,26 +415,26 @@ namespace AngularNetBase.Practice.Services
             var first = available[Random.Shared.Next(available.Count)];
             var results = new List<PerspectiveScenarioPromptDto>
             {
-                MapPerspectiveScenarioPrompt(first)
+                MapPerspectiveScenarioPrompt(first, isEnglish)
             };
 
             var remaining = available.Where(x => x.Id != first.Id).ToList();
             if (remaining.Count > 0)
             {
                 var second = remaining[Random.Shared.Next(remaining.Count)];
-                results.Add(MapPerspectiveScenarioPrompt(second));
+                results.Add(MapPerspectiveScenarioPrompt(second, isEnglish));
             }
 
             return results;
         }
 
-        private static PerspectiveScenarioPromptDto MapPerspectiveScenarioPrompt(PerspectiveScenarioChallenge challenge)
+        private static PerspectiveScenarioPromptDto MapPerspectiveScenarioPrompt(PerspectiveScenarioChallenge challenge, bool isEnglish)
         {
             return new PerspectiveScenarioPromptDto(
                 challenge.Id,
                 challenge.ActorCount,
                 challenge.Context,
-                challenge.ScenarioText,
+                Localize(challenge.ScenarioText, challenge.ScenarioTextEn, isEnglish),
                 challenge.ChallengeLevel,
                 challenge.Questions
                     .OrderBy(q => q.Order)
@@ -429,7 +442,7 @@ namespace AngularNetBase.Practice.Services
                         q.Id,
                         q.SkillId,
                         q.Order,
-                        q.QuestionText))
+                        Localize(q.QuestionText, q.QuestionTextEn, isEnglish)))
                     .ToList());
         }
 
@@ -466,11 +479,12 @@ namespace AngularNetBase.Practice.Services
 
         private async Task<TodayPracticePlanDto> BuildPlanWithDistancedJournalChoicesAsync(
             DailyChallengeAssignment assignment,
+            bool isEnglish,
             CancellationToken cancellationToken)
         {
             return BuildPlan(
                 null,
-                await BuildDistancedJournalChoicesForTodayAsync(assignment, cancellationToken),
+                await BuildDistancedJournalChoicesForTodayAsync(assignment, isEnglish, cancellationToken),
                 Array.Empty<PerspectiveScenarioPromptDto>(),
                 false,
                 false,
@@ -480,19 +494,21 @@ namespace AngularNetBase.Practice.Services
 
         private async Task<TodayPracticePlanDto> BuildPlanBasedOnDistancedJournalTodayAsync(
             bool hasDistancedJournalToday,
+            bool isEnglish,
             DailyChallengeAssignment assignment,
             CancellationToken cancellationToken)
         {
             if (hasDistancedJournalToday)
                 return BuildPlanWithDistancedJournalCompletedOnly();
 
-            return await BuildPlanWithDistancedJournalChoicesAsync(assignment, cancellationToken);
+            return await BuildPlanWithDistancedJournalChoicesAsync(assignment, isEnglish, cancellationToken);
         }
 
         private async Task<TodayPracticePlanDto> BuildPlanAfterDistancedJournalYesterdayAsync(
             List<ExerciseRecord> yesterdayExerciseRecords,
             bool hasDistancedJournalReflectionToday,
             bool hasPerspectiveScenarioToday,
+            bool isEnglish,
             DailyChallengeAssignment assignment,
             CancellationToken cancellationToken)
         {
@@ -502,11 +518,12 @@ namespace AngularNetBase.Practice.Services
             {
                 reflectionPrompt = await BuildReflectionPromptFromYesterdayAsync(
                     yesterdayExerciseRecords,
+                    isEnglish,
                     cancellationToken);
             }
 
             var perspectiveScenarioChoices = !hasPerspectiveScenarioToday
-                ? await BuildPerspectiveScenarioChoicesForTodayAsync(assignment, cancellationToken)
+                ? await BuildPerspectiveScenarioChoicesForTodayAsync(assignment, isEnglish, cancellationToken)
                 : Array.Empty<PerspectiveScenarioPromptDto>();
 
             var shouldShowPerspectiveScenario = !hasPerspectiveScenarioToday && perspectiveScenarioChoices.Count > 0;
@@ -531,5 +548,11 @@ namespace AngularNetBase.Practice.Services
                 session.PrimerSkipped,
                 session.CompletedExercisesCount);
         }
+
+        private static string Localize(string sourceText, string? englishText, bool isEnglish)
+            => isEnglish && !string.IsNullOrWhiteSpace(englishText) ? englishText : sourceText;
+
+        private static bool IsEnglishLanguage(string? lang)
+            => string.Equals(lang, "en", StringComparison.OrdinalIgnoreCase);
     }
 }
