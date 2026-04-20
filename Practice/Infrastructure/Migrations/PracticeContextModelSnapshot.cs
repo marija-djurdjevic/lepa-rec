@@ -91,8 +91,16 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<string>("ContentEn")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
                     b.Property<string>("FollowUpQuestion")
                         .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("FollowUpQuestionEn")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
@@ -154,6 +162,10 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
+                    b.Property<string>("TextEn")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -193,6 +205,10 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
                     b.Property<string>("ScenarioText")
                         .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("ScenarioTextEn")
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
@@ -252,8 +268,16 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
+                    b.Property<string>("QuestionTextEn")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
                     b.Property<string>("Reveal")
                         .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("RevealEn")
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 

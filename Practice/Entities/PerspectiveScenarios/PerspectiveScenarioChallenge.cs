@@ -12,6 +12,7 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
         public PerspectiveScenarioContext Context { get; private set; }
         public int ActorCount { get; private set; }
         public string ScenarioText { get; private set; } = string.Empty;
+        public string? ScenarioTextEn { get; private set; }
 
         public IReadOnlyCollection<PerspectiveScenarioQuestion> Questions => _questions;
 
@@ -23,7 +24,26 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
             int actorCount,
             string scenarioText,
             ChallengeLevel challengeLevel,
-            IEnumerable<(Guid Id, Guid SkillId, int Order, string QuestionText, string Reveal)> questions) : base(id)
+            IEnumerable<(Guid Id, Guid SkillId, int Order, string QuestionText, string Reveal)> questions)
+            : this(
+                  id,
+                  context,
+                  actorCount,
+                  scenarioText,
+                  challengeLevel,
+                  questions.Select(q => (q.Id, q.SkillId, q.Order, q.QuestionText, q.Reveal, (string?)null, (string?)null)),
+                  null)
+        {
+        }
+
+        public PerspectiveScenarioChallenge(
+            Guid id,
+            PerspectiveScenarioContext context,
+            int actorCount,
+            string scenarioText,
+            ChallengeLevel challengeLevel,
+            IEnumerable<(Guid Id, Guid SkillId, int Order, string QuestionText, string Reveal, string? QuestionTextEn, string? RevealEn)> questions,
+            string? scenarioTextEn = null) : base(id)
         {
             if (id == Guid.Empty)
                 throw new ArgumentException("Id must be a valid GUID.", nameof(id));
@@ -55,6 +75,7 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
             Context = context;
             ActorCount = actorCount;
             ScenarioText = scenarioText.Trim();
+            ScenarioTextEn = NormalizeOptional(scenarioTextEn);
 
             foreach (var question in questionList)
             {
@@ -64,7 +85,9 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
                     question.SkillId,
                     question.Order,
                     question.QuestionText,
-                    question.Reveal));
+                    question.Reveal,
+                    question.QuestionTextEn,
+                    question.RevealEn));
             }
         }
 
@@ -91,6 +114,14 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
             EnsureQuestionCountStillMatchesDifficulty();
 
             return question;
+        }
+
+        private static string? NormalizeOptional(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+
+            return value.Trim();
         }
 
         private static void ValidateQuestionCount(ChallengeLevel challengeLevel, int questionCount)

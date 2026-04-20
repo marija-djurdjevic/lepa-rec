@@ -28,18 +28,20 @@ namespace AngularNetBase.API.Controllers
 
         [HttpGet("challenges")]
         public async Task<ActionResult<IEnumerable<DistancedJournalChallengeDto>>> GetAllChallenges(
+            [FromQuery] string? lang,
             CancellationToken cancellationToken)
         {
-            var result = await _distancedJournalService.GetAllChallengesAsync(cancellationToken);
+            var result = await _distancedJournalService.GetAllChallengesAsync(lang, cancellationToken);
             return Ok(result);
         }
 
         [HttpGet("challenges/level/{challengeLevel}")]
         public async Task<ActionResult<IEnumerable<DistancedJournalChallengeDto>>> GetChallengesByLevel(
             ChallengeLevel challengeLevel,
+            [FromQuery] string? lang,
             CancellationToken cancellationToken)
         {
-            var result = await _distancedJournalService.GetChallengesByLevelAsync(challengeLevel, cancellationToken);
+            var result = await _distancedJournalService.GetChallengesByLevelAsync(challengeLevel, lang, cancellationToken);
             return Ok(result);
         }
 
@@ -165,9 +167,12 @@ namespace AngularNetBase.API.Controllers
         }
 
         [HttpGet("challenges/random/{level}")]
-        public async Task<ActionResult<DistancedJournalChallengeDto>> GetRandomChallenge(ChallengeLevel level, CancellationToken cancellationToken)
+        public async Task<ActionResult<DistancedJournalChallengeDto>> GetRandomChallenge(
+            ChallengeLevel level,
+            [FromQuery] string? lang,
+            CancellationToken cancellationToken)
         {
-            var result = await _distancedJournalService.GetRandomChallengeAsync(level, cancellationToken);
+            var result = await _distancedJournalService.GetRandomChallengeAsync(level, lang, cancellationToken);
             return Ok(result);
         }
 

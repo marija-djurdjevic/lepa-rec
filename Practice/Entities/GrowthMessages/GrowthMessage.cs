@@ -9,6 +9,7 @@ namespace AngularNetBase.Practice.Entities.GrowthMessages
     public class GrowthMessage : Entity<Guid>, IAggregateRoot
     {
         public string Text { get; private set; } = string.Empty;
+        public string? TextEn { get; private set; }
         public GrowthMessageType Type { get; private set; }
         public Guid? AffirmationValueId { get; private set; }
 
@@ -21,15 +22,25 @@ namespace AngularNetBase.Practice.Entities.GrowthMessages
             string text,
             GrowthMessageType type = GrowthMessageType.Begin,
             bool isActive = true,
-            Guid? affirmationValueId = null) : base(id)
+            Guid? affirmationValueId = null,
+            string? textEn = null) : base(id)
         {
             if (string.IsNullOrWhiteSpace(text))
                 throw new ArgumentException("Growth message text is required.", nameof(text));
 
             Text = text.Trim();
+            TextEn = NormalizeOptional(textEn);
             Type = type;
             IsActive = isActive;
             AffirmationValueId = affirmationValueId;
+        }
+
+        private static string? NormalizeOptional(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+
+            return value.Trim();
         }
 
         public void Activate()

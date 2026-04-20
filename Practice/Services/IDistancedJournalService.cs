@@ -13,10 +13,12 @@ namespace AngularNetBase.Practice.Services
         CancellationToken cancellationToken = default);
 
         Task<IEnumerable<DistancedJournalChallengeDto>> GetAllChallengesAsync(
+            string? language = null,
             CancellationToken cancellationToken = default);
 
         Task<IEnumerable<DistancedJournalChallengeDto>> GetChallengesByLevelAsync(
             ChallengeLevel challengeLevel,
+            string? language = null,
             CancellationToken cancellationToken = default);
 
         Task<DistancedJournalExerciseDto> StartExerciseAsync(
@@ -56,6 +58,7 @@ namespace AngularNetBase.Practice.Services
 
         Task<DistancedJournalChallengeDto> GetRandomChallengeAsync(
             ChallengeLevel level,
+            string? language = null,
             CancellationToken cancellationToken = default);
     }
 }

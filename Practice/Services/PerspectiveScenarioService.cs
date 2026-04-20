@@ -51,31 +51,35 @@ namespace AngularNetBase.Practice.Services
                 dto.ActorCount,
                 dto.ScenarioText,
                 dto.ChallengeLevel,
-                dto.Questions.Select(x => (Guid.NewGuid(), x.SkillId, x.Order, x.QuestionText, x.Reveal)));
+                dto.Questions.Select(x => (Guid.NewGuid(), x.SkillId, x.Order, x.QuestionText, x.Reveal, x.QuestionTextEn, x.RevealEn)),
+                dto.ScenarioTextEn);
 
             await _challengeRepository.AddAsync(challenge, cancellationToken);
             await _challengeRepository.SaveChangesAsync(cancellationToken);
 
-            return MapChallenge(challenge);
+            return MapChallenge(challenge, null);
         }
 
         public async Task<IEnumerable<PerspectiveScenarioChallengeDto>> GetAllChallengesAsync(
+            string? language = null,
             CancellationToken cancellationToken = default)
         {
             var challenges = await _challengeRepository.GetAllAsync(cancellationToken);
-            return challenges.Select(MapChallenge);
+            return challenges.Select(challenge => MapChallenge(challenge, language));
         }
 
         public async Task<IEnumerable<PerspectiveScenarioChallengeDto>> GetChallengesByLevelAsync(
             ChallengeLevel challengeLevel,
+            string? language = null,
             CancellationToken cancellationToken = default)
         {
             var challenges = await _challengeRepository.GetByChallengeLevelAsync(challengeLevel, cancellationToken);
-            return challenges.Select(MapChallenge);
+            return challenges.Select(challenge => MapChallenge(challenge, language));
         }
 
         public async Task<PerspectiveScenarioPromptDto> GetRandomChallengeAsync(
             ChallengeLevel level,
+            string? language = null,
             CancellationToken cancellationToken = default)
         {
             var challenge = await _challengeRepository.GetRandomByLevelAsync(level, cancellationToken);
@@ -83,7 +87,7 @@ namespace AngularNetBase.Practice.Services
             if (challenge is null)
                 throw new InvalidOperationException("No perspective scenarios found for the selected level.");
 
-            return MapPrompt(challenge);
+            return MapPrompt(challenge, language);
         }
 
         public async Task<PerspectiveScenarioExerciseDto> StartExerciseAsync(
@@ -140,6 +144,7 @@ namespace AngularNetBase.Practice.Services
         public async Task<SubmitPerspectiveScenarioResultDto> SubmitAnswersAsync(
             Guid userId,
             SubmitPerspectiveScenarioAnswerDto dto,
+            string? language = null,
             CancellationToken cancellationToken = default)
         {
             if (dto.ExerciseId == Guid.Empty)
@@ -181,7 +186,7 @@ namespace AngularNetBase.Practice.Services
                 MapExercise(exercise),
                 challenge.Questions
                     .OrderBy(x => x.Order)
-                    .Select(MapReveal)
+                    .Select(question => MapReveal(question, language))
                     .ToList());
         }
 
@@ -206,53 +211,58 @@ namespace AngularNetBase.Practice.Services
                 throw new InvalidOperationException("Submitted answers do not match the scenario questions.");
         }
 
-        private static PerspectiveScenarioChallengeDto MapChallenge(PerspectiveScenarioChallenge challenge)
+        private static PerspectiveScenarioChallengeDto MapChallenge(PerspectiveScenarioChallenge challenge, string? language)
         {
+            var isEnglish = IsEnglish(language);
             return new PerspectiveScenarioChallengeDto(
                 challenge.Id,
                 challenge.ActorCount,
                 challenge.Context,
-                challenge.ScenarioText,
+                SelectLocalized(challenge.ScenarioText, challenge.ScenarioTextEn, isEnglish),
                 challenge.ChallengeLevel,
-                challenge.Questions.OrderBy(x => x.Order).Select(MapQuestion).ToList());
+                challenge.Questions.OrderBy(x => x.Order).Select(question => MapQuestion(question, language)).ToList());
         }
 
-        private static PerspectiveScenarioPromptDto MapPrompt(PerspectiveScenarioChallenge challenge)
+        private static PerspectiveScenarioPromptDto MapPrompt(PerspectiveScenarioChallenge challenge, string? language)
         {
+            var isEnglish = IsEnglish(language);
             return new PerspectiveScenarioPromptDto(
                 challenge.Id,
                 challenge.ActorCount,
                 challenge.Context,
-                challenge.ScenarioText,
+                SelectLocalized(challenge.ScenarioText, challenge.ScenarioTextEn, isEnglish),
                 challenge.ChallengeLevel,
-                challenge.Questions.OrderBy(x => x.Order).Select(MapPromptQuestion).ToList());
+                challenge.Questions.OrderBy(x => x.Order).Select(question => MapPromptQuestion(question, language)).ToList());
         }
 
-        private static PerspectiveScenarioQuestionDto MapQuestion(PerspectiveScenarioQuestion question)
+        private static PerspectiveScenarioQuestionDto MapQuestion(PerspectiveScenarioQuestion question, string? language)
         {
+            var isEnglish = IsEnglish(language);
             return new PerspectiveScenarioQuestionDto(
                 question.Id,
                 question.SkillId,
                 question.Order,
-                question.QuestionText,
-                question.Reveal);
+                SelectLocalized(question.QuestionText, question.QuestionTextEn, isEnglish),
+                SelectLocalized(question.Reveal, question.RevealEn, isEnglish));
         }
 
-        private static PerspectiveScenarioPromptQuestionDto MapPromptQuestion(PerspectiveScenarioQuestion question)
+        private static PerspectiveScenarioPromptQuestionDto MapPromptQuestion(PerspectiveScenarioQuestion question, string? language)
         {
+            var isEnglish = IsEnglish(language);
             return new PerspectiveScenarioPromptQuestionDto(
                 question.Id,
                 question.SkillId,
                 question.Order,
-                question.QuestionText);
+                SelectLocalized(question.QuestionText, question.QuestionTextEn, isEnglish));
         }
 
-        private static PerspectiveScenarioRevealDto MapReveal(PerspectiveScenarioQuestion question)
+        private static PerspectiveScenarioRevealDto MapReveal(PerspectiveScenarioQuestion question, string? language)
         {
+            var isEnglish = IsEnglish(language);
             return new PerspectiveScenarioRevealDto(
                 question.Id,
                 question.Order,
-                question.Reveal);
+                SelectLocalized(question.Reveal, question.RevealEn, isEnglish));
         }
 
         private static PerspectiveScenarioExerciseDto MapExercise(PerspectiveScenarioExercise exercise)
@@ -264,6 +274,20 @@ namespace AngularNetBase.Practice.Services
                 exercise.Answers.Select(x => new ScenarioAnswerDto(x.QuestionId, x.AnswerText)).ToList(),
                 exercise.SubmittedAt,
                 exercise.IsCompleted());
+        }
+
+        private static bool IsEnglish(string? language)
+        {
+            return !string.IsNullOrWhiteSpace(language)
+                && language.StartsWith("en", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string SelectLocalized(string sr, string? en, bool isEnglish)
+        {
+            if (isEnglish && !string.IsNullOrWhiteSpace(en))
+                return en;
+
+            return sr;
         }
 
         private async Task<DailySession> GetOrCreateTodaySessionAsync(

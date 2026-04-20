@@ -8,7 +8,9 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
         public Guid SkillId { get; private set; }
         public int Order { get; private set; }
         public string QuestionText { get; private set; } = string.Empty;
+        public string? QuestionTextEn { get; private set; }
         public string Reveal { get; private set; } = string.Empty;
+        public string? RevealEn { get; private set; }
 
         private PerspectiveScenarioQuestion() : base() { }
 
@@ -18,7 +20,9 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
             Guid skillId,
             int order,
             string questionText,
-            string reveal) : base(id)
+            string reveal,
+            string? questionTextEn = null,
+            string? revealEn = null) : base(id)
         {
             if (perspectiveScenarioChallengeId == Guid.Empty)
                 throw new ArgumentException("Perspective scenario challenge id must be provided.", nameof(perspectiveScenarioChallengeId));
@@ -39,7 +43,17 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
             SkillId = skillId;
             Order = order;
             QuestionText = questionText.Trim();
+            QuestionTextEn = NormalizeOptional(questionTextEn);
             Reveal = reveal.Trim();
+            RevealEn = NormalizeOptional(revealEn);
+        }
+
+        private static string? NormalizeOptional(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+
+            return value.Trim();
         }
     }
 }

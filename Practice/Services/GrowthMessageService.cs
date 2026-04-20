@@ -22,7 +22,7 @@ namespace AngularNetBase.Practice.Services
 
         public async Task<Guid> CreateMessageAsync(CreateGrowthMessageDto dto, CancellationToken cancellationToken = default)
         {
-            var message = new GrowthMessage(Guid.NewGuid(), dto.Text, dto.Type, true);
+            var message = new GrowthMessage(Guid.NewGuid(), dto.Text, dto.Type, true, null, dto.TextEn);
 
             await _repository.AddAsync(message, cancellationToken);
             await _repository.SaveChangesAsync(cancellationToken);
@@ -47,12 +47,13 @@ namespace AngularNetBase.Practice.Services
         public async Task<GrowthMessageDto> GetRandomMessageAsync(
             GrowthMessageType type,
             Guid? selectedStatementId = null,
+            string? language = null,
             CancellationToken cancellationToken = default)
         {
             var message = await SelectMessageAsync(type, selectedStatementId, cancellationToken)
                 ?? throw new InvalidOperationException("Nema aktivnih poruka ohrabrenja u bazi.");
 
-            return new GrowthMessageDto(message.Id, message.Text);
+            return new GrowthMessageDto(message.Id, SelectLocalized(message.Text, message.TextEn, language));
         }
 
         private async Task<GrowthMessage?> SelectMessageAsync(
@@ -87,6 +88,17 @@ namespace AngularNetBase.Practice.Services
                 return matched;
 
             return await _repository.GetRandomActiveMessageWithoutAffirmationValueAsync(type, cancellationToken);
+        }
+
+        private static string SelectLocalized(string sr, string? en, string? language)
+        {
+            var isEnglish = !string.IsNullOrWhiteSpace(language)
+                && language.StartsWith("en", StringComparison.OrdinalIgnoreCase);
+
+            if (isEnglish && !string.IsNullOrWhiteSpace(en))
+                return en;
+
+            return sr;
         }
     }
 }

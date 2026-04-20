@@ -205,6 +205,9 @@ namespace AngularNetBase.Practice.Infrastructure
                     .IsRequired()
                     .HasMaxLength(1000);
 
+                entity.Property(e => e.TextEn)
+                    .HasMaxLength(1000);
+
                 entity.Property(e => e.Type)
                     .HasConversion<string>()
                     .HasMaxLength(20)
@@ -232,8 +235,14 @@ namespace AngularNetBase.Practice.Infrastructure
                     .IsRequired()
                     .HasMaxLength(2000);
 
+                entity.Property(e => e.ContentEn)
+                    .HasMaxLength(2000);
+
                 entity.Property(e => e.FollowUpQuestion)
                     .IsRequired()
+                    .HasMaxLength(1000);
+
+                entity.Property(e => e.FollowUpQuestionEn)
                     .HasMaxLength(1000);
 
                 entity.Property(e => e.ChallengeLevel)
@@ -386,6 +395,9 @@ namespace AngularNetBase.Practice.Infrastructure
                     .IsRequired()
                     .HasMaxLength(2000);
 
+                entity.Property(e => e.ScenarioTextEn)
+                    .HasMaxLength(2000);
+
                 entity.Property(e => e.Context)
                     .HasConversion<string>()
                     .HasMaxLength(20)
@@ -421,11 +433,17 @@ namespace AngularNetBase.Practice.Infrastructure
                     .IsRequired()
                     .HasMaxLength(1000);
 
+                entity.Property(e => e.QuestionTextEn)
+                    .HasMaxLength(1000);
+
                 entity.Property(e => e.Order)
                     .IsRequired();
 
                 entity.Property(e => e.Reveal)
                     .IsRequired()
+                    .HasMaxLength(2000);
+
+                entity.Property(e => e.RevealEn)
                     .HasMaxLength(2000);
 
                 entity.HasIndex(e => new { e.PerspectiveScenarioChallengeId, e.Order })
