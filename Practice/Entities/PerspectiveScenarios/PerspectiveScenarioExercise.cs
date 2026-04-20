@@ -35,6 +35,9 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
             if (SubmittedAt.HasValue)
                 throw new InvalidOperationException("Answers have already been submitted.");
 
+            if (_answers.Count > 0)
+                throw new InvalidOperationException("Answers have already been started. Use per-question flow.");
+
             var answerList = answers?.ToList()
                 ?? throw new ArgumentNullException(nameof(answers));
 
@@ -48,6 +51,34 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
                 throw new ArgumentException("Only one answer per question is allowed.", nameof(answers));
 
             _answers.AddRange(answerList);
+            SubmittedAt = submittedAt;
+        }
+
+        public void SubmitOrUpdateAnswer(ScenarioAnswer answer)
+        {
+            if (SubmittedAt.HasValue)
+                throw new InvalidOperationException("Answers have already been submitted.");
+
+            ArgumentNullException.ThrowIfNull(answer);
+
+            var existingIndex = _answers.FindIndex(x => x.QuestionId == answer.QuestionId);
+            if (existingIndex >= 0)
+            {
+                _answers[existingIndex] = answer;
+                return;
+            }
+
+            _answers.Add(answer);
+        }
+
+        public void MarkSubmitted(DateTime submittedAt)
+        {
+            if (SubmittedAt.HasValue)
+                return;
+
+            if (_answers.Count == 0)
+                throw new InvalidOperationException("At least one answer must be provided.");
+
             SubmittedAt = submittedAt;
         }
 

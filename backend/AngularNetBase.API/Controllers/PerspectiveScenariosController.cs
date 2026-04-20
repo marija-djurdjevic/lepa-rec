@@ -110,6 +110,25 @@ namespace AngularNetBase.API.Controllers
             }
         }
 
+        [HttpPost("answer-and-reveal")]
+        public async Task<ActionResult<AnswerPerspectiveScenarioQuestionResultDto>> AnswerQuestionAndGetReveal(
+            [FromBody] AnswerPerspectiveScenarioQuestionDto dto,
+            [FromQuery] string? lang,
+            CancellationToken cancellationToken)
+        {
+            var userId = GetUserId();
+
+            try
+            {
+                var result = await _perspectiveScenarioService.AnswerQuestionAndGetRevealAsync(userId, dto, lang, cancellationToken);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return NotFound();
+            }
+        }
+
         [HttpGet("challenges/random/{level}")]
         public async Task<ActionResult<PerspectiveScenarioPromptDto>> GetRandomChallenge(
             ChallengeLevel level,
