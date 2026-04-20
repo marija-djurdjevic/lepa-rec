@@ -191,6 +191,9 @@ namespace AngularNetBase.Practice.Infrastructure
                     .IsRequired()
                     .HasMaxLength(1000);
 
+                entity.Property(e => e.TextEn)
+                    .HasMaxLength(1000);
+
                 entity.Property(e => e.IsActive)
                     .IsRequired();
             });

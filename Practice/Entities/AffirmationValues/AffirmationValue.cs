@@ -24,7 +24,7 @@ namespace AngularNetBase.Practice.Entities.AffirmationValues
             Name = name.Trim();
         }
 
-        public ValueStatement AddStatement(Guid statementId, string text, bool isActive = true)
+        public ValueStatement AddStatement(Guid statementId, string text, bool isActive = true, string? textEn = null)
         {
             if (statementId == Guid.Empty)
                 throw new ArgumentException("Statement id cannot be empty.", nameof(statementId));
@@ -32,7 +32,7 @@ namespace AngularNetBase.Practice.Entities.AffirmationValues
             if (string.IsNullOrWhiteSpace(text))
                 throw new ArgumentException("Statement text is required.", nameof(text));
 
-            var statement = new ValueStatement(statementId, Id, text.Trim(), isActive);
+            var statement = new ValueStatement(statementId, Id, text.Trim(), isActive, textEn);
             _statements.Add(statement);
 
             return statement;
