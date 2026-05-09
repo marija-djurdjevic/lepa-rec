@@ -56,9 +56,17 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
         public async Task<DistancedJournalChallenge?> GetRandomByLevelAsync(ChallengeLevel challengeLevel, CancellationToken cancellationToken = default)
         {
             return await _context.DistancedJournalChallenges
-                .Where(x => x.ChallengeLevel == challengeLevel)
+                .Where(x => x.ChallengeLevel == challengeLevel && !x.IsOnboardingHook)
                 .OrderBy(x => Guid.NewGuid())
                 .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<DistancedJournalChallenge?> GetOnboardingHookByKeyAsync(string hookKey, CancellationToken cancellationToken = default)
+        {
+            return await _context.DistancedJournalChallenges
+                .FirstOrDefaultAsync(
+                    x => x.IsOnboardingHook && x.OnboardingHookKey == hookKey,
+                    cancellationToken);
         }
 
         public async Task SaveChangesAsync(CancellationToken cancellationToken = default)

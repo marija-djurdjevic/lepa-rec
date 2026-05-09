@@ -10,13 +10,14 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
     {
         public Guid UserId { get; private set; }
         public Guid ChallengeId { get; private set; }
+        public bool IsOnboardingHookRun { get; private set; }
         public DistancedJournalAnswer? Answer { get; private set; }
         private readonly List<DistancedJournalPhoto> _photos = new();
         public IReadOnlyCollection<DistancedJournalPhoto> Photos => _photos.AsReadOnly();
 
         private DistancedJournalExercise() : base() { }
 
-        public DistancedJournalExercise(Guid id, Guid userId, Guid challengeId) : base(id)
+        public DistancedJournalExercise(Guid id, Guid userId, Guid challengeId, bool isOnboardingHookRun = false) : base(id)
         {
             if (id == Guid.Empty)
                 throw new ArgumentException("Id must be a valid GUID.");
@@ -29,6 +30,7 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
 
             UserId = userId;
             ChallengeId = challengeId;
+            IsOnboardingHookRun = isOnboardingHookRun;
         }
 
         public void SubmitAnswer(string? mainAnswer, string? followUpAnswer, string? reflection, DateTime submittedAt)

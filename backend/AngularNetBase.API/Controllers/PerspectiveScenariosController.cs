@@ -64,7 +64,9 @@ namespace AngularNetBase.API.Controllers
                 userId,
                 dto.ChallengeId);
 
-            var result = await _perspectiveScenarioService.StartExerciseAsync(command, cancellationToken);
+            var result = await _perspectiveScenarioService.StartExerciseAsync(
+                command,
+                cancellationToken: cancellationToken);
             return Ok(result);
         }
 
@@ -101,7 +103,11 @@ namespace AngularNetBase.API.Controllers
 
             try
             {
-                var result = await _perspectiveScenarioService.SubmitAnswersAsync(userId, dto, lang, cancellationToken);
+                var result = await _perspectiveScenarioService.SubmitAnswersAsync(
+                    userId,
+                    dto,
+                    lang,
+                    cancellationToken: cancellationToken);
                 return Ok(result);
             }
             catch (UnauthorizedAccessException)

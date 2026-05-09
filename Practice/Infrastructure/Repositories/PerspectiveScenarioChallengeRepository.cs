@@ -61,9 +61,18 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
         {
             return await _context.PerspectiveScenarioChallenges
                 .Include(x => x.Questions)
-                .Where(x => x.ChallengeLevel == challengeLevel)
+                .Where(x => x.ChallengeLevel == challengeLevel && !x.IsOnboardingHook)
                 .OrderBy(x => Guid.NewGuid())
                 .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<PerspectiveScenarioChallenge?> GetOnboardingHookByKeyAsync(string hookKey, CancellationToken cancellationToken = default)
+        {
+            return await _context.PerspectiveScenarioChallenges
+                .Include(x => x.Questions)
+                .FirstOrDefaultAsync(
+                    x => x.IsOnboardingHook && x.OnboardingHookKey == hookKey,
+                    cancellationToken);
         }
 
         public async Task SaveChangesAsync(CancellationToken cancellationToken = default)

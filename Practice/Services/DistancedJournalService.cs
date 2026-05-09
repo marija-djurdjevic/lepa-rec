@@ -81,6 +81,7 @@ namespace AngularNetBase.Practice.Services
 
         public async Task<DistancedJournalExerciseDto> StartExerciseAsync(
             StartDistancedJournalExerciseDto dto,
+            bool isOnboardingHookRun = false,
             CancellationToken cancellationToken = default)
         {
             if (dto.UserId == Guid.Empty)
@@ -92,11 +93,14 @@ namespace AngularNetBase.Practice.Services
             var challenge = await _challengeRepository.GetByIdAsync(dto.ChallengeId, cancellationToken);
             if (challenge is null)
                 throw new InvalidOperationException("Distanced journal challenge was not found.");
+            if (isOnboardingHookRun && !challenge.IsOnboardingHook)
+                throw new InvalidOperationException("Challenge is not configured as onboarding hook.");
 
             var exercise = new DistancedJournalExercise(
                 Guid.NewGuid(),
                 dto.UserId,
-                dto.ChallengeId);
+                dto.ChallengeId,
+                isOnboardingHookRun);
 
             await _exerciseRepository.AddAsync(exercise, cancellationToken);
             await _exerciseRepository.SaveChangesAsync(cancellationToken);
@@ -133,6 +137,7 @@ namespace AngularNetBase.Practice.Services
         public async Task<SubmitDistancedJournalResultDto> SubmitAnswerAsync(
             Guid userId,
             SubmitDistancedJournalAnswerDto dto,
+            bool trackInDailySession = true,
             CancellationToken cancellationToken = default)
         {
             if (dto.ExerciseId == Guid.Empty)
@@ -143,8 +148,8 @@ namespace AngularNetBase.Practice.Services
                 throw new InvalidOperationException("Distanced journal exercise was not found.");
             if (exercise.UserId != userId)
                 throw new UnauthorizedAccessException("Exercise does not belong to the current user.");
-
-            var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
+            if (!trackInDailySession && !exercise.IsOnboardingHookRun)
+                throw new InvalidOperationException("Only onboarding hook exercises can bypass daily session tracking.");
 
             var submittedAt = _dateTimeProvider.UtcNow;
 
@@ -156,17 +161,21 @@ namespace AngularNetBase.Practice.Services
                 dto.Reflection,
                 submittedAt);
 
-            dailySession.RecordExercise(
-                exercise.Id,
-                ExerciseType.DistancedJournal,
-                submittedAt);
+            if (trackInDailySession)
+            {
+                var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
+                dailySession.RecordExercise(
+                    exercise.Id,
+                    ExerciseType.DistancedJournal,
+                    submittedAt);
 
-            await SaveSessionWithRetryAsync(
-                dailySession,
-                exercise.Id,
-                ExerciseType.DistancedJournal,
-                submittedAt,
-                cancellationToken);
+                await SaveSessionWithRetryAsync(
+                    dailySession,
+                    exercise.Id,
+                    ExerciseType.DistancedJournal,
+                    submittedAt,
+                    cancellationToken);
+            }
 
             var feedback = await ComputeFeedbackAsync(
                 exercise.UserId,
@@ -183,6 +192,7 @@ namespace AngularNetBase.Practice.Services
             Guid userId,
             SubmitDistancedJournalAnswerDto dto,
             IReadOnlyCollection<PhotoUpload> photos,
+            bool trackInDailySession = true,
             CancellationToken cancellationToken = default)
         {
             if (dto.ExerciseId == Guid.Empty)
@@ -206,8 +216,9 @@ namespace AngularNetBase.Practice.Services
                 throw new InvalidOperationException("Distanced journal exercise was not found.");
             if (exercise.UserId != userId)
                 throw new UnauthorizedAccessException("Exercise does not belong to the current user.");
+            if (!trackInDailySession && !exercise.IsOnboardingHookRun)
+                throw new InvalidOperationException("Only onboarding hook exercises can bypass daily session tracking.");
 
-            var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
             var submittedAt = _dateTimeProvider.UtcNow;
 
             foreach (var photo in photos)
@@ -246,17 +257,21 @@ namespace AngularNetBase.Practice.Services
                 dto.Reflection,
                 submittedAt);
 
-            dailySession.RecordExercise(
-                exercise.Id,
-                ExerciseType.DistancedJournal,
-                submittedAt);
+            if (trackInDailySession)
+            {
+                var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
+                dailySession.RecordExercise(
+                    exercise.Id,
+                    ExerciseType.DistancedJournal,
+                    submittedAt);
 
-            await SaveSessionWithRetryAsync(
-                dailySession,
-                exercise.Id,
-                ExerciseType.DistancedJournal,
-                submittedAt,
-                cancellationToken);
+                await SaveSessionWithRetryAsync(
+                    dailySession,
+                    exercise.Id,
+                    ExerciseType.DistancedJournal,
+                    submittedAt,
+                    cancellationToken);
+            }
 
             ThirdPersonFeedbackType? feedback = hasPhotos
                 ? null
@@ -346,6 +361,7 @@ namespace AngularNetBase.Practice.Services
                 exercise.Answer?.Reflection,
                 exercise.Answer?.SubmittedAt,
                 exercise.IsCompleted(),
+                exercise.IsOnboardingHookRun,
                 BuildPhotoUrls(exercise));
         }
 
@@ -379,6 +395,19 @@ namespace AngularNetBase.Practice.Services
 
             if (challenge is null)
                 throw new InvalidOperationException("No challenges found for the selected level.");
+
+            return MapChallenge(challenge, language);
+        }
+
+        public async Task<DistancedJournalChallengeDto> GetOnboardingHookChallengeAsync(
+            string? language = null,
+            CancellationToken cancellationToken = default)
+        {
+            var challenge = await _challengeRepository
+                .GetOnboardingHookByKeyAsync("distancedjournal.default", cancellationToken);
+
+            if (challenge is null)
+                throw new InvalidOperationException("Onboarding distanced journal hook challenge is not configured.");
 
             return MapChallenge(challenge, language);
         }

@@ -40,6 +40,30 @@ public class AuthService
         return await GenerateTokensAsync(user);
     }
 
+    public async Task<AuthResponse> RegisterAsync(string email, string password)
+    {
+        var existing = await _userManager.FindByEmailAsync(email);
+        if (existing is not null)
+            throw new InvalidOperationException("Email is already registered.");
+
+        var user = new ApplicationUser
+        {
+            UserName = email,
+            Email = email,
+            EmailConfirmed = true
+        };
+
+        var createResult = await _userManager.CreateAsync(user, password);
+        if (!createResult.Succeeded)
+        {
+            throw new InvalidOperationException(
+                string.Join(", ", createResult.Errors.Select(e => e.Description)));
+        }
+
+        await _userManager.AddToRoleAsync(user, "User");
+        return await GenerateTokensAsync(user);
+    }
+
     public async Task LogoutAsync(string refreshToken, Guid userId)
     {
         var stored = await _db.RefreshTokens
@@ -84,7 +108,13 @@ public class AuthService
         _db.RefreshTokens.Add(refreshToken);
         await _db.SaveChangesAsync();
 
-        return new AuthResponse(accessToken, refreshTokenValue, expiresAt, user.Id.ToString(), role);
+        return new AuthResponse(
+            accessToken,
+            refreshTokenValue,
+            expiresAt,
+            user.Id.ToString(),
+            role,
+            user.OnboardingCompleted);
     }
 
     private async Task<(string Token, DateTime ExpiresAt, string Role)> GenerateAccessTokenAsync(ApplicationUser user)
@@ -97,6 +127,7 @@ public class AuthService
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Email, user.Email!),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
@@ -169,5 +200,108 @@ public class AuthService
         }
 
         return await GenerateTokensAsync(user);
+    }
+
+    public async Task UpdateOnboardingLanguageAsync(Guid userId, string preferredLanguage)
+    {
+        var user = await GetRequiredUserAsync(userId);
+        EnsureOnboardingStillOpen(user);
+
+        user.PreferredLanguage = preferredLanguage.Trim();
+        await _userManager.UpdateAsync(user);
+    }
+
+    public async Task UpdateOnboardingHookAsync(Guid userId, string hookType, Guid? hookChallengeId)
+    {
+        var user = await GetRequiredUserAsync(userId);
+        EnsureOnboardingStillOpen(user);
+
+        var normalized = hookType.Trim().ToLowerInvariant();
+        if (normalized is not ("distancedjournal" or "perspectivescenario"))
+            throw new InvalidOperationException("HookType must be DistancedJournal or PerspectiveScenario.");
+
+        user.HookType = normalized;
+        user.HookChallengeId = hookChallengeId;
+        await _userManager.UpdateAsync(user);
+    }
+
+    public async Task UpdateOnboardingProfileAsync(
+        Guid userId,
+        string firstName,
+        string lastName,
+        bool notificationEnabled,
+        string? notificationTimeLocal,
+        string? timeZoneId)
+    {
+        var user = await GetRequiredUserAsync(userId);
+        EnsureOnboardingStillOpen(user);
+
+        if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
+            throw new InvalidOperationException("FirstName and LastName are required.");
+
+        if (notificationEnabled)
+        {
+            if (string.IsNullOrWhiteSpace(notificationTimeLocal) || !TimeOnly.TryParse(notificationTimeLocal, out _))
+                throw new InvalidOperationException("NotificationTimeLocal must be a valid time when notifications are enabled.");
+
+            if (string.IsNullOrWhiteSpace(timeZoneId))
+                throw new InvalidOperationException("TimeZoneId is required when notifications are enabled.");
+        }
+
+        user.FirstName = firstName.Trim();
+        user.LastName = lastName.Trim();
+        user.NotificationEnabled = notificationEnabled;
+        user.NotificationTimeLocal = notificationEnabled ? notificationTimeLocal?.Trim() : null;
+        user.TimeZoneId = notificationEnabled ? timeZoneId?.Trim() : null;
+
+        await _userManager.UpdateAsync(user);
+    }
+
+    public async Task CompleteOnboardingAsync(Guid userId)
+    {
+        var user = await GetRequiredUserAsync(userId);
+        EnsureOnboardingStillOpen(user);
+
+        if (string.IsNullOrWhiteSpace(user.PreferredLanguage))
+            throw new InvalidOperationException("PreferredLanguage is required.");
+
+        if (string.IsNullOrWhiteSpace(user.FirstName) || string.IsNullOrWhiteSpace(user.LastName))
+            throw new InvalidOperationException("Profile is incomplete.");
+
+        user.OnboardingCompleted = true;
+        user.OnboardingCompletedAt = DateTime.UtcNow;
+        await _userManager.UpdateAsync(user);
+    }
+
+    public async Task<UserBootstrapResponse> GetBootstrapAsync(Guid userId)
+    {
+        var user = await GetRequiredUserAsync(userId);
+
+        return new UserBootstrapResponse(
+            user.Id.ToString(),
+            user.OnboardingCompleted,
+            user.PreferredLanguage,
+            user.FirstName,
+            user.LastName,
+            user.NotificationEnabled,
+            user.NotificationTimeLocal,
+            user.TimeZoneId,
+            user.HookType,
+            user.HookChallengeId);
+    }
+
+    private async Task<ApplicationUser> GetRequiredUserAsync(Guid userId)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+            throw new InvalidOperationException("User not found.");
+
+        return user;
+    }
+
+    private static void EnsureOnboardingStillOpen(ApplicationUser user)
+    {
+        if (user.OnboardingCompleted)
+            throw new InvalidOperationException("Onboarding already completed.");
     }
 }

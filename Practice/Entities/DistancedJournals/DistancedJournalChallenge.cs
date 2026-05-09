@@ -13,6 +13,8 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
         public string? FollowUpQuestionEn { get; private set; }
         public ChallengeLevel ChallengeLevel { get; private set; }
         public Guid? SkillId { get; private set; }
+        public bool IsOnboardingHook { get; private set; }
+        public string? OnboardingHookKey { get; private set; }
 
         private DistancedJournalChallenge() : base()
         {
@@ -27,7 +29,9 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
             ChallengeLevel challengeLevel,
             Guid? skillId = null,
             string? contentEn = null,
-            string? followUpQuestionEn = null)
+            string? followUpQuestionEn = null,
+            bool isOnboardingHook = false,
+            string? onboardingHookKey = null)
             : base(id)
         {
             if (id == Guid.Empty)
@@ -45,6 +49,8 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
             FollowUpQuestionEn = NormalizeOptional(followUpQuestionEn);
             ChallengeLevel = challengeLevel;
             SkillId = skillId;
+            IsOnboardingHook = isOnboardingHook;
+            OnboardingHookKey = NormalizeOptional(onboardingHookKey);
         }
 
         public void Update(
@@ -67,6 +73,15 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
             FollowUpQuestionEn = NormalizeOptional(followUpQuestionEn);
             ChallengeLevel = challengeLevel;
             SkillId = skillId;
+        }
+
+        public void MarkAsOnboardingHook(string hookKey)
+        {
+            if (string.IsNullOrWhiteSpace(hookKey))
+                throw new ArgumentException("Hook key must be provided.", nameof(hookKey));
+
+            IsOnboardingHook = true;
+            OnboardingHookKey = hookKey.Trim();
         }
 
         private static string? NormalizeOptional(string? value)

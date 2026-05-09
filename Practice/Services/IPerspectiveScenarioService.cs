@@ -26,8 +26,13 @@ namespace AngularNetBase.Practice.Services
             string? language = null,
             CancellationToken cancellationToken = default);
 
+        Task<PerspectiveScenarioPromptDto> GetOnboardingHookChallengeAsync(
+            string? language = null,
+            CancellationToken cancellationToken = default);
+
         Task<PerspectiveScenarioExerciseDto> StartExerciseAsync(
             StartPerspectiveScenarioExerciseDto dto,
+            bool isOnboardingHookRun = false,
             CancellationToken cancellationToken = default);
 
         Task<PerspectiveScenarioExerciseDto?> GetExerciseByIdAsync(
@@ -43,6 +48,7 @@ namespace AngularNetBase.Practice.Services
             Guid userId,
             SubmitPerspectiveScenarioAnswerDto dto,
             string? language = null,
+            bool trackInDailySession = true,
             CancellationToken cancellationToken = default);
 
         Task<AnswerPerspectiveScenarioQuestionResultDto> AnswerQuestionAndGetRevealAsync(
