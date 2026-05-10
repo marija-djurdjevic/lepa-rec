@@ -243,26 +243,42 @@ public class AuthService
     {
         var user = await GetRequiredUserAsync(userId);
         EnsureOnboardingStillOpen(user);
-
-        if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
-            throw new InvalidOperationException("FirstName and LastName are required.");
-
-        if (notificationEnabled)
-        {
-            if (string.IsNullOrWhiteSpace(notificationTimeLocal) || !TimeOnly.TryParse(notificationTimeLocal, out _))
-                throw new InvalidOperationException("NotificationTimeLocal must be a valid time when notifications are enabled.");
-
-            if (string.IsNullOrWhiteSpace(timeZoneId))
-                throw new InvalidOperationException("TimeZoneId is required when notifications are enabled.");
-        }
-
-        user.FirstName = firstName.Trim();
-        user.LastName = lastName.Trim();
-        user.NotificationEnabled = notificationEnabled;
-        user.NotificationTimeLocal = notificationEnabled ? notificationTimeLocal?.Trim() : null;
-        user.TimeZoneId = notificationEnabled ? timeZoneId?.Trim() : null;
+        ApplyProfileSettings(
+            user,
+            firstName,
+            lastName,
+            user.PreferredLanguage,
+            notificationEnabled,
+            notificationTimeLocal,
+            timeZoneId);
 
         await _userManager.UpdateAsync(user);
+    }
+
+    public async Task<ProfileMeResponse> GetProfileAsync(Guid userId)
+    {
+        var user = await GetRequiredUserAsync(userId);
+        return MapProfile(user);
+    }
+
+    public async Task<ProfileMeResponse> UpdateProfileAsync(Guid userId, UpdateProfileMeRequest request)
+    {
+        var user = await GetRequiredUserAsync(userId);
+
+        ApplyProfileSettings(
+            user,
+            request.FirstName,
+            request.LastName,
+            request.PreferredLanguage,
+            request.NotificationEnabled,
+            request.NotificationTimeLocal,
+            request.TimeZoneId);
+
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            throw new InvalidOperationException(string.Join(", ", result.Errors.Select(e => e.Description)));
+
+        return MapProfile(user);
     }
 
     public async Task CompleteOnboardingAsync(Guid userId)
@@ -311,5 +327,51 @@ public class AuthService
     {
         if (user.OnboardingCompleted)
             throw new InvalidOperationException("Onboarding already completed.");
+    }
+
+    private static void ApplyProfileSettings(
+        ApplicationUser user,
+        string firstName,
+        string lastName,
+        string preferredLanguage,
+        bool notificationEnabled,
+        string? notificationTimeLocal,
+        string? timeZoneId)
+    {
+        if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
+            throw new InvalidOperationException("FirstName and LastName are required.");
+
+        if (string.IsNullOrWhiteSpace(preferredLanguage))
+            throw new InvalidOperationException("PreferredLanguage is required.");
+
+        if (notificationEnabled)
+        {
+            if (string.IsNullOrWhiteSpace(notificationTimeLocal) || !TimeOnly.TryParse(notificationTimeLocal, out _))
+                throw new InvalidOperationException("NotificationTimeLocal must be a valid time when notifications are enabled.");
+
+            if (string.IsNullOrWhiteSpace(timeZoneId))
+                throw new InvalidOperationException("TimeZoneId is required when notifications are enabled.");
+        }
+
+        user.FirstName = firstName.Trim();
+        user.LastName = lastName.Trim();
+        user.PreferredLanguage = preferredLanguage.Trim();
+        user.NotificationEnabled = notificationEnabled;
+        user.NotificationTimeLocal = notificationEnabled ? notificationTimeLocal?.Trim() : null;
+        user.TimeZoneId = notificationEnabled ? timeZoneId?.Trim() : null;
+    }
+
+    private static ProfileMeResponse MapProfile(ApplicationUser user)
+    {
+        return new ProfileMeResponse(
+            user.Id.ToString(),
+            user.Email ?? string.Empty,
+            user.FirstName,
+            user.LastName,
+            user.PreferredLanguage,
+            user.NotificationEnabled,
+            user.NotificationTimeLocal,
+            user.TimeZoneId,
+            user.OnboardingCompleted);
     }
 }
