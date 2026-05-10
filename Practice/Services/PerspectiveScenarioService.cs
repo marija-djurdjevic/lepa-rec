@@ -90,8 +90,22 @@ namespace AngularNetBase.Practice.Services
             return MapPrompt(challenge, language);
         }
 
+        public async Task<PerspectiveScenarioPromptDto> GetOnboardingHookChallengeAsync(
+            string? language = null,
+            CancellationToken cancellationToken = default)
+        {
+            var challenge = await _challengeRepository
+                .GetOnboardingHookByKeyAsync("perspectivescenario.default", cancellationToken);
+
+            if (challenge is null)
+                throw new InvalidOperationException("Onboarding perspective scenario hook challenge is not configured.");
+
+            return MapPrompt(challenge, language);
+        }
+
         public async Task<PerspectiveScenarioExerciseDto> StartExerciseAsync(
             StartPerspectiveScenarioExerciseDto dto,
+            bool isOnboardingHookRun = false,
             CancellationToken cancellationToken = default)
         {
             if (dto.UserId == Guid.Empty)
@@ -103,11 +117,14 @@ namespace AngularNetBase.Practice.Services
             var challenge = await _challengeRepository.GetByIdAsync(dto.ChallengeId, cancellationToken);
             if (challenge is null)
                 throw new InvalidOperationException("Perspective scenario challenge was not found.");
+            if (isOnboardingHookRun && !challenge.IsOnboardingHook)
+                throw new InvalidOperationException("Challenge is not configured as onboarding hook.");
 
             var exercise = new PerspectiveScenarioExercise(
                 Guid.NewGuid(),
                 dto.UserId,
-                dto.ChallengeId);
+                dto.ChallengeId,
+                isOnboardingHookRun);
 
             await _exerciseRepository.AddAsync(exercise, cancellationToken);
             await _exerciseRepository.SaveChangesAsync(cancellationToken);
@@ -145,6 +162,7 @@ namespace AngularNetBase.Practice.Services
             Guid userId,
             SubmitPerspectiveScenarioAnswerDto dto,
             string? language = null,
+            bool trackInDailySession = true,
             CancellationToken cancellationToken = default)
         {
             if (dto.ExerciseId == Guid.Empty)
@@ -163,8 +181,6 @@ namespace AngularNetBase.Practice.Services
             if (challenge is null)
                 throw new InvalidOperationException("Perspective scenario challenge was not found.");
 
-            var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
-
             EnsureAnswersMatchChallengeQuestions(challenge, dto.Answers);
 
             var submittedAt = _dateTimeProvider.UtcNow;
@@ -174,13 +190,22 @@ namespace AngularNetBase.Practice.Services
 
             exercise.SubmitAnswers(answers, submittedAt);
 
-            dailySession.RecordExercise(
-                exercise.Id,
-                ExerciseType.PerspectiveScenario,
-                submittedAt);
+            if (trackInDailySession)
+            {
+                var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
+                dailySession.RecordExercise(
+                    exercise.Id,
+                    ExerciseType.PerspectiveScenario,
+                    submittedAt);
 
-            await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
-            await _dailySessionRepository.SaveChangesAsync(cancellationToken);
+                await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
+                await _dailySessionRepository.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                await _exerciseRepository.UpdateAsync(exercise, cancellationToken);
+                await _exerciseRepository.SaveChangesAsync(cancellationToken);
+            }
 
             return new SubmitPerspectiveScenarioResultDto(
                 MapExercise(exercise),
@@ -194,6 +219,7 @@ namespace AngularNetBase.Practice.Services
             Guid userId,
             AnswerPerspectiveScenarioQuestionDto dto,
             string? language = null,
+            bool trackInDailySession = true,
             CancellationToken cancellationToken = default)
         {
             if (dto.ExerciseId == Guid.Empty)
@@ -239,13 +265,16 @@ namespace AngularNetBase.Practice.Services
                 var completedAt = _dateTimeProvider.UtcNow;
                 exercise.MarkSubmitted(completedAt);
 
-                var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
-                dailySession.RecordExercise(
-                    exercise.Id,
-                    ExerciseType.PerspectiveScenario,
-                    completedAt);
+                if (trackInDailySession)
+                {
+                    var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
+                    dailySession.RecordExercise(
+                        exercise.Id,
+                        ExerciseType.PerspectiveScenario,
+                        completedAt);
 
-                await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
+                    await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
+                }
             }
 
             await _exerciseRepository.UpdateAsync(exercise, cancellationToken);
@@ -342,7 +371,8 @@ namespace AngularNetBase.Practice.Services
                 exercise.ChallengeId,
                 exercise.Answers.Select(x => new ScenarioAnswerDto(x.QuestionId, x.AnswerText)).ToList(),
                 exercise.SubmittedAt,
-                exercise.IsCompleted());
+                exercise.IsCompleted(),
+                exercise.IsOnboardingHookRun);
         }
 
         private static bool IsEnglish(string? language)

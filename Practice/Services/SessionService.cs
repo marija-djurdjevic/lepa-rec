@@ -330,7 +330,7 @@ namespace AngularNetBase.Practice.Services
         {
             var challenges = await _distancedJournalChallengeRepository.GetAllAsync(cancellationToken);
             var available = challenges
-                .Where(x => !excludeIds.Contains(x.Id))
+                .Where(x => !excludeIds.Contains(x.Id) && !x.IsOnboardingHook)
                 .ToList();
 
             if (available.Count == 0)
@@ -406,7 +406,7 @@ namespace AngularNetBase.Practice.Services
         {
             var challenges = await _perspectiveScenarioChallengeRepository.GetAllAsync(cancellationToken);
             var available = challenges
-                .Where(x => !excludeIds.Contains(x.Id))
+                .Where(x => !excludeIds.Contains(x.Id) && !x.IsOnboardingHook)
                 .ToList();
 
             if (available.Count == 0)

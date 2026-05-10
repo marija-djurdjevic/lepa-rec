@@ -15,6 +15,10 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
         ChallengeLevel challengeLevel,
         CancellationToken cancellationToken = default);
 
+        Task<DistancedJournalChallenge?> GetOnboardingHookByKeyAsync(
+            string hookKey,
+            CancellationToken cancellationToken = default);
+
         Task SaveChangesAsync(CancellationToken cancellationToken = default);
 
     }

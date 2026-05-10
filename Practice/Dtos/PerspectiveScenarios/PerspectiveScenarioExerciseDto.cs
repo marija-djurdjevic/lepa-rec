@@ -10,5 +10,6 @@ namespace AngularNetBase.Practice.Dtos.PerspectiveScenarios
         Guid ChallengeId,
         IReadOnlyCollection<ScenarioAnswerDto> Answers,
         DateTime? SubmittedAt,
-        bool IsCompleted);
+        bool IsCompleted,
+        bool IsOnboardingHookRun);
 }

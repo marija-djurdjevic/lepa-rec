@@ -9,13 +9,14 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
 
         public Guid UserId { get; private set; }
         public Guid ChallengeId { get; private set; }
+        public bool IsOnboardingHookRun { get; private set; }
         public DateTime? SubmittedAt { get; private set; }
 
         public IReadOnlyCollection<ScenarioAnswer> Answers => _answers;
 
         private PerspectiveScenarioExercise() : base() { }
 
-        public PerspectiveScenarioExercise(Guid id, Guid userId, Guid challengeId) : base(id)
+        public PerspectiveScenarioExercise(Guid id, Guid userId, Guid challengeId, bool isOnboardingHookRun = false) : base(id)
         {
             if (id == Guid.Empty)
                 throw new ArgumentException("Id must be a valid GUID.", nameof(id));
@@ -28,6 +29,7 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
 
             UserId = userId;
             ChallengeId = challengeId;
+            IsOnboardingHookRun = isOnboardingHookRun;
         }
 
         public void SubmitAnswers(IEnumerable<ScenarioAnswer> answers, DateTime submittedAt)

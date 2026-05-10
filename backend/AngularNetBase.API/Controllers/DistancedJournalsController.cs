@@ -65,7 +65,9 @@ namespace AngularNetBase.API.Controllers
                 userId,
                 dto.ChallengeId);
 
-            var result = await _distancedJournalService.StartExerciseAsync(command, cancellationToken);
+            var result = await _distancedJournalService.StartExerciseAsync(
+                command,
+                cancellationToken: cancellationToken);
             return Ok(result);
         }
 
@@ -101,7 +103,10 @@ namespace AngularNetBase.API.Controllers
 
             try
             {
-                var result = await _distancedJournalService.SubmitAnswerAsync(userId, dto, cancellationToken);
+                var result = await _distancedJournalService.SubmitAnswerAsync(
+                    userId,
+                    dto,
+                    cancellationToken: cancellationToken);
                 return Ok(result);
             }
             catch (UnauthorizedAccessException)
@@ -139,7 +144,7 @@ namespace AngularNetBase.API.Controllers
                     userId,
                     dto,
                     photos,
-                    cancellationToken);
+                    cancellationToken: cancellationToken);
                 return Ok(result);
             }
             catch (UnauthorizedAccessException)

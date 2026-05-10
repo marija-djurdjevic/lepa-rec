@@ -98,6 +98,7 @@ namespace AngularNetBase.Practice.Services
         private async Task<(Guid First, Guid Second)> SelectDistancedJournalChallengeIdsAsync(CancellationToken cancellationToken)
         {
             var challenges = (await _distancedJournalChallengeRepository.GetAllAsync(cancellationToken)).ToList();
+            challenges = challenges.Where(x => !x.IsOnboardingHook).ToList();
             if (challenges.Count == 0)
                 throw new InvalidOperationException("No distanced journal challenges found.");
 
@@ -112,6 +113,7 @@ namespace AngularNetBase.Practice.Services
         private async Task<(Guid First, Guid Second)> SelectPerspectiveScenarioChallengeIdsAsync(CancellationToken cancellationToken)
         {
             var challenges = (await _perspectiveScenarioChallengeRepository.GetAllAsync(cancellationToken)).ToList();
+            challenges = challenges.Where(x => !x.IsOnboardingHook).ToList();
             if (challenges.Count == 0)
                 throw new InvalidOperationException("No perspective scenario challenges found.");
 
@@ -146,6 +148,7 @@ namespace AngularNetBase.Practice.Services
         private async Task<Guid> SelectSecondDistancedJournalChallengeIdAsync(Guid firstId, CancellationToken cancellationToken)
         {
             var challenges = (await _distancedJournalChallengeRepository.GetAllAsync(cancellationToken)).ToList();
+            challenges = challenges.Where(x => !x.IsOnboardingHook).ToList();
             if (challenges.Count == 0)
                 throw new InvalidOperationException("No distanced journal challenges found.");
 
@@ -162,6 +165,7 @@ namespace AngularNetBase.Practice.Services
         private async Task<Guid> SelectSecondPerspectiveScenarioChallengeIdAsync(Guid firstId, CancellationToken cancellationToken)
         {
             var challenges = (await _perspectiveScenarioChallengeRepository.GetAllAsync(cancellationToken)).ToList();
+            challenges = challenges.Where(x => !x.IsOnboardingHook).ToList();
             if (challenges.Count == 0)
                 throw new InvalidOperationException("No perspective scenario challenges found.");
 

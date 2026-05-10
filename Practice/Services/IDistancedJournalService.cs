@@ -23,6 +23,7 @@ namespace AngularNetBase.Practice.Services
 
         Task<DistancedJournalExerciseDto> StartExerciseAsync(
             StartDistancedJournalExerciseDto dto,
+            bool isOnboardingHookRun = false,
             CancellationToken cancellationToken = default);
 
         Task<DistancedJournalExerciseDto?> GetExerciseByIdAsync(
@@ -37,12 +38,14 @@ namespace AngularNetBase.Practice.Services
         Task<SubmitDistancedJournalResultDto> SubmitAnswerAsync(
             Guid userId,
             SubmitDistancedJournalAnswerDto dto,
+            bool trackInDailySession = true,
             CancellationToken cancellationToken = default);
 
         Task<SubmitDistancedJournalResultDto> SubmitAnswerWithPhotosAsync(
             Guid userId,
             SubmitDistancedJournalAnswerDto dto,
             IReadOnlyCollection<PhotoUpload> photos,
+            bool trackInDailySession = true,
             CancellationToken cancellationToken = default);
 
         Task<DistancedJournalExerciseDto> AddReflectionAsync(
@@ -58,6 +61,10 @@ namespace AngularNetBase.Practice.Services
 
         Task<DistancedJournalChallengeDto> GetRandomChallengeAsync(
             ChallengeLevel level,
+            string? language = null,
+            CancellationToken cancellationToken = default);
+
+        Task<DistancedJournalChallengeDto> GetOnboardingHookChallengeAsync(
             string? language = null,
             CancellationToken cancellationToken = default);
     }

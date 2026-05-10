@@ -260,7 +260,9 @@ Opišite šta se desilo u trećem licu, kao da pišete scenu iz filma gde ste vi
                         @"Think of a recent conversation that did not go the way you wanted. Maybe something got lost in communication, or you left feeling misunderstood.
 
 Describe what happened in the third person, as if you were writing a movie scene where you and the other person are characters. What was each person trying to say?",
-                        @"What is one moment in that conversation where things could have gone differently? What could the main character who represents you have done or said to produce a better outcome?"
+                        @"What is one moment in that conversation where things could have gone differently? What could the main character who represents you have done or said to produce a better outcome?",
+                        true,
+                        "distancedjournal.default"
                     ),
                     new DistancedJournalChallenge(
                         Guid.NewGuid(),
@@ -772,6 +774,11 @@ Describe your case in the third person, without judgment. What is the main chara
                         questions,
                         TranslateToEnglish(scenario.Scenario));
                 }).ToList();
+
+                if (challenges.Count > 0)
+                {
+                    challenges[0].MarkAsOnboardingHook("perspectivescenario.default");
+                }
 
                 context.PerspectiveScenarioChallenges.AddRange(challenges);
             }
