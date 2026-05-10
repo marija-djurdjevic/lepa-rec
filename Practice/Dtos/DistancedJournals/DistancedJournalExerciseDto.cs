@@ -13,5 +13,6 @@ namespace AngularNetBase.Practice.Dtos.DistancedJournals
     string? Reflection,
     DateTime? SubmittedAt,
     bool IsCompleted,
+    bool IsOnboardingHookRun,
     IReadOnlyCollection<string> PhotoUrls);
 }

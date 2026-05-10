@@ -47,6 +47,12 @@ namespace AngularNetBase.Identity.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("HookChallengeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("HookType")
+                        .HasColumnType("text");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -65,6 +71,18 @@ namespace AngularNetBase.Identity.Infrastructure.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<bool>("NotificationEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("NotificationTimeLocal")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("OnboardingCompleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("OnboardingCompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("PasswordHash")
                         .HasColumnType("text");
 
@@ -74,7 +92,14 @@ namespace AngularNetBase.Identity.Infrastructure.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("PreferredLanguage")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("SecurityStamp")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TimeZoneId")
                         .HasColumnType("text");
 
                     b.Property<bool>("TwoFactorEnabled")
@@ -94,6 +119,135 @@ namespace AngularNetBase.Identity.Infrastructure.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", "identity");
+                });
+
+            modelBuilder.Entity("AngularNetBase.Identity.Entities.OnboardingSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeviceFingerprint")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("DistancedExerciseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DistancedFollowUpAnswer")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DistancedMainAnswer")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DistancedReflection")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DistancedSessionDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("HookChallengeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("HookExerciseCompleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("HookType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("PerspectiveAnswersJson")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("PerspectiveExerciseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PerspectiveLang")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PreferredLanguage")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("UsedAt");
+
+                    b.ToTable("OnboardingSessions", "identity");
+                });
+
+            modelBuilder.Entity("AngularNetBase.Identity.Entities.PushDeviceToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "IsActive");
+
+                    b.ToTable("PushDeviceTokens", "identity");
+                });
+
+            modelBuilder.Entity("AngularNetBase.Identity.Entities.PushReminderDispatch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("LocalDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime>("SentAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SentAtUtc");
+
+                    b.HasIndex("UserId", "LocalDate")
+                        .IsUnique();
+
+                    b.ToTable("PushReminderDispatches", "identity");
                 });
 
             modelBuilder.Entity("AngularNetBase.Identity.Entities.RefreshToken", b =>
@@ -253,6 +407,28 @@ namespace AngularNetBase.Identity.Infrastructure.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", "identity");
+                });
+
+            modelBuilder.Entity("AngularNetBase.Identity.Entities.PushDeviceToken", b =>
+                {
+                    b.HasOne("AngularNetBase.Identity.Entities.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AngularNetBase.Identity.Entities.PushReminderDispatch", b =>
+                {
+                    b.HasOne("AngularNetBase.Identity.Entities.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("AngularNetBase.Identity.Entities.RefreshToken", b =>

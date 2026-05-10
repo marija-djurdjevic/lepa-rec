@@ -19,6 +19,7 @@ public static class IdentityModuleRegistration
     public static IServiceCollection AddIdentityModule(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
+        services.Configure<FirebaseOptions>(configuration.GetSection("Firebase"));
 
         services.AddDbContext<IdentityContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
@@ -46,8 +47,13 @@ public static class IdentityModuleRegistration
             });
 
         services.AddAuthorization();
+        services.AddHttpClient();
 
         services.AddScoped<AuthService>();
+        services.AddScoped<OnboardingSessionService>();
+        services.AddScoped<PushTokenService>();
+        services.AddScoped<IPushNotificationSender, FcmPushNotificationSender>();
+        services.AddHostedService<PushReminderScheduler>();
         services.AddScoped<IUserProfileReader, UserProfileReader>();
 
         return services;

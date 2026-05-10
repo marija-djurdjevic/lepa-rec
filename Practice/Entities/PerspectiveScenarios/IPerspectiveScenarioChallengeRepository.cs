@@ -16,6 +16,10 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
             ChallengeLevel challengeLevel,
             CancellationToken cancellationToken = default);
 
+        Task<PerspectiveScenarioChallenge?> GetOnboardingHookByKeyAsync(
+            string hookKey,
+            CancellationToken cancellationToken = default);
+
         Task SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

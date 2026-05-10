@@ -13,6 +13,8 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
         public int ActorCount { get; private set; }
         public string ScenarioText { get; private set; } = string.Empty;
         public string? ScenarioTextEn { get; private set; }
+        public bool IsOnboardingHook { get; private set; }
+        public string? OnboardingHookKey { get; private set; }
 
         public IReadOnlyCollection<PerspectiveScenarioQuestion> Questions => _questions;
 
@@ -89,6 +91,15 @@ namespace AngularNetBase.Practice.Entities.PerspectiveScenarios
                     question.QuestionTextEn,
                     question.RevealEn));
             }
+        }
+
+        public void MarkAsOnboardingHook(string hookKey)
+        {
+            if (string.IsNullOrWhiteSpace(hookKey))
+                throw new ArgumentException("Hook key must be provided.", nameof(hookKey));
+
+            IsOnboardingHook = true;
+            OnboardingHookKey = hookKey.Trim();
         }
 
         public PerspectiveScenarioQuestion AddQuestion(Guid questionId, Guid skillId, int order, string questionText, string reveal)

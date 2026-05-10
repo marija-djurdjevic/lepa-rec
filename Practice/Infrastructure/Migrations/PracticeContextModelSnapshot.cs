@@ -108,6 +108,13 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
+                    b.Property<bool>("IsOnboardingHook")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("OnboardingHookKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<Guid?>("SkillId")
                         .HasColumnType("uuid");
 
@@ -118,6 +125,9 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                         .HasColumnName("xmin");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OnboardingHookKey")
+                        .IsUnique();
 
                     b.HasIndex("SkillId");
 
@@ -132,6 +142,9 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
                     b.Property<Guid>("ChallengeId")
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("IsOnboardingHookRun")
+                        .HasColumnType("boolean");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -207,6 +220,13 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<bool>("IsOnboardingHook")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("OnboardingHookKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("ScenarioText")
                         .IsRequired()
                         .HasMaxLength(2000)
@@ -224,6 +244,9 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("OnboardingHookKey")
+                        .IsUnique();
+
                     b.ToTable("PerspectiveScenarioChallenges", "practice");
                 });
 
@@ -235,6 +258,9 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
 
                     b.Property<Guid>("ChallengeId")
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("IsOnboardingHookRun")
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime?>("SubmittedAt")
                         .HasColumnType("timestamp with time zone");

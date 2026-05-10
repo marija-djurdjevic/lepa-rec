@@ -1,6 +1,9 @@
 using System.Security.Claims;
 using AngularNetBase.Identity.Dtos;
 using AngularNetBase.Identity.Services;
+using AngularNetBase.Practice.Dtos.DistancedJournals;
+using AngularNetBase.Practice.Dtos.PerspectiveScenarios;
+using AngularNetBase.Practice.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,10 +14,20 @@ namespace AngularNetBase.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly AuthService _authService;
+    private readonly OnboardingSessionService _onboardingSessionService;
+    private readonly IDistancedJournalService _distancedJournalService;
+    private readonly IPerspectiveScenarioService _perspectiveScenarioService;
 
-    public AuthController(AuthService authService)
+    public AuthController(
+        AuthService authService,
+        OnboardingSessionService onboardingSessionService,
+        IDistancedJournalService distancedJournalService,
+        IPerspectiveScenarioService perspectiveScenarioService)
     {
         _authService = authService;
+        _onboardingSessionService = onboardingSessionService;
+        _distancedJournalService = distancedJournalService;
+        _perspectiveScenarioService = perspectiveScenarioService;
     }
 
     [HttpPost("login")]
@@ -25,6 +38,105 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Invalid email or password" });
 
         return Ok(result);
+    }
+
+    [HttpPost("register")]
+    public async Task<IActionResult> Register(RegisterRequest request)
+    {
+        try
+        {
+            var result = await _authService.RegisterAsync(request.Email, request.Password);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("register-with-onboarding")]
+    public async Task<IActionResult> RegisterWithOnboarding(RegisterWithOnboardingRequest request)
+    {
+        try
+        {
+            var session = await _onboardingSessionService.GetActiveSessionAsync(request.OnboardingSessionId);
+            _onboardingSessionService.EnsureReadyForRegistration(session);
+
+            var user = await _authService.RegisterUserAsync(request.Email, request.Password);
+
+            await _authService.UpdateOnboardingLanguageAsync(user.Id, session.PreferredLanguage!);
+            await _authService.UpdateOnboardingHookAsync(user.Id, session.HookType!, session.HookChallengeId);
+
+            if (session.HookType == "distancedjournal")
+            {
+                if (!session.HookChallengeId.HasValue || !session.DistancedSessionDate.HasValue
+                    || string.IsNullOrWhiteSpace(session.DistancedMainAnswer)
+                    || string.IsNullOrWhiteSpace(session.DistancedFollowUpAnswer))
+                {
+                    return BadRequest(new { code = OnboardingErrorCodes.Incomplete, message = "Onboarding session is incomplete." });
+                }
+
+                var started = await _distancedJournalService.StartExerciseAsync(
+                    new StartDistancedJournalExerciseDto(user.Id, session.HookChallengeId.Value),
+                    isOnboardingHookRun: true);
+
+                await _distancedJournalService.SubmitAnswerAsync(
+                    user.Id,
+                    new SubmitDistancedJournalAnswerDto(
+                        started.Id,
+                        session.DistancedSessionDate.Value,
+                        session.DistancedMainAnswer!,
+                        session.DistancedFollowUpAnswer!,
+                        session.DistancedReflection),
+                    trackInDailySession: false);
+            }
+            else if (session.HookType == "perspectivescenario")
+            {
+                if (!session.HookChallengeId.HasValue || string.IsNullOrWhiteSpace(session.PerspectiveAnswersJson))
+                    return BadRequest(new { code = OnboardingErrorCodes.Incomplete, message = "Onboarding session is incomplete." });
+
+                var answers = System.Text.Json.JsonSerializer.Deserialize<IReadOnlyCollection<SessionPerspectiveAnswerItemDto>>(
+                    session.PerspectiveAnswersJson!);
+
+                if (answers is null || answers.Count == 0)
+                    return BadRequest(new { code = OnboardingErrorCodes.Incomplete, message = "Onboarding session is incomplete." });
+
+                var started = await _perspectiveScenarioService.StartExerciseAsync(
+                    new StartPerspectiveScenarioExerciseDto(user.Id, session.HookChallengeId.Value),
+                    isOnboardingHookRun: true);
+
+                await _perspectiveScenarioService.SubmitAnswersAsync(
+                    user.Id,
+                    new SubmitPerspectiveScenarioAnswerDto(
+                        started.Id,
+                        DateTime.UtcNow,
+                        answers.Select(x => new SubmitPerspectiveScenarioAnswerItemDto(x.QuestionId, x.AnswerText)).ToList()),
+                    session.PerspectiveLang,
+                    trackInDailySession: false);
+            }
+
+            await _authService.UpdateOnboardingProfileAsync(
+                user.Id,
+                request.Profile.FirstName,
+                request.Profile.LastName,
+                request.Profile.NotificationEnabled,
+                request.Profile.NotificationTimeLocal,
+                request.Profile.TimeZoneId);
+
+            await _authService.CompleteOnboardingAsync(user.Id);
+            await _onboardingSessionService.MarkUsedAsync(session.Id);
+
+            var response = await _authService.LoginAsync(request.Email, request.Password);
+            return Ok(response);
+        }
+        catch (OnboardingException ex)
+        {
+            return BadRequest(new { code = ex.Code, message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("refresh")]

@@ -256,6 +256,15 @@ namespace AngularNetBase.Practice.Infrastructure
                 entity.Property(e => e.SkillId)
                     .IsRequired(false);
 
+                entity.Property(e => e.IsOnboardingHook)
+                    .IsRequired();
+
+                entity.Property(e => e.OnboardingHookKey)
+                    .HasMaxLength(100);
+
+                entity.HasIndex(e => e.OnboardingHookKey)
+                    .IsUnique();
+
                 entity.HasOne<Skill>()
                     .WithMany()
                     .HasForeignKey(e => e.SkillId)
@@ -272,6 +281,9 @@ namespace AngularNetBase.Practice.Infrastructure
                     .IsRequired();
 
                 entity.Property(e => e.ChallengeId)
+                    .IsRequired();
+
+                entity.Property(e => e.IsOnboardingHookRun)
                     .IsRequired();
 
                 entity.HasIndex(e => new { e.UserId, e.ChallengeId });
@@ -414,6 +426,15 @@ namespace AngularNetBase.Practice.Infrastructure
                     .HasMaxLength(20)
                     .IsRequired();
 
+                entity.Property(e => e.IsOnboardingHook)
+                    .IsRequired();
+
+                entity.Property(e => e.OnboardingHookKey)
+                    .HasMaxLength(100);
+
+                entity.HasIndex(e => e.OnboardingHookKey)
+                    .IsUnique();
+
                 entity.HasMany(e => e.Questions)
                     .WithOne()
                     .HasForeignKey(q => q.PerspectiveScenarioChallengeId)
@@ -466,6 +487,9 @@ namespace AngularNetBase.Practice.Infrastructure
                     .IsRequired();
 
                 entity.Property(e => e.SubmittedAt);
+
+                entity.Property(e => e.IsOnboardingHookRun)
+                    .IsRequired();
 
                 entity.HasIndex(e => new { e.UserId, e.ChallengeId });
 
