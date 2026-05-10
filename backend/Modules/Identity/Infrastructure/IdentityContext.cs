@@ -9,6 +9,8 @@ public class IdentityContext : IdentityDbContext<ApplicationUser, IdentityRole<G
 {
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<OnboardingSession> OnboardingSessions => Set<OnboardingSession>();
+    public DbSet<PushDeviceToken> PushDeviceTokens => Set<PushDeviceToken>();
+    public DbSet<PushReminderDispatch> PushReminderDispatches => Set<PushReminderDispatch>();
 
     public IdentityContext(DbContextOptions<IdentityContext> options) : base(options) { }
 
@@ -37,6 +39,31 @@ public class IdentityContext : IdentityDbContext<ApplicationUser, IdentityRole<G
             entity.Property(x => x.PerspectiveAnswersJson).HasColumnType("text");
             entity.HasIndex(x => x.ExpiresAt);
             entity.HasIndex(x => x.UsedAt);
+        });
+
+        builder.Entity<PushDeviceToken>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Token).HasMaxLength(500).IsRequired();
+            entity.Property(x => x.Platform).HasMaxLength(30).IsRequired();
+            entity.Property(x => x.IsActive).IsRequired();
+            entity.HasIndex(x => x.Token).IsUnique();
+            entity.HasIndex(x => new { x.UserId, x.IsActive });
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<PushReminderDispatch>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.UserId, x.LocalDate }).IsUnique();
+            entity.HasIndex(x => x.SentAtUtc);
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
