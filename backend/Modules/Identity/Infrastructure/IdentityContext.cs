@@ -8,6 +8,7 @@ namespace AngularNetBase.Identity.Infrastructure;
 public class IdentityContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
 {
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<OnboardingSession> OnboardingSessions => Set<OnboardingSession>();
 
     public IdentityContext(DbContextOptions<IdentityContext> options) : base(options) { }
 
@@ -25,6 +26,17 @@ public class IdentityContext : IdentityDbContext<ApplicationUser, IdentityRole<G
                 .WithMany()
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<OnboardingSession>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PreferredLanguage).HasMaxLength(10);
+            entity.Property(x => x.HookType).HasMaxLength(50);
+            entity.Property(x => x.DeviceFingerprint).HasMaxLength(200);
+            entity.Property(x => x.PerspectiveAnswersJson).HasColumnType("text");
+            entity.HasIndex(x => x.ExpiresAt);
+            entity.HasIndex(x => x.UsedAt);
         });
     }
 }

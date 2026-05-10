@@ -55,6 +55,7 @@ namespace AngularNetBase.Practice.Services
             Guid userId,
             AnswerPerspectiveScenarioQuestionDto dto,
             string? language = null,
+            bool trackInDailySession = true,
             CancellationToken cancellationToken = default);
     }
 }

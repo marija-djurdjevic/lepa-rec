@@ -42,6 +42,12 @@ public class AuthService
 
     public async Task<AuthResponse> RegisterAsync(string email, string password)
     {
+        var user = await RegisterUserAsync(email, password);
+        return await GenerateTokensAsync(user);
+    }
+
+    public async Task<ApplicationUser> RegisterUserAsync(string email, string password)
+    {
         var existing = await _userManager.FindByEmailAsync(email);
         if (existing is not null)
             throw new InvalidOperationException("Email is already registered.");
@@ -55,13 +61,15 @@ public class AuthService
 
         var createResult = await _userManager.CreateAsync(user, password);
         if (!createResult.Succeeded)
-        {
-            throw new InvalidOperationException(
-                string.Join(", ", createResult.Errors.Select(e => e.Description)));
-        }
+            throw new InvalidOperationException(string.Join(", ", createResult.Errors.Select(e => e.Description)));
 
         await _userManager.AddToRoleAsync(user, "User");
-        return await GenerateTokensAsync(user);
+        return user;
+    }
+
+    public Task<AuthResponse> IssueTokensAsync(ApplicationUser user)
+    {
+        return GenerateTokensAsync(user);
     }
 
     public async Task LogoutAsync(string refreshToken, Guid userId)

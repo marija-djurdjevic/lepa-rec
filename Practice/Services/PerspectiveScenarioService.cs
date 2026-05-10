@@ -201,6 +201,11 @@ namespace AngularNetBase.Practice.Services
                 await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
                 await _dailySessionRepository.SaveChangesAsync(cancellationToken);
             }
+            else
+            {
+                await _exerciseRepository.UpdateAsync(exercise, cancellationToken);
+                await _exerciseRepository.SaveChangesAsync(cancellationToken);
+            }
 
             return new SubmitPerspectiveScenarioResultDto(
                 MapExercise(exercise),
@@ -214,6 +219,7 @@ namespace AngularNetBase.Practice.Services
             Guid userId,
             AnswerPerspectiveScenarioQuestionDto dto,
             string? language = null,
+            bool trackInDailySession = true,
             CancellationToken cancellationToken = default)
         {
             if (dto.ExerciseId == Guid.Empty)
@@ -259,13 +265,16 @@ namespace AngularNetBase.Practice.Services
                 var completedAt = _dateTimeProvider.UtcNow;
                 exercise.MarkSubmitted(completedAt);
 
-                var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
-                dailySession.RecordExercise(
-                    exercise.Id,
-                    ExerciseType.PerspectiveScenario,
-                    completedAt);
+                if (trackInDailySession)
+                {
+                    var dailySession = await GetOrCreateTodaySessionAsync(exercise.UserId, cancellationToken);
+                    dailySession.RecordExercise(
+                        exercise.Id,
+                        ExerciseType.PerspectiveScenario,
+                        completedAt);
 
-                await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
+                    await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
+                }
             }
 
             await _exerciseRepository.UpdateAsync(exercise, cancellationToken);

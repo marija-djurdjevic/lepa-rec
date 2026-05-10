@@ -52,6 +52,20 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                 type: "uuid",
                 nullable: true);
 
+            migrationBuilder.Sql(
+                """
+                UPDATE practice."PerspectiveScenarioQuestions" q
+                SET "Order" = s.rn
+                FROM (
+                    SELECT "Id",
+                           ROW_NUMBER() OVER (
+                               PARTITION BY "PerspectiveScenarioChallengeId"
+                               ORDER BY "Id") AS rn
+                    FROM practice."PerspectiveScenarioQuestions"
+                ) s
+                WHERE q."Id" = s."Id";
+                """);
+
             migrationBuilder.CreateIndex(
                 name: "IX_PerspectiveScenarioQuestions_PerspectiveScenarioChallengeId~",
                 schema: "practice",

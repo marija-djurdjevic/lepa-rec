@@ -176,6 +176,11 @@ namespace AngularNetBase.Practice.Services
                     submittedAt,
                     cancellationToken);
             }
+            else
+            {
+                await _exerciseRepository.UpdateAsync(exercise, cancellationToken);
+                await _exerciseRepository.SaveChangesAsync(cancellationToken);
+            }
 
             var feedback = await ComputeFeedbackAsync(
                 exercise.UserId,
@@ -271,6 +276,11 @@ namespace AngularNetBase.Practice.Services
                     ExerciseType.DistancedJournal,
                     submittedAt,
                     cancellationToken);
+            }
+            else
+            {
+                await _exerciseRepository.UpdateAsync(exercise, cancellationToken);
+                await _exerciseRepository.SaveChangesAsync(cancellationToken);
             }
 
             ThirdPersonFeedbackType? feedback = hasPhotos

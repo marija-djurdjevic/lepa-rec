@@ -48,6 +48,7 @@ public static class IdentityModuleRegistration
         services.AddAuthorization();
 
         services.AddScoped<AuthService>();
+        services.AddScoped<OnboardingSessionService>();
         services.AddScoped<IUserProfileReader, UserProfileReader>();
 
         return services;

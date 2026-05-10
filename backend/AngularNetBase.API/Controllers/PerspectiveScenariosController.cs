@@ -126,7 +126,11 @@ namespace AngularNetBase.API.Controllers
 
             try
             {
-                var result = await _perspectiveScenarioService.AnswerQuestionAndGetRevealAsync(userId, dto, lang, cancellationToken);
+                var result = await _perspectiveScenarioService.AnswerQuestionAndGetRevealAsync(
+                    userId,
+                    dto,
+                    lang,
+                    cancellationToken: cancellationToken);
                 return Ok(result);
             }
             catch (UnauthorizedAccessException)
