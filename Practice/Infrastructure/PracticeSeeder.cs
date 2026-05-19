@@ -225,6 +225,7 @@ namespace AngularNetBase.Practice.Infrastructure
                 (Guid.Parse("a6666666-6666-6666-6666-666666666666"), "Prospective reasoning", "The ability to consider multiple ways an interpersonal situation may unfold. Recognition that situations, relationships, and people are not fixed. Recognition that current conflicts may resolve, current alliances may fray, and the meaning of an event shifts with time and context."),
                 (Guid.Parse("a7777777-7777-7777-7777-777777777777"), "Viewpoint simulation", "Active consideration of how others involved in a situation see, feel, and reason through it."),
                 (Guid.Parse("a8888888-8888-8888-8888-888888888888"), "Perspective integration", "Active effort to synthesize competing viewpoints into a coherent, higher-order understanding and a resolution that addresses the core interests behind each position, and not a mere compromise."),
+                (Guid.Parse("a9999999-9999-9999-9999-999999999999"), "Frame recognition", "Noticing that one's read of a situation reflects a particular vantage point rather than reality as it is. Treating one's own interpretation as an interpretation rather than as direct perception."),
             };
 
             foreach (var skill in requiredSkills)
@@ -233,6 +234,71 @@ namespace AngularNetBase.Practice.Infrastructure
                 {
                     context.Skills.Add(new Skill(skill.Id, skill.Name, skill.Description));
                 }
+            }
+
+            var skillIdsByLegacy = new Dictionary<int, Guid>
+            {
+                [-1] = Guid.Parse("a1111111-1111-1111-1111-111111111111"),
+                [-2] = Guid.Parse("a2222222-2222-2222-2222-222222222222"),
+                [-3] = Guid.Parse("a3333333-3333-3333-3333-333333333333"),
+                [-4] = Guid.Parse("a4444444-4444-4444-4444-444444444444"),
+                [-5] = Guid.Parse("a5555555-5555-5555-5555-555555555555"),
+                [-6] = Guid.Parse("a6666666-6666-6666-6666-666666666666"),
+                [-7] = Guid.Parse("a7777777-7777-7777-7777-777777777777"),
+                [-8] = Guid.Parse("a8888888-8888-8888-8888-888888888888"),
+                [-9] = Guid.Parse("a9999999-9999-9999-9999-999999999999"),
+            };
+
+            var skillEndMessages = new (int LegacySkillId, string Text)[]
+            {
+                (-1, "U zadatku ste pisali o sopstvenom iskustvu u trećem licu. Istraživanja pokazuju da kada situaciju sagledavamo kao da nije naša, naš mozak je drugačije obrađuje i vidimo je objektivnije."),
+                (-1, "Kad nas preplavi emocija, teško možemo čuti drugu osobu. Distanciranjem vraćamo pažnju i strpljenje i lakše biramo reakciju."),
+                (-1, "Impulsivne odluke retko su dobre. Ova tehnika vraća jasnoću u momentima kada je najteže doći do nje."),
+                (-1, "Ova veština čuva odnose, ugled i mir u svakodnevnom životu jer smanjuje reakcije iz afekta."),
+                (-2, "U zadatku ste zamišljali kako će ova situacija izgledati za mesec ili godinu. Vremenska distanca pomaže da prepoznamo šta je zaista važno dugoročno."),
+                (-2, "Vremensko distanciranje odvaja stvarno bitno od buke koja u trenutku deluje hitno, a samo nas troši."),
+                (-2, "Kad pogledamo dalje od ovog trenutka, lakše izbegnemo odluke koje nas kasnije skupo koštaju."),
+                (-2, "Ova veština smanjuje trenutni teret i povećava šansu da postupimo mudro."),
+                (-3, "U zadatku ste sagledali situaciju iz perspektive neutralnog posmatrača. To smanjuje upliv ličnih emocija i daje jasniju sliku."),
+                (-3, "Kad se pogledamo spolja, bolje vidimo kako naše ponašanje utiče na druge i gde možemo da korigujemo kurs."),
+                (-3, "Posmatračka perspektiva često otkrije mogućnosti koje ne vidimo kada smo zaglavljeni u sopstvenoj glavi."),
+                (-3, "Ova veština pomaže da očuvamo sopstveni i društveni mir kroz smirenije i jasnije odluke."),
+                (-4, "U zadatku ste se postavili u ulogu savetnika nekoga do koga vam je stalo. Tako sebi dajete kvalitetnije savete koje je lakše prihvatiti."),
+                (-4, "Pristup šta bih rekao prijatelju zaobilazi ego i vraća kvalitet razmišljanja koji već imate."),
+                (-4, "Ovom vežbom trenirate da budete dobar prijatelj sebi i da smanjite nepotreban unutrašnji pritisak."),
+                (-4, "Smiren i razuman glas koji imamo za druge, primenjen na sebe, pomaže da donesemo odluke bez kajanja."),
+                (-5, "U zadatku ste ispitivali šta zaista znate, šta pretpostavljate i šta ne znate. To je osnova za bolje rasuđivanje."),
+                (-5, "Kalibracija sopstvenog znanja otvara prostor za stvaran razgovor, posebno sa ljudima čije se iskustvo razlikuje od našeg."),
+                (-5, "Prevelika sigurnost u sopstvene procene ograničava nas. Otvorenost za ispravku vodi boljim odlukama."),
+                (-5, "Kada znamo granice svog znanja, radoznalost raste i vidimo mogućnosti koje ranije nisu bile vidljive."),
+                (-6, "U zadatku ste razmatrali više načina na koje situacija može da se razvije. To gradi fleksibilnost i bolju pripremu."),
+                (-6, "Sposobnost da vidimo više mogućih ishoda daje nam moć da biramo poteze koji vode boljem rezultatu."),
+                (-6, "Kada prihvatimo da tok situacije nije fiksan, otvara se prostor za pametnije delovanje."),
+                (-6, "Razmišljanje o alternativnim ishodima pomaže da zahtevne razgovore vodimo mirnije i sa više kontrole."),
+                (-7, "U zadatku ste svesno zamišljali kako druga osoba vidi, oseća i razume situaciju. To smanjuje osuđivanje i približava ljude."),
+                (-7, "Da bi podrška bila korisna, moramo razumeti gde se druga osoba zaista nalazi, a ne samo gde mi mislimo da jeste."),
+                (-7, "Sagledavanje tuđeg ugla je preduslov za kvalitetne pregovore, vođenje i svakodnevnu saradnju."),
+                (-7, "Mnoge svađe nastaju iz pogrešne pretpostavke o tuđoj nameri. Ova veština te greške značajno smanjuje."),
+                (-8, "U zadatku ste pokušali da suprotstavljene tačke gledišta spojite u koherentno rešenje, ne samo kompromis."),
+                (-8, "Integracija perspektiva ne deli postojeće opcije, već stvara bolje novo rešenje za uključene strane."),
+                (-8, "Ova veština smanjuje vraćanje istih konflikata jer vodi dogovorima koji traju."),
+                (-8, "Kada povezujemo naizgled nespojive ideje, razvijamo kreativnost i širimo prostor mogućih ishoda."),
+                (-9, "U zadatku ste primetili da vaše viđenje nije objektivna stvarnost već interpretacija oblikovana iskustvom i emocijama."),
+                (-9, "Prepoznavanje sopstvenog okvira smanjuje slepe tačke i otvara prostor za tačnije procene."),
+                (-9, "Kad vidimo da i mi gledamo kroz okvir, lakše prihvatamo legitimno drugačije poglede drugih."),
+                (-9, "Navika propitivanja sopstvenog okvira pomaže da izbegnemo brzoplete zaključke i skupe greške."),
+            };
+
+            foreach (var message in skillEndMessages)
+            {
+                if (!skillIdsByLegacy.TryGetValue(message.LegacySkillId, out var skillId))
+                    continue;
+
+                context.GrowthMessages.Add(new GrowthMessage(
+                    Guid.NewGuid(),
+                    message.Text,
+                    GrowthMessageType.End,
+                    skillId: skillId));
             }
 
             if (!context.DistancedJournalChallenges.Any())
