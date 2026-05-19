@@ -9,7 +9,7 @@ namespace AngularNetBase.Practice.Services
 {
     public class GrowthMessageService : IGrowthMessageService
     {
-        private static readonly IReadOnlyDictionary<Guid, string> SkillEndMessagePrefixes =
+        private static readonly IReadOnlyDictionary<Guid, string> SkillEndMessagePrefixesSr =
             new Dictionary<Guid, string>
             {
                 [Guid.Parse("a1111111-1111-1111-1111-111111111111")] = "U zadatku ste pisali o sopstvenom iskustvu u trećem licu. Istraživanja pokazuju da kada situaciju sagledavamo kao da nije naša, naš mozak je drugačije \"obrađuje\" i vidimo je objektivnije. Kroz ovu vežbu stičete sposobnost da se u svakodnevnoj interakciji distancirate od trenutnog afekta i vidite svet jasnije.",
@@ -21,6 +21,19 @@ namespace AngularNetBase.Practice.Services
                 [Guid.Parse("a7777777-7777-7777-7777-777777777777")] = "U zadatku ste svesno zamišljali kako druga osoba vidi, oseća i razume situaciju. Istraživanja pokazuju da ovakav fokusiran napor, čak i kad traje samo nekoliko minuta, smanjuje predrasude i osuđivanje i pomaže vam da se približite ljudima.",
                 [Guid.Parse("a8888888-8888-8888-8888-888888888888")] = "U zadatku ste pokušali da različite i suprotstavljene tačke gledišta spojite u nešto koherentno. Niste tražili samo kompromis, već rešenje koje ozbiljno uzima u obzir šta svaka strana zaista hoće. Istraživanja pokazuju da kratke vežbe ovog tipa povećavaju otvorenost prema drugima i spremnost da pronađemo najbolja rešenja koja koriste svima.",
                 [Guid.Parse("a9999999-9999-9999-9999-999999999999")] = "U zadatku ste primetili da vaše viđenje situacije nije objektivan opis stvarnosti, već interpretacija oblikovana vašim iskustvom, znanjem i trenutnim emocijama. Istraživanja pokazuju da svi imamo sklonost da naš pogled doživljavamo kao direktan uvid u \"kako stvari jesu\", dok drugima pripisujemo pristranost. Prepoznavanje okvira je korak izvan te zamke.",
+            };
+        private static readonly IReadOnlyDictionary<Guid, string> SkillEndMessagePrefixesEn =
+            new Dictionary<Guid, string>
+            {
+                [Guid.Parse("a1111111-1111-1111-1111-111111111111")] = "In this exercise, you wrote about your own experience in the third person. Research shows that when we view a situation as if it were not our own, our brain processes it differently and we see it more objectively. Through this practice, you build the ability to distance yourself from immediate emotional intensity in everyday interactions and see things more clearly.",
+                [Guid.Parse("a2222222-2222-2222-2222-222222222222")] = "In this exercise, you imagined how this situation might look in a month or a year. Research shows that stepping out of the present-moment perspective and observing events from a time distance helps us recognize what truly matters and what will have a real long-term impact on our life. This reduces immediate burden and increases the chance of acting wisely.",
+                [Guid.Parse("a3333333-3333-3333-3333-333333333333")] = "In this exercise, you viewed the situation from the perspective of a neutral observer. Research shows this approach reduces the influence of personal emotions in difficult situations and helps you see things more clearly.",
+                [Guid.Parse("a4444444-4444-4444-4444-444444444444")] = "In this exercise, you put yourself in the role of advisor to someone you care about. Research shows we often give better advice to others than to ourselves because we are not emotionally invested in the same way. This practice trains you to give yourself better advice and accept it more easily.",
+                [Guid.Parse("a5555555-5555-5555-5555-555555555555")] = "In this exercise, you examined what you truly know, what you assume, and what you do not know. Research shows that people who can sense the limits of their knowledge distinguish strong arguments from weak ones more effectively, are more open to correction, and navigate conversations better.",
+                [Guid.Parse("a6666666-6666-6666-6666-666666666666")] = "In this exercise, you considered how one situation can unfold in multiple ways depending on circumstances and people’s behavior. Research shows this awareness, that outcomes are not fixed and can unfold differently even when history points one way, helps people adapt better and influence how situations develop.",
+                [Guid.Parse("a7777777-7777-7777-7777-777777777777")] = "In this exercise, you intentionally imagined how another person sees, feels, and understands the situation. Research shows that even a few minutes of this focused effort can reduce prejudice and judgment and help you connect with people.",
+                [Guid.Parse("a8888888-8888-8888-8888-888888888888")] = "In this exercise, you tried to combine different and opposing viewpoints into something coherent. You were not looking for compromise alone, but for a solution that seriously accounts for what each side truly wants. Research shows brief practices like this increase openness to others and readiness to find better solutions that benefit everyone.",
+                [Guid.Parse("a9999999-9999-9999-9999-999999999999")] = "In this exercise, you noticed that your view of the situation is not an objective description of reality, but an interpretation shaped by your experience, knowledge, and current emotions. Research shows we all tend to treat our own view as direct access to \"how things are\" while attributing bias to others. Recognizing the frame is a step beyond that trap.",
             };
 
         private readonly IGrowthMessageRepository _repository;
@@ -69,7 +82,7 @@ namespace AngularNetBase.Practice.Services
                 ?? throw new InvalidOperationException("Nema aktivnih poruka ohrabrenja u bazi.");
 
             var localized = SelectLocalized(message.Text, message.TextEn, language);
-            var composed = ComposeSkillEndMessage(type, message.SkillId, localized);
+            var composed = ComposeSkillEndMessage(type, message.SkillId, localized, language);
 
             return new GrowthMessageDto(message.Id, composed);
         }
@@ -158,12 +171,18 @@ namespace AngularNetBase.Practice.Services
         private static string ComposeSkillEndMessage(
             GrowthMessageType type,
             Guid? skillId,
-            string messageBody)
+            string messageBody,
+            string? language)
         {
             if (type != GrowthMessageType.End || !skillId.HasValue)
                 return messageBody;
 
-            if (!SkillEndMessagePrefixes.TryGetValue(skillId.Value, out var prefix))
+            var isEnglish = !string.IsNullOrWhiteSpace(language)
+                && language.StartsWith("en", StringComparison.OrdinalIgnoreCase);
+
+            var prefixes = isEnglish ? SkillEndMessagePrefixesEn : SkillEndMessagePrefixesSr;
+
+            if (!prefixes.TryGetValue(skillId.Value, out var prefix))
                 return messageBody;
 
             return $"{prefix} {messageBody}";
