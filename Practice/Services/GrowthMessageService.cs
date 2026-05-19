@@ -22,7 +22,7 @@ namespace AngularNetBase.Practice.Services
 
         public async Task<Guid> CreateMessageAsync(CreateGrowthMessageDto dto, CancellationToken cancellationToken = default)
         {
-            var message = new GrowthMessage(Guid.NewGuid(), dto.Text, dto.Type, true, null, dto.TextEn);
+            var message = new GrowthMessage(Guid.NewGuid(), dto.Text, dto.Type, true, null, dto.TextEn, dto.SkillId);
 
             await _repository.AddAsync(message, cancellationToken);
             await _repository.SaveChangesAsync(cancellationToken);
@@ -47,10 +47,11 @@ namespace AngularNetBase.Practice.Services
         public async Task<GrowthMessageDto> GetRandomMessageAsync(
             GrowthMessageType type,
             Guid? selectedStatementId = null,
+            IReadOnlyCollection<Guid>? developedSkillIds = null,
             string? language = null,
             CancellationToken cancellationToken = default)
         {
-            var message = await SelectMessageAsync(type, selectedStatementId, cancellationToken)
+            var message = await SelectMessageAsync(type, selectedStatementId, developedSkillIds, cancellationToken)
                 ?? throw new InvalidOperationException("Nema aktivnih poruka ohrabrenja u bazi.");
 
             return new GrowthMessageDto(message.Id, SelectLocalized(message.Text, message.TextEn, language));
@@ -59,8 +60,21 @@ namespace AngularNetBase.Practice.Services
         private async Task<GrowthMessage?> SelectMessageAsync(
             GrowthMessageType type,
             Guid? selectedStatementId,
+            IReadOnlyCollection<Guid>? developedSkillIds,
             CancellationToken cancellationToken)
         {
+            if (type == GrowthMessageType.End)
+            {
+                var selectedSkillMessage = await SelectMessageForDevelopedSkillsAsync(
+                    developedSkillIds,
+                    cancellationToken);
+
+                if (selectedSkillMessage is not null)
+                    return selectedSkillMessage;
+
+                return await _repository.GetRandomActiveMessageAsync(type, cancellationToken);
+            }
+
             if (type != GrowthMessageType.Begin || !selectedStatementId.HasValue || selectedStatementId.Value == Guid.Empty)
             {
                 return await _repository.GetRandomActiveMessageAsync(type, cancellationToken);
@@ -88,6 +102,29 @@ namespace AngularNetBase.Practice.Services
                 return matched;
 
             return await _repository.GetRandomActiveMessageWithoutAffirmationValueAsync(type, cancellationToken);
+        }
+
+        private async Task<GrowthMessage?> SelectMessageForDevelopedSkillsAsync(
+            IReadOnlyCollection<Guid>? developedSkillIds,
+            CancellationToken cancellationToken)
+        {
+            if (developedSkillIds is null || developedSkillIds.Count == 0)
+                return null;
+
+            var distinctSkillIds = developedSkillIds
+                .Where(id => id != Guid.Empty)
+                .Distinct()
+                .ToList();
+
+            if (distinctSkillIds.Count == 0)
+                return null;
+
+            var randomSkillId = distinctSkillIds[Random.Shared.Next(distinctSkillIds.Count)];
+
+            return await _repository.GetRandomActiveMessageBySkillAsync(
+                GrowthMessageType.End,
+                randomSkillId,
+                cancellationToken);
         }
 
         private static string SelectLocalized(string sr, string? en, string? language)
