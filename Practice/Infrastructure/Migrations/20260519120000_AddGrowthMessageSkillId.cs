@@ -1,4 +1,5 @@
 using System;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -6,6 +7,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AngularNetBase.Practice.Infrastructure.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(PracticeContext))]
+    [Migration("20260519120000_AddGrowthMessageSkillId")]
     public partial class AddGrowthMessageSkillId : Migration
     {
         /// <inheritdoc />
