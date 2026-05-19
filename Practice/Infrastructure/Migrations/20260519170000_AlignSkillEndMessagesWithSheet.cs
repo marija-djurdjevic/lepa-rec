@@ -22,13 +22,13 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                     ('90000000-0000-0000-0000-000000000003'::uuid, 'Nije retko da ponavljamo iste greške u afektu, gde zbog nekog ponašanja partnera ili kolega reagujemo kako ne bismo želeli. Kroz ovu tehniku, možemo obraditi emociju pre nego što izazove reakciju koju ne želimo i odlučiti kako ćemo odgovoriti, umesto da situacija odluči za nas.'),
                     ('90000000-0000-0000-0000-000000000004'::uuid, 'Lako se zamerimo ljudima kada izgovaramo reči u afektu i donosimo odluke pod stresom. Ova tehnika smanjuje verovatnoću takvih grešaka i čuva ono što smo izgradili: odnose, ugled, mir u svakodnevnom životu.'),
 
-                    ('90000000-0000-0000-0000-000000000005'::uuid, 'ttpogled pomaže da ne žrtvujemo dugoročne odnose zbog trenutne emocije.'),
+                    ('90000000-0000-0000-0000-000000000005'::uuid, 'Ovaj pogled pomaže da ne žrtvujemo dugoročne odnose zbog trenutne emocije.'),
                     ('90000000-0000-0000-0000-000000000006'::uuid, 'Naše vreme i energija su ograničen resurs. Ako nas stalno pritiskaju gorući problemi, neće nam ostati snage da radimo na dugoročnim ciljevima. Vremensko distanciranje nam pomaže da razdvojimo ono što je stvarno bitno od buke koja u trenutku deluje važna, ali nas samo troši bez koristi.'),
-                    ('90000000-0000-0000-0000-000000000007'::uuid, 'ttzarobljeni uti izgubimo kontrolu nad svojim mislima.tttstvarima.'),
-                    ('90000000-0000-0000-0000-000000000008'::uuid, 'ttodluke koje će nas koštati. Tako možemo uskratiti sebi buduće prilike ili se zameriti ljudima do kojih nam je stalo. Vremenska distanca stavlja stvari u perspektivu i pomaže nam da izbegnemo ove scenarije.'),
+                    ('90000000-0000-0000-0000-000000000007'::uuid, 'Kada smo zarobljeni u trenutnim stvarima, izgubimo kontrolu nad svojim mislima.'),
+                    ('90000000-0000-0000-0000-000000000008'::uuid, 'U afektu možemo doneti odluke koje će nas koštati. Tako možemo uskratiti sebi buduće prilike ili se zameriti ljudima do kojih nam je stalo. Vremenska distanca stavlja stvari u perspektivu i pomaže nam da izbegnemo ove scenarije.'),
 
                     ('90000000-0000-0000-0000-000000000009'::uuid, 'Kad se pogledamo spolja, vidimo kako naše ponašanje deluje na ljude oko nas. To nije uvek ugodna stvar, ali je korisna kako bismo bili nežniji prema sebi i drugima. Oni do kojih nam je stalo će osetiti promenu naše energije.'),
-                    ('90000000-0000-0000-0000-000000000010'::uuid, 'tkakve su stvarno mogućnosti pred nama. Bez toga igramo lošije nego što bismo mogli.'),
+                    ('90000000-0000-0000-0000-000000000010'::uuid, 'Tek kada izađemo iz sebe, vidimo kakve su stvarno mogućnosti pred nama. Bez toga igramo lošije nego što bismo mogli.'),
                     ('90000000-0000-0000-0000-000000000011'::uuid, 'Kada smo zaglavljeni "u svojoj glavi", svet deluje ograničeno. Ne deluje da možemo da izgladimo neki odnos ili da imamo taj težak razgovor sa kolegom ili partnerom. Iz tuđe perspektive vidimo da su ove stvari ipak moguće i da nisu toliko strašne, što nam daje moć da delujemo i prevaziđemo prepreku.'),
                     ('90000000-0000-0000-0000-000000000012'::uuid, 'Da bismo očuvali zdrave odnose, potrebno je da štitimo svoje granice i da uvažavamo tuđe. Posmatračka perspektiva nam pomaže da jasnije vidimo situaciju i time očuvamo sopstveni i društveni mir.'),
 
