@@ -39,12 +39,14 @@ namespace AngularNetBase.API.Controllers
         public async Task<IActionResult> GetRandomMessage(
             [FromQuery] GrowthMessageType? type,
             [FromQuery] Guid? selectedStatementId,
+            [FromQuery] List<Guid>? developedSkillIds,
             [FromQuery] string? lang,
             CancellationToken cancellationToken)
         {
             var message = await _growthMessageService.GetRandomMessageAsync(
                 type ?? GrowthMessageType.Begin,
                 selectedStatementId,
+                developedSkillIds,
                 lang,
                 cancellationToken);
             return Ok(message);

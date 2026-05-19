@@ -219,10 +219,20 @@ namespace AngularNetBase.Practice.Infrastructure
                 entity.Property(e => e.AffirmationValueId)
                     .IsRequired(false);
 
+                entity.Property(e => e.SkillId)
+                    .IsRequired(false);
+
                 entity.HasOne<AffirmationValue>()
                     .WithMany()
                     .HasForeignKey(e => e.AffirmationValueId)
                     .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne<Skill>()
+                    .WithMany()
+                    .HasForeignKey(e => e.SkillId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasIndex(e => e.SkillId);
 
                 entity.Property(e => e.IsActive)
                     .IsRequired();

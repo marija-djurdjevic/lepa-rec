@@ -5,5 +5,6 @@ namespace AngularNetBase.Practice.Dtos.GrowthMessages
     public record CreateGrowthMessageDto(
         string Text,
         GrowthMessageType Type = GrowthMessageType.Begin,
-        string? TextEn = null);
+        string? TextEn = null,
+        Guid? SkillId = null);
 }

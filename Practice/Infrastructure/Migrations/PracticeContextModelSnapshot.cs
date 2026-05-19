@@ -174,6 +174,9 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<Guid?>("SkillId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasMaxLength(1000)
@@ -197,6 +200,8 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AffirmationValueId");
+
+                    b.HasIndex("SkillId");
 
                     b.ToTable("GrowthMessages", "practice");
                 });
@@ -602,6 +607,11 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                     b.HasOne("AngularNetBase.Practice.Entities.AffirmationValues.AffirmationValue", null)
                         .WithMany()
                         .HasForeignKey("AffirmationValueId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("AngularNetBase.Practice.Entities.Skills.Skill", null)
+                        .WithMany()
+                        .HasForeignKey("SkillId")
                         .OnDelete(DeleteBehavior.SetNull);
                 });
 
