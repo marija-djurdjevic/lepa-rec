@@ -25,6 +25,8 @@ namespace AngularNetBase.Practice.Infrastructure
         public DbSet<Skill> Skills { get; set; }
         public DbSet<SkillMastery> SkillMasteries { get; set; }
         public DbSet<DailyChallengeAssignment> DailyChallengeAssignments { get; set; }
+        public DbSet<UserChallengeExposure> UserChallengeExposures { get; set; }
+        public DbSet<UserDailyPracticeAssignment> UserDailyPracticeAssignments { get; set; }
 
         public PracticeContext(DbContextOptions<PracticeContext> options) : base(options) { }
 
@@ -162,6 +164,59 @@ namespace AngularNetBase.Practice.Infrastructure
                     .IsUnique();
             });
 
+            modelBuilder.Entity<UserChallengeExposure>(entity =>
+            {
+                entity.ToTable("UserChallengeExposures");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.UserId)
+                    .IsRequired();
+
+                entity.Property(e => e.Type)
+                    .HasConversion<string>()
+                    .HasMaxLength(30)
+                    .IsRequired();
+
+                entity.Property(e => e.ChallengeId)
+                    .IsRequired();
+
+                entity.Property(e => e.ShownOnDate)
+                    .HasColumnType("date")
+                    .IsRequired();
+
+                entity.Property(e => e.CreatedAt)
+                    .IsRequired();
+
+                entity.HasIndex(e => new { e.UserId, e.Type, e.ChallengeId })
+                    .IsUnique();
+            });
+
+            modelBuilder.Entity<UserDailyPracticeAssignment>(entity =>
+            {
+                entity.ToTable("UserDailyPracticeAssignments");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.UserId)
+                    .IsRequired();
+
+                entity.Property(e => e.Date)
+                    .HasColumnType("date")
+                    .IsRequired();
+
+                entity.Property(e => e.MainExerciseType)
+                    .HasConversion<string>()
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(e => e.CreatedAt)
+                    .IsRequired();
+
+                entity.HasIndex(e => new { e.UserId, e.Date })
+                    .IsUnique();
+            });
+
             modelBuilder.Entity<AffirmationValue>(entity =>
             {
                 entity.ToTable("AffirmationValues");
@@ -244,6 +299,11 @@ namespace AngularNetBase.Practice.Infrastructure
 
                 entity.HasKey(e => e.Id);
 
+                entity.Property(e => e.Theme)
+                    .IsRequired()
+                    .HasMaxLength(300)
+                    .HasDefaultValue(string.Empty);
+
                 entity.Property(e => e.Content)
                     .IsRequired()
                     .HasMaxLength(2000);
@@ -263,6 +323,16 @@ namespace AngularNetBase.Practice.Infrastructure
                     .HasMaxLength(20)
                     .IsRequired();
 
+                entity.Property(e => e.Variant)
+                    .HasConversion<string>()
+                    .HasMaxLength(10)
+                    .IsRequired();
+
+                entity.Property(e => e.Phase)
+                    .HasConversion<string>()
+                    .HasMaxLength(20)
+                    .IsRequired();
+
                 entity.Property(e => e.SkillId)
                     .IsRequired(false);
 
@@ -273,6 +343,53 @@ namespace AngularNetBase.Practice.Infrastructure
                     .HasMaxLength(100);
 
                 entity.HasIndex(e => e.OnboardingHookKey)
+                    .IsUnique();
+
+                entity.HasOne<Skill>()
+                    .WithMany()
+                    .HasForeignKey(e => e.SkillId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasMany(e => e.Questions)
+                    .WithOne()
+                    .HasForeignKey(q => q.DistancedJournalChallengeId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Navigation(e => e.Questions)
+                    .UsePropertyAccessMode(PropertyAccessMode.Field);
+            });
+
+            modelBuilder.Entity<DistancedJournalQuestion>(entity =>
+            {
+                entity.ToTable("DistancedJournalQuestions");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id)
+                    .ValueGeneratedNever();
+
+                entity.Property(e => e.Kind)
+                    .HasConversion<string>()
+                    .HasMaxLength(20)
+                    .IsRequired();
+
+                entity.Property(e => e.Order)
+                    .IsRequired();
+
+                entity.Property(e => e.Text)
+                    .IsRequired()
+                    .HasMaxLength(2000);
+
+                entity.Property(e => e.TextEn)
+                    .HasMaxLength(2000);
+
+                entity.Property(e => e.SkillId)
+                    .IsRequired(false);
+
+                entity.HasIndex(e => new { e.DistancedJournalChallengeId, e.Kind })
+                    .IsUnique();
+
+                entity.HasIndex(e => new { e.DistancedJournalChallengeId, e.Order })
                     .IsUnique();
 
                 entity.HasOne<Skill>()

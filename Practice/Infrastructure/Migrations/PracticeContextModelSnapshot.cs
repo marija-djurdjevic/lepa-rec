@@ -115,8 +115,25 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("Phase")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<Guid?>("SkillId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Theme")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Variant")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
 
                     b.Property<uint>("xmin")
                         .IsConcurrencyToken()
@@ -160,6 +177,47 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                     b.HasIndex("UserId", "ChallengeId");
 
                     b.ToTable("DistancedJournalExercises", "practice");
+                });
+
+            modelBuilder.Entity("AngularNetBase.Practice.Entities.DistancedJournals.DistancedJournalQuestion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("DistancedJournalChallengeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("SkillId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("TextEn")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SkillId");
+
+                    b.HasIndex("DistancedJournalChallengeId", "Kind")
+                        .IsUnique();
+
+                    b.HasIndex("DistancedJournalChallengeId", "Order")
+                        .IsUnique();
+
+                    b.ToTable("DistancedJournalQuestions", "practice");
                 });
 
             modelBuilder.Entity("AngularNetBase.Practice.Entities.GrowthMessages.GrowthMessage", b =>
@@ -363,6 +421,80 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("DailyChallengeAssignments", "practice");
+                });
+
+            modelBuilder.Entity("AngularNetBase.Practice.Entities.Scheduling.UserChallengeExposure", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChallengeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ShownOnDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Type", "ChallengeId")
+                        .IsUnique();
+
+                    b.ToTable("UserChallengeExposures", "practice");
+                });
+
+            modelBuilder.Entity("AngularNetBase.Practice.Entities.Scheduling.UserDailyPracticeAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<Guid?>("DistancedJournalChallengeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("DistancedJournalChallengeId2")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("MainExerciseType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid?>("PerspectiveScenarioChallengeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("PerspectiveScenarioChallengeId2")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ReflectionExerciseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Date")
+                        .IsUnique();
+
+                    b.ToTable("UserDailyPracticeAssignments", "practice");
                 });
 
             modelBuilder.Entity("AngularNetBase.Practice.Entities.Sessions.DailySession", b =>
@@ -602,6 +734,20 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                     b.Navigation("Photos");
                 });
 
+            modelBuilder.Entity("AngularNetBase.Practice.Entities.DistancedJournals.DistancedJournalQuestion", b =>
+                {
+                    b.HasOne("AngularNetBase.Practice.Entities.DistancedJournals.DistancedJournalChallenge", null)
+                        .WithMany("Questions")
+                        .HasForeignKey("DistancedJournalChallengeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AngularNetBase.Practice.Entities.Skills.Skill", null)
+                        .WithMany()
+                        .HasForeignKey("SkillId")
+                        .OnDelete(DeleteBehavior.SetNull);
+                });
+
             modelBuilder.Entity("AngularNetBase.Practice.Entities.GrowthMessages.GrowthMessage", b =>
                 {
                     b.HasOne("AngularNetBase.Practice.Entities.AffirmationValues.AffirmationValue", null)
@@ -744,6 +890,11 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
             modelBuilder.Entity("AngularNetBase.Practice.Entities.AffirmationValues.AffirmationValue", b =>
                 {
                     b.Navigation("Statements");
+                });
+
+            modelBuilder.Entity("AngularNetBase.Practice.Entities.DistancedJournals.DistancedJournalChallenge", b =>
+                {
+                    b.Navigation("Questions");
                 });
 
             modelBuilder.Entity("AngularNetBase.Practice.Entities.PerspectiveScenarios.PerspectiveScenarioChallenge", b =>

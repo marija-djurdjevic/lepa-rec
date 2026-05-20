@@ -1,4 +1,4 @@
-﻿using AngularNetBase.Practice.Entities.AffirmationValues;
+using AngularNetBase.Practice.Entities.AffirmationValues;
 using AngularNetBase.Practice.Entities.DistancedJournals;
 using AngularNetBase.Practice.Entities.GrowthMessages;
 using AngularNetBase.Practice.Entities.PerspectiveScenarios;
@@ -303,218 +303,8 @@ namespace AngularNetBase.Practice.Infrastructure
 
             if (!context.DistancedJournalChallenges.Any())
             {
-                var distancedJournalSkillMap = new Dictionary<int, Guid>
-                {
-                    [-2] = Guid.Parse("a2222222-2222-2222-2222-222222222222"),
-                    [-3] = Guid.Parse("a3333333-3333-3333-3333-333333333333"),
-                    [-4] = Guid.Parse("a4444444-4444-4444-4444-444444444444"),
-                    [-5] = Guid.Parse("a5555555-5555-5555-5555-555555555555"),
-                    [-6] = Guid.Parse("a6666666-6666-6666-6666-666666666666"),
-                    [-7] = Guid.Parse("a7777777-7777-7777-7777-777777777777"),
-                    [-8] = Guid.Parse("a8888888-8888-8888-8888-888888888888")
-                };
-
-                context.DistancedJournalChallenges.AddRange(
-                    new DistancedJournalChallenge(
-                        Guid.NewGuid(),
-                        @"Setite se nedavnog razgovora koji nije prošao onako kako ste želeli. Možda se nešto izgubilo u komunikaciji, ili ste otišli sa osećajem da niste bili shvaćeni.
-
-Opišite šta se desilo u trećem licu, kao da pišete scenu iz filma gde ste vi i druga osoba likovi. Šta je koja osoba pokušala da kaže?",
-                        @"Koji je jedan trenutak u tom razgovoru gde je moglo da krene drugačije? Šta bi glavni lik koji igra vas mogao da uradi ili kaže da bi ishod bio bolji?",
-                        ChallengeLevel.Easy,
-                        distancedJournalSkillMap[-6],
-                        @"Think of a recent conversation that did not go the way you wanted. Maybe something got lost in communication, or you left feeling misunderstood.
-
-Describe what happened in the third person, as if you were writing a movie scene where you and the other person are characters. What was each person trying to say?",
-                        @"What is one moment in that conversation where things could have gone differently? What could the main character who represents you have done or said to produce a better outcome?",
-                        true,
-                        "distancedjournal.default"
-                    ),
-                    new DistancedJournalChallenge(
-                        Guid.NewGuid(),
-                        @"Pomislite na nekoga ko vas je nedavno iznenadio (prijatno ili neprijatno) nečim što je rekao ili uradio.
-
-Opišite šta se desilo u trećem licu, kao da pišete scenu iz filma gde ste vi i druga osoba likovi. Šta je osoba koja igra vas očekivala pre tog trenutka, i kako se to promenilo?",
-                        @"Šta mislite da je tu drugu osobu navelo da postupi baš tako? Koje okolnosti ili brige, nevidljive u tom trenutku, bi mogle objasniti njeno ponašanje?",
-                        ChallengeLevel.Easy,
-                        distancedJournalSkillMap[-7],
-                        @"Think of someone who recently surprised you (pleasantly or unpleasantly) with something they said or did.
-
-Describe what happened in the third person, as if you were writing a movie scene where you and the other person are characters. What did the person representing you expect before that moment, and how did that change?",
-                        @"What do you think led the other person to act that way? What circumstances or concerns, invisible at that moment, might explain their behavior?"
-                    ),
-                    new DistancedJournalChallenge(
-                        Guid.NewGuid(),
-                        @"Zamislite se nad zadatkom, aktivnostima ili ponašanjem koji rutinski vršite većinu dana u nedelji.
-
-Opišite tu rutinu u trećem licu, kao da posmatrate sebe iz drugog kraja sobe. Šta osoba koja igra vas radi tokom te rutine? Šta oseća tokom tog procesa?",
-                        @"U toj rutini, koji u kom trenutnku bi osoba koja gleda sa strane primetila osmeh ili nervozu na licu osobe koja igra vas?",
-                        ChallengeLevel.Easy,
-                        distancedJournalSkillMap[-3],
-                        @"Think about a task, activity, or behavior you routinely do on most days of the week.
-
-Describe that routine in the third person, as if you were observing yourself from the other side of the room. What does the person who represents you do during that routine? What do they feel during the process?",
-                        @"In that routine, at which moment would an outside observer notice a smile or nervousness on the face of the person representing you?"
-                    ),
-                    new DistancedJournalChallenge(
-                        Guid.NewGuid(),
-                        @"Setite se trenutka iz poslednje nedelje kada ste pomogli nekome, čak i na mali način.
-
-Opišite tu situaciju u trećem licu, kao da pričate o nekome koga poznajete. Šta je tu osobu motivisalo da pomogne? Kako se osećala pre, tokom i posle?",
-                        @"Kako je, po vašem mišljenju, osoba koja je primila pomoć doživela taj trenutak? Šta je možda primetila, a šta joj je promaklo?",
-                        ChallengeLevel.Easy,
-                        distancedJournalSkillMap[-7],
-                        @"Recall a moment from the past week when you helped someone, even in a small way.
-
-Describe that situation in the third person, as if you were talking about someone you know. What motivated that person to help? How did they feel before, during, and after?",
-                        @"In your opinion, how did the person who received help experience that moment? What might they have noticed, and what might they have missed?"
-                    ),
-                    new DistancedJournalChallenge(
-                        Guid.NewGuid(),
-                        @"Setite se situacije kada ste nedavno osetili ponos ili zadovoljstvo sobom.
-
-Opišite tu situaciju u trećem licu, kao da pišete kratku priču o nekome. Šta je ta osoba postigla? Šta joj je to značilo?",
-                        @"Da li ta osoba dovoljno prepoznaje ono što je uradila, ili postoji nešto što umanjuje u sopstvenim očima? Šta bi nepristrasni posmatrač dodao?",
-                        ChallengeLevel.Easy,
-                        distancedJournalSkillMap[-5],
-                        @"Recall a situation when you recently felt proud or satisfied with yourself.
-
-Describe that situation in the third person, as if writing a short story about someone. What did that person accomplish? What did it mean to them?",
-                        @"Does that person fully recognize what they did, or is there something that minimizes it in their own eyes? What would an impartial observer add?"
-                    ),
-                    new DistancedJournalChallenge(
-                        Guid.NewGuid(),
-                        @"Pomislite na nešto što ste nedavno čuli ili pročitali (vest, komentar, ili nečiju priču) što vas je emotivno pogodilo, makar i malo.
-
-Opišite svoje iskustvo u trećem licu. Šta je tu osobu tačno pogodilo? Šta takva reakcija govori o toj osobi?",
-                        @"Da li je neko drugi mogao čuti istu stvar i reagovati sasvim drugačije? Šta bi oblikovalo tu drugačiju reakciju?",
-                        ChallengeLevel.Easy,
-                        distancedJournalSkillMap[-7],
-                        @"Think of something you recently heard or read (news, a comment, or someone's story) that affected you emotionally, even a little.
-
-Describe your experience in the third person. What exactly affected that person? What does such a reaction say about that person?",
-                        @"Could someone else hear the same thing and react completely differently? What would shape that different reaction?"
-                    ),
-                    new DistancedJournalChallenge(
-                        Guid.NewGuid(),
-                        @"Setite se situacije u kojoj ste nedavno morali da se prilagodite, da li zbog novog okruženja, novih ljudi, novih pravila ili bilo koje sitne promene.
-
-Opišite to iskustvo u trećem licu. Šta je ta osoba osećala tokom prilagođavanja? Šta je bilo najteže i zbog čega?",
-                        @"Kako su drugi ljudi u toj situaciji verovatno videli tu osobu dok se prilagođavala? Da li bi se njihov utisak razlikovao od onog kako se ona osećala iznutra?",
-                        ChallengeLevel.Easy,
-                        distancedJournalSkillMap[-3],
-                        @"Recall a situation where you recently had to adapt, whether because of a new environment, new people, new rules, or any small change.
-
-Describe that experience in the third person. What did that person feel during adaptation? What was hardest, and why?",
-                        @"How did other people in that situation likely see that person while they were adapting? Would their impression differ from how the person felt inside?"
-                    ),
-                    new DistancedJournalChallenge(
-                        Guid.NewGuid(),
-                        @"Setite se nedavnog trenutka kada ste osetili frustraciju, razočaranje ili neslaganje sa nekim.
-
-Opišite šta se desilo u trećem licu, kao da pišete scenu iz filma gde ste vi i druga osoba likovi. Opišite šta se desilo, šta su likovi mislili i osećali i kako su reagovali.",
-                        @"Postavite se u položaj osobe koja je razlog frustracije ili razočarenja. Navedite dobar razlog zašto je ta osoba postupila kako je postupila, takav da se otkloni deo negativne emocije koju glavni lik oseća.",
-                        ChallengeLevel.Medium,
-                        distancedJournalSkillMap[-8],
-                        @"Recall a recent moment when you felt frustration, disappointment, or disagreement with someone.
-
-Describe what happened in the third person, as if writing a movie scene where you and the other person are characters. Describe what happened, what the characters thought and felt, and how they reacted.",
-                        @"Put yourself in the position of the person who caused the frustration or disappointment. Give a good reason why that person acted the way they did, in a way that softens part of the negative emotion the main character feels."
-                    ),
-                    new DistancedJournalChallenge(
-                        Guid.NewGuid(),
-                        @"Pomislite na neku odluku koju trenutno odlažete ili oko koje se dvoumite.
-
-Opišite tu situaciju u trećem licu, kao da posmatrate prijatelja koji se nalazi na istom raskršću. Šta ta osoba želi? Čega se plaši? Šta je drži na mestu?",
-                        @"Da ta osoba za pet godina gleda unazad na ovaj trenutak, šta bi joj bilo važno, a šta bi joj delovalo beznačajno?",
-                        ChallengeLevel.Medium,
-                        distancedJournalSkillMap[-2],
-                        @"Think of a decision you are currently postponing or unsure about.
-
-Describe that situation in the third person, as if observing a friend at the same crossroads. What does that person want? What are they afraid of? What keeps them stuck?",
-                        @"If that person looked back at this moment in five years, what would matter to them and what would seem insignificant?"
-                    ),
-                    new DistancedJournalChallenge(
-                        Guid.NewGuid(),
-                        @"Setite se nedavne situacije u kojoj ste bili sigurni da ste u pravu, a druga osoba se nije slagala.
-
-Opišite tu situaciju u trećem licu, kao da ne pišete o sebi već o nekome koga poznajete. Kako je ta osoba videla stvari? Zašto je bila ubeđena da je u pravu?",
-                        @"Šta bi druga osoba rekla da je neko pita da ispriča svoju stranu priče? U čemu bi se njena verzija najviše razlikovala?",
-                        ChallengeLevel.Medium,
-                        distancedJournalSkillMap[-7],
-                        @"Recall a recent situation where you were sure you were right, but the other person disagreed.
-
-Describe that situation in the third person, as if you were not writing about yourself but about someone you know. How did that person see things? Why were they convinced they were right?",
-                        @"What would the other person say if someone asked them to tell their side of the story? Where would their version differ the most?"
-                    ),
-                    new DistancedJournalChallenge(
-                        Guid.NewGuid(),
-                        @"Pomislite na grupu ljudi kojoj pripadate (kolege, porodica, društvo) i na neku nedavnu dinamiku unutar te grupe koja vam je bila neprijatna ili zbunjujuća.
-
-Opišite šta se dešavalo u trećem licu, kao da opisujete scenu iz filma. Šta je radio i osećao lik koji igra vas? Kakvu ulogu je ta osoba imala u toj dinamici?",
-                        @"Kako bi neko ko tek upoznaje ovu grupu opisao tu situaciju? Šta bi mu prvo upalo u oči, a šta bi mu ostalo nevidljivo?",
-                        ChallengeLevel.Medium,
-                        distancedJournalSkillMap[-3],
-                        @"Think about a group you belong to (colleagues, family, friends) and a recent dynamic within that group that felt uncomfortable or confusing.
-
-Describe what happened in the third person, as if describing a movie scene. What did the character who represents you do and feel? What role did that person have in that dynamic?",
-                        @"How would someone who is just getting to know this group describe that situation? What would stand out to them first, and what would remain invisible?"
-                    ),
-                    new DistancedJournalChallenge(
-                        Guid.NewGuid(),
-                        @"Pomislite na nekoga koga ste nedavno sreli ili sa kim ste razgovarali, a ko vas je iritirao ili vam bio nesimpatičan.
-
-Opišite tu interakciju u trećem licu, kao neutralan izveštaj bez optužbe. Šta je druga osoba radila? Šta je osoba koja vas predstavlja mislila i zbog čega?",
-                        @"Kako bi prijatelj od nesimpatične osobe, koji je dobro poznaje, objasnio njeno ponašanje?",
-                        ChallengeLevel.Medium,
-                        distancedJournalSkillMap[-8],
-                        @"Think of someone you recently met or spoke with who irritated you or felt unlikeable.
-
-Describe that interaction in the third person, as a neutral report without blame. What was the other person doing? What was the person representing you thinking, and why?",
-                        @"How would a friend of that unlikeable person, someone who knows them well, explain their behavior?"
-                    ),
-                    new DistancedJournalChallenge(
-                        Guid.NewGuid(),
-                        @"Pomislite na nešto što vas u poslednje vreme opterećuje, poput brige koja se stalno vraća u misli.
-
-Opišite vas i vašu brigu u trećem licu, kao da pratite nekoga kroz njegov dan. Kako ta briga utiče na njega? Kada je najglasnija, a kada se povlači?",
-                        @"Ako bi vaš dobar prijatelj imao sličnu brigu koja ga toliko opterećuje, kako biste ga posavetovali?",
-                        ChallengeLevel.Hard,
-                        distancedJournalSkillMap[-4],
-                        @"Think of something that has been weighing on you lately, like a worry that keeps returning.
-
-Describe yourself and your worry in the third person, as if following someone through their day. How does that worry affect them? When is it loudest, and when does it fade?",
-                        @"If your close friend had a similar worry weighing on them that much, how would you advise them?"
-                    ),
-                    new DistancedJournalChallenge(
-                        Guid.NewGuid(),
-                        @"Pomislite na osobu sa kojom ste u poslednje vreme u napetom ili hladnom odnosu.
-
-Opišite situaciju u trećem licu, gde ste vi lik iz priče. Kako taj lik fizički doživljava tu napetost? Da li je tu više ljutnje, tuge, ili nečeg trećeg? Koja potreba glavnog lika nije ispunjena pa se tako oseća?",
-                        @"Ako bi druga osoba iskreno opisala šta oseća povodom napetosti glavnog lika, šta mislite da bi rekla? Kako bi obrazložila svoju stranu priče?",
-                        ChallengeLevel.Hard,
-                        distancedJournalSkillMap[-7],
-                        @"Think of a person with whom you have recently had a tense or distant relationship.
-
-Describe the situation in the third person, where you are the character in the story. How does that character physically experience the tension? Is there more anger, sadness, or something else? What need of the main character is unmet, causing them to feel this way?",
-                        @"If the other person honestly described what they feel about the main character's tension, what do you think they would say? How would they explain their side of the story?"
-                    ),
-                    new DistancedJournalChallenge(
-                        Guid.NewGuid(),
-                        @"Setite se nečega što izbegavate ili odlažete u poslednje vreme, poput razgovora, obaveze, ili odluke.
-
-Opišite vaš slučaj u trećem licu, bez osuđivanja. Šta glavni lik izbegava? Šta misli da bi se desilo ako se suoči sa tim?",
-                        @"Da li ta osoba izbegava sam ishod, ili osećanje koje bi taj ishod doneo? Koliki će uticaj na život dati ishod imati za šest meseci?",
-                        ChallengeLevel.Hard,
-                        distancedJournalSkillMap[-2],
-                        @"Recall something you have been avoiding or postponing lately, such as a conversation, obligation, or decision.
-
-Describe your case in the third person, without judgment. What is the main character avoiding? What do they think would happen if they faced it?",
-                        @"Is that person avoiding the outcome itself, or the feeling that outcome would bring? How much impact will that outcome have on life in six months?"
-                    )
-                );
+                context.DistancedJournalChallenges.AddRange(BuildDistancedJournalChallenges(skillIdsByLegacy));
             }
-            await context.SaveChangesAsync();
 
             if (!context.PerspectiveScenarioChallenges.Any())
             {
@@ -851,6 +641,98 @@ Describe your case in the third person, without judgment. What is the main chara
 
             await context.SaveChangesAsync();
         }
+
+        private static IEnumerable<DistancedJournalChallenge> BuildDistancedJournalChallenges(
+            IReadOnlyDictionary<int, Guid> skillIdsByLegacy)
+        {
+            var pairedThemes = new HashSet<string>
+            {
+                "Neko vas je iznenadio",
+                "Zadovoljstvo",
+                "Emotivna reakcija na vest",
+                "Neslaganje",
+                "Sigurni da ste u pravu",
+                "Grupna dinamika",
+                "Iritirajuća osoba",
+                "Napet odnos"
+            };
+
+            var data = new[]
+            {
+                new JournalSeed("A", "Loša komunikacija", "Setite se nedavnog razgovora koji nije prošao onako kako ste želeli. Možda se nešto izgubilo u komunikaciji, ili ste otišli sa osećajem da niste bili shvaćeni.", "Opišite šta se desilo u trećem licu, kao da pišete scenu iz filma gde ste vi i druga osoba likovi. Šta je koja osoba pokušala da kaže?", "Koji je jedan trenutak u tom razgovoru gde je moglo da krene drugačije? Šta bi glavni lik koji igra vas mogao da uradi ili kaže da bi ishod bio bolji?", null, ChallengeLevel.Easy, "-1, -6", true),
+                new JournalSeed("A", "Neko vas je iznenadio", "Pomislite na nekoga ko vas je nedavno iznenadio (prijatno ili neprijatno) nečim što je rekao ili uradio.", "Opišite šta se desilo u trećem licu, kao da pišete scenu iz filma gde ste vi i druga osoba likovi. Šta je osoba koja igra vas očekivala pre tog trenutka, i kako se to promenilo?", "Šta mislite da je tu drugu osobu navelo da postupi baš tako? Koje okolnosti ili brige, nevidljive u tom trenutku, bi mogle objasniti njeno ponašanje?", null, ChallengeLevel.Easy, "-1, -7"),
+                new JournalSeed("B", "Neko vas je iznenadio", "Pomislite na nekoga ko vas je nedavno iznenadio (prijatno ili neprijatno) nečim što je rekao ili uradio.", "Zamislite da celu situaciju posmatrate sa strane. Opišite šta vidite iz te perspektive, bez mogućnosti da zavirite u unutrašnji svet učesnika.", "Primetite kako neutralni posmatrač sa strane ne vidi vaš unutrašnji svet i razloge zbog kojih vi radite određene stvari. Šta sve vi ne znate u vezi sa osobom koja vas je iznenadila? Šta bi mogao da bude nevidljivi razlog koji je uticao na njeno ponašanje?", "Van reakcije koju ste ispoljili, kako ste još mogli reagovati u datoj situaciji? Kako biste je mogli učiniti boljom ili gorom?", ChallengeLevel.Easy, "-3, -5, -6"),
+                new JournalSeed("A", "Rutina", "Zamislite se nad zadatkom, aktivnostima ili ponašanjem koje rutinski vršite većinu dana u nedelji.", "Opišite tu rutinu u trećem licu, kao da posmatrate sebe iz drugog kraja sobe. Šta ta osoba radi tokom te rutine? Šta deluje da oseća tokom tog procesa?", "Zamislite da opisani zadatak, aktivnost ili ponašanje vrši neka druga osoba, a ne Vi. Šta bi ta osoba mogla raditi drugačije? Kako bi to izgledalo?", "Ako bi vaš dobar prijatelj prolazio kroz sličnu rutinu, koje korisne savete biste mu udelili kako bi učinio rutinu prijatnijom ili produktivnijom?", ChallengeLevel.Easy, "-1, -7, -4"),
+                new JournalSeed("A", "Pomogli ste nekome", "Setite se trenutka iz poslednje nedelje kada ste pomogli nekome, čak i na mali način.", "Opišite tu situaciju u trećem licu, kao da pričate o nekome koga poznajete. Šta je tu osobu motivisalo da pomogne? Kako se osećala pre, tokom i posle?", "Kako je, po vašem mišljenju, osoba koja je primila pomoć doživela taj trenutak? Šta je možda primetila, a šta joj je promaklo?", "Da ste odlučili da pomognete na drugačiji način, šta bi se promenilo? Kako bi se stvari dalje odvijale?", ChallengeLevel.Easy, "-1, -7, -6"),
+                new JournalSeed("A", "Zadovoljstvo", "Setite se situacije kada ste nedavno osetili ponos ili zadovoljstvo sobom.", "Opišite tu situaciju u trećem licu, kao da pišete kratku priču o nekome. Šta je ta osoba postigla? Šta joj je to značilo?", "Kako ćete na ovu situaciju gledati za tri meseca? Hoće li biti jednako važna i da li ćete se isto osećati u vezi sa njom?", "Kako bi situacija koja je izazvala zadovoljstvo mogla da se odvija drugačije i da ima drugačiji ishod? Od čega je to zavisilo? Kako biste se osećali da su okolnosti bile drugačije?", ChallengeLevel.Easy, "-1, -2, -6"),
+                new JournalSeed("B", "Zadovoljstvo", "Setite se situacije kada ste nedavno osetili ponos ili zadovoljstvo sobom.", "Zamislite da ste pažljivi posmatrač koji gleda zadovoljnu osobu. Šta se dešava na sceni? Kako se ponaša posmatrana osoba i šta joj se vidi na licu?", "Da li ta osoba dobro prepoznaje svoj doprinos situaciji? Da li postoji neki razlog zbog kog uveličava ili umanjuje taj doprinos, makar u svojim očima?", null, ChallengeLevel.Easy, "-3, -5"),
+                new JournalSeed("A", "Emotivna reakcija na vest", "Pomislite na nešto što ste nedavno čuli ili pročitali (vest, komentar, ili nečiju priču) što vas je emotivno pogodilo, makar i malo.", "Opišite svoje iskustvo u trećem licu. Šta je tu osobu tačno pogodilo? Šta takva reakcija govori o toj osobi?", "Da li je neko drugi mogao čuti istu stvar i reagovati sasvim drugačije? Šta bi oblikovalo tu drugačiju reakciju?", "Koji detalji priče su mogli biti drugačiji, pa da se vaš doživljaj potpuno promeni? Kako biste se onda osećali u vezi sa tom drugom pričom?", ChallengeLevel.Easy, "-1, -7, -6"),
+                new JournalSeed("B", "Emotivna reakcija na vest", "Pomislite na nešto što ste nedavno čuli ili pročitali (vest, komentar, ili nečiju priču) što vas je emotivno pogodilo, makar i malo.", "Šta bi video prolaznik koji bi zastao da vas posmatra u datom momentu? Kako bi video vaše ponašanje? Šta bi otkrio na vašem licu?", "Na koji način je to što ste čuli ograničeno i ne omogućava da dovoljno duboko razumete sve okolnosti priče? Koje detalje ste pretpostavili da postoje, ali nije sigurno da su stvarni deo priče?", "Da ste istu priču čuli ili pročitali kao 10 godina starija osoba, da li biste je na isti način doživeli? Ako bi vaš doživljaj bio drugačiji, od čega bi to zavisilo? Ako bi doživljaj bio isti, zašto je isti?", ChallengeLevel.Easy, "-3, -5, -2"),
+                new JournalSeed("A", "Prilagođavanje novom okruženju", "Setite se situacije u kojoj ste nedavno morali da se prilagodite, da li zbog novog okruženja, novih ljudi, novih pravila ili bilo koje sitne promene.", "Opišite to iskustvo u trećem licu. Šta je ta osoba osećala tokom prilagođavanja? Šta je bilo najteže i zbog čega?", "Kako su drugi ljudi u toj situaciji verovatno videli tu osobu dok se prilagođavala? Da li bi se njihov utisak razlikovao od onog kako se ona osećala iznutra?", "Kako bi u situaciji sa kojom ste se suočili još mogla biti vaša reakcija? Smislite bar dva različita načina da odgovorite na izazov sa kojim ste se susreli. Šta ove moguće načine prilagođavanja čini težim u odnosu na onaj koji ste izabrali?", ChallengeLevel.Medium, "-1, -7, -6"),
+                new JournalSeed("A", "Neslaganje", "Setite se nedavnog trenutka kada ste osetili frustraciju, razočaranje ili neslaganje sa nekim.", "Opišite šta se desilo u trećem licu, kao da pišete scenu iz filma gde ste vi i druga osoba likovi. Opišite šta se desilo, šta su likovi mislili i osećali i kako su reagovali.", "Postavite se u položaj osobe koja je razlog frustracije ili razočarenja. Kako se ona osećala? Šta je mislila? Navedite dobar razlog zašto je ta osoba postupila kako je postupila, takav da se otkloni deo negativne emocije koju glavni lik oseća.", "Uvažavajući vašu perspektivu i moguće objašnjenje perspektive druge osobe, šta bi moglo da bude razrešenje situacije gde su sve negativne emocije otklonjene? Kakvo rešenje bi bilo čak i bolje od kompromisa?", ChallengeLevel.Medium, "-1, -7, -8"),
+                new JournalSeed("B", "Neslaganje", "Setite se nedavnog trenutka kada ste osetili frustraciju, razočaranje ili neslaganje sa nekim.", "Zamislite da posmatrate sebe i ostale uključene osobe iz perspektive prolaznika. Taj prolaznik ne može da vidi vaš unutrašnji svet, ali vidi ponašanje, govor, izraze lica. Šta tačno vidi u ovoj situaciji?", "Kao što stranac ne vidi vaš unutrašnji svet, tako i osoba koja je izvor frustracije ne vidi mnogo toga. Šta su stvari koje ste vi podrazumevali da su jasne u ovoj situaciji? Kako se situacija menja ako stvari koje podrazumevate nisu jasne drugima?", "Kako ćete na ovu situaciju gledati za par meseci? Da li će negativne emocije biti podjednako snažne? Zašto hoće ili neće?", ChallengeLevel.Medium, "-3, -5, -2"),
+                new JournalSeed("A", "Odluka koju odlažete", "Pomislite na neku odluku koju trenutno odlažete ili oko koje se dvoumite.", "Opišite tu situaciju u trećem licu, kao da posmatrate prijatelja koji se nalazi na istom raskršću. Šta ta osoba želi? Čega se plaši? Šta je drži na mestu?", "Da ta osoba za pet godina gleda unazad na ovaj trenutak, šta bi joj bilo važno, a šta bi joj delovalo beznačajno?", "Da se neka osoba koja vam je bliska nalazi u takvoj situaciji i pred istom odlukom, šta biste je posavetovali?", ChallengeLevel.Medium, "-1, -2, -4"),
+                new JournalSeed("A", "Sigurni da ste u pravu", "Setite se nedavne situacije u kojoj ste bili sigurni da ste u pravu, a druga osoba se nije slagala.", "Opišite tu situaciju u trećem licu, kao da ne pišete o sebi već o nekome koga poznajete. Kako je ta osoba videla stvari? Zašto je bila ubeđena da je u pravu?", "Šta bi druga osoba rekla da je neko pita da ispriča svoju stranu priče? U čemu bi se njena verzija najviše razlikovala?", "Šta bi se desilo da ste samo jednu stvar drugačije rekli u datoj raspravi? A da je druga osoba nešto rekla na drugačiji način? Kako bi se cela situacija završila?", ChallengeLevel.Medium, "-1, -7, -6"),
+                new JournalSeed("B", "Sigurni da ste u pravu", "Setite se nedavne situacije u kojoj ste bili sigurni da ste u pravu, a druga osoba se nije slagala.", "Zamislite da posmatrate raspravu iz perspektive prolaznika. Šta vidite? Opišite ponašanje i govor tela svih prisutnih osoba.", "Kada ste zagovarali svoj stav u datoj raspravi, šta su stvari koje ste pretpostavljali, ali niste imali proverene informacije o njima? Kako se situacija menja ako vaše pretpostavke nisu tačne?", "Zamislite da ova situacija nije deo vašeg iskustva, nego da se desila nekome ko vam je blizak. Šta biste savetovali toj osobi?", ChallengeLevel.Medium, "-3, -5, -4"),
+                new JournalSeed("A", "Grupna dinamika", "Pomislite na grupu ljudi kojoj pripadate (kolege, porodica, društvo) i na neku nedavnu dinamiku unutar te grupe koja vam je bila neprijatna ili zbunjujuća.", "Opišite šta se dešavalo u trećem licu, kao da opisujete scenu iz filma. Šta je radio i osećao vaš lik? Kakvu ulogu je ta osoba imala u toj dinamici?", "U datoj situaciji, pomislite na osobu stav vam je najmanje blizak ili koja vam se najmanje dopada. Šta bi ta osoba rekla da je neko pita da ispriča svoju stranu priče? Kako se ona osećala? Kako je razmišljala?", "Šta je moglo da bude izrečeno ili urađeno od strane bilo koje osobe, što bi značajno promenilo situaciju koja se dogodila? Šta ste vi mogli drugačije da uradite ili kažete, pa da situacija ispadne bolja za sve?", ChallengeLevel.Medium, "-1, -7, -6"),
+                new JournalSeed("B", "Grupna dinamika", "Pomislite na grupu ljudi kojoj pripadate (kolege, porodica, društvo) i na neku nedavnu dinamiku unutar te grupe koja vam je bila neprijatna ili zbunjujuća.", "Kako bi neko ko tek upoznaje ovu grupu opisao tu situaciju? Šta bi mu prvo upalo u oči, a šta bi mu ostalo nevidljivo?", "Koje pretpostavke ste pravili vi i ostali učesnici u toku razvoja ove situacije? Kako bi saznanje da neke pretpostavlje nisu tačne promenile situaciju?", "Kakav će uticaj imati situacija koja se desila na ovu grupu ljudi za mesec dana? Da li će i dalje biti važna?", ChallengeLevel.Medium, "-3, -5, -2"),
+                new JournalSeed("A", "Iritirajuća osoba", "Pomislite na nekoga koga ste nedavno sreli ili sa kim ste razgovarali, a čije ponašanje vas je iritiralo ili vam je bilo nesimpatično.", "Opišite tu interakciju u trećem licu, kao neutralan izveštaj bez optužbe. Šta je druga osoba radila? Šta je osoba koja vas predstavlja mislila i zbog čega?", "Kako bi ta druga osoba koja vam je bila nesimpatična mogla objasniti situaciju koja se desila? Šta je moglo uticati na nju da je primora da se tako ponaša?", "Šta u vezi sa tom osobom pouzdano znate, a šta su pretpostavke ili informacije od drugih za koje ne možete biti sigurni da su tačne? Šta bi se promenilo da saznate da te stvari nisu tačne?", ChallengeLevel.Medium, "-1, -7, -5"),
+                new JournalSeed("B", "Iritirajuća osoba", "Pomislite na nekoga koga ste nedavno sreli ili sa kim ste razgovarali, a čije ponašanje vas je iritiralo ili vam je bilo nesimpatično.", "Zamislite da ste neko ko se slučajno zatekao u blizini i svedočio celom događaju. Kako toj osobi izgleda osoba koja je vas iritirala? Kako biste joj izgledali Vi? Kako bi ta osoba razumela situaciju koja se odvija pred njom?", "Koji aspekti situacije, koji nisu vezani za tu osobu, nego za okolnosti u kojima se našla, bi mogli objasniti njeno ponašanje? Kako bi se ona mogla ponašati da su te okolnosti drugačije?", "Ako biste se osvrnuli na ovu situaciju sa distance od tri meseca, kako biste tad gledali na nju? Šta bi i dalje bilo bitno, a šta bi u međuvremenu postalo nebitno?", ChallengeLevel.Medium, "-3, -6, -2"),
+                new JournalSeed("A", "Briga koja se stalno vraća", "Pomislite na nešto što vas u poslednje vreme opterećuje, poput brige koja se stalno vraća u misli.", "Opišite vas i vašu brigu u trećem licu, kao da pratite nekoga kroz njegov dan. Kako ta briga utiče na njega? Kada je najglasnija, a kada se povlači?", "Ako bi vaš dobar prijatelj imao sličnu brigu koja ga toliko opterećuje, kako biste ga posavetovali?", "Na kojim pretpostavkama počiva situacija zbog koje ste zabrinuti? Kako biste se osećali ako neke od tih pretpostavki nisu tačne?", ChallengeLevel.Hard, "-1, -4, -5"),
+                new JournalSeed("A", "Napet odnos", "Pomislite na osobu sa kojom ste u poslednje vreme u napetom ili hladnom odnosu.", "Opišite situaciju u trećem licu, gde ste vi lik iz priče. Kako taj lik fizički doživljava tu napetost? Da li je tu više ljutnje, tuge, ili nečeg trećeg? Koja potreba glavnog lika nije ispunjena pa se tako oseća?", "Ako bi druga osoba iskreno opisala šta oseća povodom napetosti vašeg lika, šta mislite da bi rekla? Kako bi obrazložila svoju stranu priče?", "Zamislite da ste vi osoba koja je bliska i sa vama i sa osobom sa kojom ste u napetom odnosu. Neko ko je oboma blizak prijatelj. Kako ta osoba vidi vaš međusobni odnos? Šta bi ta osoba posavetovala Vas, a šta drugu osobu, tako da oboje budete bolje?", ChallengeLevel.Hard, "-1, -7, -8"),
+                new JournalSeed("B", "Napet odnos", "Pomislite na osobu sa kojom ste u poslednje vreme u napetom ili hladnom odnosu.", "Zamislite se u ulozi osobe koja vas je nedavno upoznala i provela je malo vremena sa vama i drugom osobom. Šta ta osoba primećuje u vašem odnosu? Kakav je govor tela, glas i ponašanje vas i druge osobe?", "Šta pouzdano znate u vezi sa životnom situacijom kroz koju prolazi ta osoba? O čemu nemate pouzdane informacije, nego ih samo pretpostavljate ili ste čuli neproverene informacije od drugih?", "Kako se Vaš odnos sa tom osobom može razvijati u budućnosti? Pokušajte da opišete bar tri različita scenarija. Od čega zavisi verovatnoća da situacija ode u svakom od opisanih smerova?", ChallengeLevel.Hard, "-3, -5, -6"),
+                new JournalSeed("A", "Izbegavanje", "Setite se nečega što izbegavate ili odlažete u poslednje vreme, poput razgovora, obaveze, ili odluke.", "Opišite vaš slučaj u trećem licu, bez osuđivanja. Šta glavni lik izbegava? Šta misli da bi se desilo ako se suoči sa tim?", "Da li ta osoba izbegava sam ishod, ili osećanje koje bi taj ishod doneo? Kakvi su drugi mogući ishodi i šta je za njih potrebno? Kakva osećanja bi doneli ti drugi ishodi?", "Ako biste sada prelomili i doneli odluku koju izbegavate, koliki uticaj na Vaš život će data odluka imati za šest meseci? Šta je ono što će izgubiti značaj, a šta će ostati?", ChallengeLevel.Hard, "-1, -6, -2"),
+            };
+
+            foreach (var item in data)
+            {
+                var skillIds = ParseSkillIds(item.SkillIds, skillIdsByLegacy).ToList();
+                var variant = item.Variant == "B" ? DistancedJournalVariant.B : DistancedJournalVariant.A;
+                var phase = item.IsOnboardingHook
+                    ? DistancedJournalPhase.Single
+                    : pairedThemes.Contains(item.Theme)
+                        ? variant == DistancedJournalVariant.A ? DistancedJournalPhase.A : DistancedJournalPhase.B
+                        : DistancedJournalPhase.Single;
+
+                yield return new DistancedJournalChallenge(
+                    Guid.NewGuid(),
+                    item.Theme,
+                    item.Content,
+                    item.OpeningQuestion,
+                    item.FollowUpQuestion,
+                    item.ReflectionQuestion,
+                    item.Level,
+                    variant,
+                    phase,
+                    skillIds.ElementAtOrDefault(0),
+                    skillIds.ElementAtOrDefault(1),
+                    skillIds.ElementAtOrDefault(2),
+                    isOnboardingHook: item.IsOnboardingHook,
+                    onboardingHookKey: item.IsOnboardingHook ? "distancedjournal.default" : null);
+            }
+        }
+
+        private static IEnumerable<Guid?> ParseSkillIds(
+            string source,
+            IReadOnlyDictionary<int, Guid> skillIdsByLegacy)
+        {
+            foreach (var part in source.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (int.TryParse(part, out var legacyId) && skillIdsByLegacy.TryGetValue(legacyId, out var skillId))
+                    yield return skillId;
+            }
+        }
+
+        private sealed record JournalSeed(
+            string Variant,
+            string Theme,
+            string Content,
+            string OpeningQuestion,
+            string FollowUpQuestion,
+            string? ReflectionQuestion,
+            ChallengeLevel Level,
+            string SkillIds,
+            bool IsOnboardingHook = false);
 
         private static string TranslateToEnglish(string source)
         {
