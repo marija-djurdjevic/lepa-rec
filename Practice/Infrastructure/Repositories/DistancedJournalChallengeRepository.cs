@@ -18,12 +18,14 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
         public async Task<DistancedJournalChallenge?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return await _context.DistancedJournalChallenges
+                .Include(x => x.Questions)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
 
         public async Task<IEnumerable<DistancedJournalChallenge>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             return await _context.DistancedJournalChallenges
+                .Include(x => x.Questions)
                 .ToListAsync(cancellationToken);
         }
 
@@ -32,6 +34,7 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
             CancellationToken cancellationToken = default)
         {
             return await _context.DistancedJournalChallenges
+                .Include(x => x.Questions)
                 .Where(x => x.ChallengeLevel == challengeLevel)
                 .ToListAsync(cancellationToken);
         }
@@ -56,6 +59,7 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
         public async Task<DistancedJournalChallenge?> GetRandomByLevelAsync(ChallengeLevel challengeLevel, CancellationToken cancellationToken = default)
         {
             return await _context.DistancedJournalChallenges
+                .Include(x => x.Questions)
                 .Where(x => x.ChallengeLevel == challengeLevel && !x.IsOnboardingHook)
                 .OrderBy(x => Guid.NewGuid())
                 .FirstOrDefaultAsync(cancellationToken);
@@ -64,6 +68,7 @@ namespace AngularNetBase.Practice.Infrastructure.Repositories
         public async Task<DistancedJournalChallenge?> GetOnboardingHookByKeyAsync(string hookKey, CancellationToken cancellationToken = default)
         {
             return await _context.DistancedJournalChallenges
+                .Include(x => x.Questions)
                 .FirstOrDefaultAsync(
                     x => x.IsOnboardingHook && x.OnboardingHookKey == hookKey,
                     cancellationToken);

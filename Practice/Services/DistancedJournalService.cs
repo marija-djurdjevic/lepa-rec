@@ -44,14 +44,32 @@ namespace AngularNetBase.Practice.Services
             CreateDistancedJournalChallengeDto dto,
             CancellationToken cancellationToken = default)
         {
-            var challenge = new DistancedJournalChallenge(
-                Guid.NewGuid(),
-                dto.Content,
-                dto.FollowUpQuestion,
-                dto.ChallengeLevel,
-                dto.SkillId,
-                dto.ContentEn,
-                dto.FollowUpQuestionEn);
+            var challenge = string.IsNullOrWhiteSpace(dto.OpeningQuestion)
+                ? new DistancedJournalChallenge(
+                    Guid.NewGuid(),
+                    dto.Content,
+                    dto.FollowUpQuestion,
+                    dto.ChallengeLevel,
+                    dto.SkillId,
+                    dto.ContentEn,
+                    dto.FollowUpQuestionEn)
+                : new DistancedJournalChallenge(
+                    Guid.NewGuid(),
+                    dto.Theme ?? dto.Content,
+                    dto.Content,
+                    dto.OpeningQuestion,
+                    dto.FollowUpQuestion,
+                    dto.ReflectionQuestion,
+                    dto.ChallengeLevel,
+                    dto.Variant,
+                    dto.Phase,
+                    dto.SkillId,
+                    dto.FollowUpSkillId,
+                    dto.ReflectionSkillId,
+                    dto.ContentEn,
+                    dto.OpeningQuestionEn,
+                    dto.FollowUpQuestionEn,
+                    dto.ReflectionQuestionEn);
 
             await _challengeRepository.AddAsync(challenge, cancellationToken);
             await _challengeRepository.SaveChangesAsync(cancellationToken);
@@ -352,12 +370,30 @@ namespace AngularNetBase.Practice.Services
         private static DistancedJournalChallengeDto MapChallenge(DistancedJournalChallenge challenge, string? language)
         {
             var isEnglish = IsEnglish(language);
+            var openingQuestion = GetQuestionText(challenge, DistancedJournalQuestionKind.Opening, isEnglish)
+                ?? SelectLocalized(challenge.Content, challenge.ContentEn, isEnglish);
+            var followUpQuestion = GetQuestionText(challenge, DistancedJournalQuestionKind.FollowUp, isEnglish)
+                ?? SelectLocalized(challenge.FollowUpQuestion, challenge.FollowUpQuestionEn, isEnglish);
+
             return new DistancedJournalChallengeDto(
                 challenge.Id,
+                challenge.Theme,
+                challenge.Variant,
+                challenge.Phase,
                 SelectLocalized(challenge.Content, challenge.ContentEn, isEnglish),
-                SelectLocalized(challenge.FollowUpQuestion, challenge.FollowUpQuestionEn, isEnglish),
+                openingQuestion,
+                followUpQuestion,
                 challenge.ChallengeLevel,
-                challenge.SkillId);
+                challenge.SkillId,
+                challenge.Questions
+                    .OrderBy(x => x.Order)
+                    .Select(question => new DistancedJournalQuestionDto(
+                        question.Id,
+                        question.Kind,
+                        question.Order,
+                        SelectLocalized(question.Text, question.TextEn, isEnglish),
+                        question.SkillId))
+                    .ToList());
         }
 
         private static DistancedJournalExerciseDto MapExercise(DistancedJournalExercise exercise)
@@ -434,6 +470,18 @@ namespace AngularNetBase.Practice.Services
                 return en;
 
             return sr;
+        }
+
+        private static string? GetQuestionText(
+            DistancedJournalChallenge challenge,
+            DistancedJournalQuestionKind kind,
+            bool isEnglish)
+        {
+            var question = challenge.Questions.FirstOrDefault(x => x.Kind == kind);
+            if (question is null)
+                return null;
+
+            return SelectLocalized(question.Text, question.TextEn, isEnglish);
         }
 
         private static IReadOnlyCollection<string> BuildPhotoUrls(DistancedJournalExercise exercise)

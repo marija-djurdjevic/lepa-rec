@@ -10,5 +10,6 @@ namespace AngularNetBase.Practice.Dtos.Sessions
         string ChallengeFollowUpQuestion,
         string? PreviousMainAnswer,
         string? PreviousFollowUpAnswer,
-        IReadOnlyCollection<string> PreviousPhotoUrls);
+        IReadOnlyCollection<string> PreviousPhotoUrls,
+        string? ReflectionQuestion = null);
 }
