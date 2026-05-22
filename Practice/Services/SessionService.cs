@@ -249,7 +249,9 @@ namespace AngularNetBase.Practice.Services
             DateTime today,
             CancellationToken cancellationToken)
         {
-            var cutoff = today.Date.AddDays(-7).AddDays(1);
+            // Npgsql rejects DateTimeKind.Unspecified for timestamptz parameters.
+            // This cutoff is compared against SubmittedAt (timestamptz), so force UTC kind.
+            var cutoff = DateTime.SpecifyKind(today.Date.AddDays(-6), DateTimeKind.Utc);
 
             return await _context.DistancedJournalExercises
                 .Include(x => x.Photos)
