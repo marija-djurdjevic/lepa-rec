@@ -40,6 +40,31 @@ public class AuthService
         return await GenerateTokensAsync(user);
     }
 
+    public async Task DeleteAccountAsync(Guid userId)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+            return;
+
+        var refreshTokens = await _db.RefreshTokens
+            .Where(x => x.UserId == userId)
+            .ToListAsync();
+        if (refreshTokens.Count > 0)
+            _db.RefreshTokens.RemoveRange(refreshTokens);
+
+        var pushTokens = await _db.PushDeviceTokens
+            .Where(x => x.UserId == userId)
+            .ToListAsync();
+        if (pushTokens.Count > 0)
+            _db.PushDeviceTokens.RemoveRange(pushTokens);
+
+        await _db.SaveChangesAsync();
+
+        var result = await _userManager.DeleteAsync(user);
+        if (!result.Succeeded)
+            throw new InvalidOperationException(string.Join(", ", result.Errors.Select(e => e.Description)));
+    }
+
     public async Task<AuthResponse> RegisterAsync(string email, string password)
     {
         var user = await RegisterUserAsync(email, password);
