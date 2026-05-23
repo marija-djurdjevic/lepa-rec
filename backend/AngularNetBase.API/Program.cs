@@ -170,6 +170,69 @@ public class Program
             return Results.Content(privacyHtml, "text/html; charset=utf-8");
         }).AllowAnonymous();
 
+        app.MapGet("/account-deletion", () =>
+        {
+            const string accountDeletionHtml = """
+                <!doctype html>
+                <html lang="en">
+                <head>
+                  <meta charset="utf-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1">
+                  <meta name="robots" content="index,follow">
+                  <title>Account Deletion - Sagledaj</title>
+                  <style>
+                    body {
+                      margin: 0;
+                      font-family: Arial, sans-serif;
+                      line-height: 1.6;
+                      color: #1a1a1a;
+                      background: #f7f7f7;
+                    }
+                    main {
+                      max-width: 860px;
+                      margin: 0 auto;
+                      padding: 24px 16px 48px;
+                      background: #ffffff;
+                    }
+                    h1, h2 { line-height: 1.25; }
+                  </style>
+                </head>
+                <body>
+                  <main>
+                    <h1>Account Deletion - Sagledaj</h1>
+                    <p>Effective date: 2026-05-23</p>
+                    <p>Last updated: 2026-05-23</p>
+
+                    <section>
+                      <h2>How to delete your account</h2>
+                      <ol>
+                        <li>Sign in to the Sagledaj mobile app.</li>
+                        <li>Open account settings and choose Delete Account.</li>
+                        <li>Confirm the deletion request.</li>
+                      </ol>
+                      <p>If you cannot access the app, send a deletion request from your registered email to masadjurdjevic02@gmail.com with the subject "Account Deletion".</p>
+                    </section>
+
+                    <section>
+                      <h2>What gets deleted</h2>
+                      <ul>
+                        <li>Account profile data and authentication account.</li>
+                        <li>Active refresh sessions and push notification tokens.</li>
+                      </ul>
+                    </section>
+
+                    <section>
+                      <h2>Retention</h2>
+                      <p>Some minimal technical logs may be retained temporarily for security, fraud prevention, or legal compliance, then deleted according to retention policy.</p>
+                    </section>
+                  </main>
+                </body>
+                </html>
+                """;
+
+            return Results.Content(accountDeletionHtml, "text/html; charset=utf-8");
+        }).AllowAnonymous();
+
         app.MapControllers();
 
         app.MapFallbackToFile("/index.html");
