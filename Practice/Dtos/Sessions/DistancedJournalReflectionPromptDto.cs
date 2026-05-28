@@ -7,6 +7,8 @@ namespace AngularNetBase.Practice.Dtos.Sessions
     public record DistancedJournalReflectionPromptDto(
         Guid ExerciseId,
         string ChallengeContent,
+        string OpeningQuestion,
+        string FollowUpQuestion,
         string ChallengeFollowUpQuestion,
         string? PreviousMainAnswer,
         string? PreviousFollowUpAnswer,
