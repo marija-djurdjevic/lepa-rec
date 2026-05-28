@@ -62,7 +62,22 @@ public class AuthController : ControllerBase
             var session = await _onboardingSessionService.GetActiveSessionAsync(request.OnboardingSessionId);
             _onboardingSessionService.EnsureReadyForRegistration(session);
 
-            var user = await _authService.RegisterUserAsync(request.Email, request.Password);
+            var user = await _authService.FindUserByEmailAsync(request.Email);
+            if (user is null)
+            {
+                user = await _authService.RegisterUserAsync(request.Email, request.Password);
+            }
+            else
+            {
+                if (user.OnboardingCompleted)
+                    return BadRequest(new { message = "Email is already registered." });
+
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!Guid.TryParse(userIdClaim, out var callerUserId) || callerUserId != user.Id)
+                {
+                    return Unauthorized(new { message = "Existing account onboarding requires an authenticated session for that account." });
+                }
+            }
 
             await _authService.UpdateOnboardingLanguageAsync(user.Id, session.PreferredLanguage!);
             await _authService.UpdateOnboardingHookAsync(user.Id, session.HookType!, session.HookChallengeId);
@@ -126,7 +141,7 @@ public class AuthController : ControllerBase
             await _authService.CompleteOnboardingAsync(user.Id);
             await _onboardingSessionService.MarkUsedAsync(session.Id);
 
-            var response = await _authService.LoginAsync(request.Email, request.Password);
+            var response = await _authService.IssueTokensAsync(user);
             return Ok(response);
         }
         catch (OnboardingException ex)
