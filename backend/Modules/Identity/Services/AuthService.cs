@@ -92,6 +92,11 @@ public class AuthService
         return user;
     }
 
+    public Task<ApplicationUser?> FindUserByEmailAsync(string email)
+    {
+        return _userManager.FindByEmailAsync(email);
+    }
+
     public Task<AuthResponse> IssueTokensAsync(ApplicationUser user)
     {
         return GenerateTokensAsync(user);
