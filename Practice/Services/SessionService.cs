@@ -518,10 +518,20 @@ namespace AngularNetBase.Practice.Services
 
             var reflectionQuestion = challenge.Questions
                 .FirstOrDefault(x => x.Kind == DistancedJournalQuestionKind.Reflection);
+            var openingQuestion = challenge.Questions
+                .FirstOrDefault(x => x.Kind == DistancedJournalQuestionKind.Opening);
+            var followUpQuestion = challenge.Questions
+                .FirstOrDefault(x => x.Kind == DistancedJournalQuestionKind.FollowUp);
 
             return new DistancedJournalReflectionPromptDto(
                 exercise.Id,
                 Localize(challenge.Content, challenge.ContentEn, isEnglish),
+                openingQuestion is null
+                    ? Localize(challenge.Content, challenge.ContentEn, isEnglish)
+                    : Localize(openingQuestion.Text, openingQuestion.TextEn, isEnglish),
+                followUpQuestion is null
+                    ? Localize(challenge.FollowUpQuestion, challenge.FollowUpQuestionEn, isEnglish)
+                    : Localize(followUpQuestion.Text, followUpQuestion.TextEn, isEnglish),
                 Localize(challenge.FollowUpQuestion, challenge.FollowUpQuestionEn, isEnglish),
                 exercise.Answer.MainAnswer,
                 exercise.Answer.FollowUpAnswer,
@@ -592,6 +602,12 @@ namespace AngularNetBase.Practice.Services
             return new DistancedJournalReflectionPromptDto(
                 exercise.Id,
                 Localize(challenge.Content, challenge.ContentEn, isEnglish),
+                challenge.Questions.FirstOrDefault(x => x.Kind == DistancedJournalQuestionKind.Opening) is DistancedJournalQuestion openingQuestion
+                    ? Localize(openingQuestion.Text, openingQuestion.TextEn, isEnglish)
+                    : Localize(challenge.Content, challenge.ContentEn, isEnglish),
+                challenge.Questions.FirstOrDefault(x => x.Kind == DistancedJournalQuestionKind.FollowUp) is DistancedJournalQuestion followUpQuestion
+                    ? Localize(followUpQuestion.Text, followUpQuestion.TextEn, isEnglish)
+                    : Localize(challenge.FollowUpQuestion, challenge.FollowUpQuestionEn, isEnglish),
                 Localize(challenge.FollowUpQuestion, challenge.FollowUpQuestionEn, isEnglish),
                 exercise.Answer.MainAnswer,
                 exercise.Answer.FollowUpAnswer,
