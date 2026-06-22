@@ -128,7 +128,8 @@ namespace AngularNetBase.API.Controllers
                 request.SessionDate,
                 request.MainAnswer ?? string.Empty,
                 request.FollowUpAnswer ?? string.Empty,
-                request.Reflection);
+                request.Reflection,
+                request.Language);
 
             var photos = request.Photos
                 .Select(p => new PhotoUpload(
@@ -163,6 +164,24 @@ namespace AngularNetBase.API.Controllers
             try
             {
                 var result = await _distancedJournalService.AddReflectionAsync(userId, dto, cancellationToken);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpPost("generated-reflection")]
+        public async Task<ActionResult<DistancedJournalExerciseDto>> AddGeneratedReflectionAnswer(
+            [FromBody] AddGeneratedDistancedJournalReflectionDto dto,
+            CancellationToken cancellationToken)
+        {
+            var userId = GetUserId();
+
+            try
+            {
+                var result = await _distancedJournalService.AddGeneratedReflectionAnswerAsync(userId, dto, cancellationToken);
                 return Ok(result);
             }
             catch (UnauthorizedAccessException)

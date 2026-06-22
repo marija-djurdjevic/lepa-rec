@@ -9,6 +9,8 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
         public string? MainAnswer { get; private set; }
         public string? FollowUpAnswer { get; private set; }
         public string? Reflection { get; private set; }
+        public string? GeneratedReflectionQuestion { get; private set; }
+        public string? GeneratedReflectionAnswer { get; private set; }
         public DateTime SubmittedAt { get; private set; }
 
         private DistancedJournalAnswer()
@@ -39,6 +41,25 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
                 throw new ArgumentException("Reflection must be provided.");
 
             Reflection = reflection.Trim();
+        }
+
+        public void SetGeneratedReflectionQuestion(string question)
+        {
+            if (string.IsNullOrWhiteSpace(question))
+                throw new ArgumentException("Generated reflection question must be provided.");
+
+            GeneratedReflectionQuestion = question.Trim();
+        }
+
+        public void AddGeneratedReflectionAnswer(string answer)
+        {
+            if (string.IsNullOrWhiteSpace(answer))
+                throw new ArgumentException("Generated reflection answer must be provided.");
+
+            if (string.IsNullOrWhiteSpace(GeneratedReflectionQuestion))
+                throw new InvalidOperationException("Cannot answer a generated reflection before a question exists.");
+
+            GeneratedReflectionAnswer = answer.Trim();
         }
     }
 }

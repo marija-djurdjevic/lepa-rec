@@ -11,6 +11,8 @@ namespace AngularNetBase.Practice.Dtos.DistancedJournals
     string? MainAnswer,
     string? FollowUpAnswer,
     string? Reflection,
+    string? GeneratedReflectionQuestion,
+    string? GeneratedReflectionAnswer,
     DateTime? SubmittedAt,
     bool IsCompleted,
     bool IsOnboardingHookRun,

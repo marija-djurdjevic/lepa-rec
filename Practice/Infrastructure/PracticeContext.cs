@@ -22,6 +22,7 @@ namespace AngularNetBase.Practice.Infrastructure
         public DbSet<DistancedJournalExercise> DistancedJournalExercises { get; set; }
         public DbSet<PerspectiveScenarioChallenge> PerspectiveScenarioChallenges { get; set; }
         public DbSet<PerspectiveScenarioExercise> PerspectiveScenarioExercises { get; set; }
+        public DbSet<AnswerConversation> AnswerConversations { get; set; }
         public DbSet<Skill> Skills { get; set; }
         public DbSet<SkillMastery> SkillMasteries { get; set; }
         public DbSet<DailyChallengeAssignment> DailyChallengeAssignments { get; set; }
@@ -40,6 +41,11 @@ namespace AngularNetBase.Practice.Infrastructure
                 (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
                 c => c != null ? c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())) : 0,
                 c => c != null ? c.ToList() : new List<Guid>());
+
+            var stringListComparer = new ValueComparer<List<string>>(
+                (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
+                c => c != null ? c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())) : 0,
+                c => c != null ? c.ToList() : new List<string>());
 
             modelBuilder.Entity<DailySession>(entity =>
             {
@@ -429,6 +435,14 @@ namespace AngularNetBase.Practice.Infrastructure
                         .HasColumnName("Reflection")
                         .HasMaxLength(3000);
 
+                    answer.Property(a => a.GeneratedReflectionQuestion)
+                        .HasColumnName("GeneratedReflectionQuestion")
+                        .HasMaxLength(1000);
+
+                    answer.Property(a => a.GeneratedReflectionAnswer)
+                        .HasColumnName("GeneratedReflectionAnswer")
+                        .HasMaxLength(3000);
+
                     answer.Property(a => a.SubmittedAt)
                         .HasColumnName("SubmittedAt");
                 });
@@ -643,6 +657,102 @@ namespace AngularNetBase.Practice.Infrastructure
                     .UsePropertyAccessMode(PropertyAccessMode.Field);
             });
 
+            modelBuilder.Entity<AnswerConversation>(entity =>
+            {
+                entity.ToTable("AnswerConversations");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Ignore(e => e.Version);
+
+                entity.Property(e => e.UserId)
+                    .IsRequired();
+
+                entity.Property(e => e.ExerciseId)
+                    .IsRequired();
+
+                entity.Property(e => e.QuestionId)
+                    .IsRequired();
+
+                entity.Property(e => e.Status)
+                    .HasConversion<string>()
+                    .HasMaxLength(30)
+                    .IsRequired();
+
+                entity.Property(e => e.GuideIterationCount)
+                    .IsRequired();
+
+                entity.Property(e => e.MaxGuideIterations)
+                    .IsRequired();
+
+                entity.HasIndex(e => new { e.UserId, e.ExerciseId, e.QuestionId })
+                    .IsUnique();
+
+                entity.OwnsMany(e => e.Turns, turn =>
+                {
+                    turn.ToTable("AnswerConversationTurns");
+
+                    turn.WithOwner().HasForeignKey("AnswerConversationId");
+
+                    turn.HasKey(t => t.Id);
+
+                    turn.Ignore(t => t.Version);
+
+                    turn.Property(t => t.Role)
+                        .HasConversion<string>()
+                        .HasMaxLength(20)
+                        .IsRequired();
+
+                    turn.Property(t => t.Message)
+                        .IsRequired()
+                        .HasMaxLength(3000);
+
+                    turn.Property(t => t.CreatedAt)
+                        .IsRequired();
+
+                    turn.Property(t => t.WhyThisQuestion)
+                        .HasMaxLength(1000);
+
+                    turn.Property(t => t.IdempotencyKey)
+                        .HasMaxLength(100);
+
+                    turn.OwnsOne(t => t.EvaluationSummary, evaluation =>
+                    {
+                        evaluation.Property(e => e.Mark)
+                            .HasColumnName("EvaluationMark");
+
+                        evaluation.Property(e => e.Language)
+                            .HasColumnName("EvaluationLanguage")
+                            .HasMaxLength(20);
+
+                        evaluation.Property<List<string>>("_issues")
+                            .HasColumnName("EvaluationIssues")
+                            .HasConversion(
+                                v => string.Join('|', v),
+                                v => string.IsNullOrEmpty(v)
+                                    ? new List<string>()
+                                    : v.Split('|', StringSplitOptions.RemoveEmptyEntries).ToList())
+                            .Metadata.SetValueComparer(stringListComparer);
+
+                        evaluation.Property<List<string>>("_strengths")
+                            .HasColumnName("EvaluationStrengths")
+                            .HasConversion(
+                                v => string.Join('|', v),
+                                v => string.IsNullOrEmpty(v)
+                                    ? new List<string>()
+                                    : v.Split('|', StringSplitOptions.RemoveEmptyEntries).ToList())
+                            .Metadata.SetValueComparer(stringListComparer);
+                    });
+
+                    turn.HasIndex("AnswerConversationId", nameof(ConversationTurn.IdempotencyKey))
+                        .IsUnique()
+                        .HasFilter("\"IdempotencyKey\" IS NOT NULL");
+                });
+
+                entity.Navigation(e => e.Turns)
+                    .UsePropertyAccessMode(PropertyAccessMode.Field);
+            });
+
             ApplyXminConcurrency(modelBuilder);
         }
 
@@ -652,6 +762,12 @@ namespace AngularNetBase.Practice.Infrastructure
             {
                 var clrType = entityType.ClrType;
                 if (clrType is null)
+                    continue;
+
+                if (entityType.IsOwned())
+                    continue;
+
+                if (clrType == typeof(AnswerConversation))
                     continue;
 
                 if (!typeof(Entity<Guid>).IsAssignableFrom(clrType))

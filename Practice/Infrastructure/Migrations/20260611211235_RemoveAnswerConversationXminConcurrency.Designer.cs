@@ -3,6 +3,7 @@ using System;
 using AngularNetBase.Practice.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AngularNetBase.Practice.Infrastructure.Migrations
 {
     [DbContext(typeof(PracticeContext))]
-    partial class PracticeContextModelSnapshot : ModelSnapshot
+    [Migration("20260611211235_RemoveAnswerConversationXminConcurrency")]
+    partial class RemoveAnswerConversationXminConcurrency
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -701,16 +704,6 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                                 .HasMaxLength(3000)
                                 .HasColumnType("character varying(3000)")
                                 .HasColumnName("FollowUpAnswer");
-
-                            b1.Property<string>("GeneratedReflectionAnswer")
-                                .HasMaxLength(3000)
-                                .HasColumnType("character varying(3000)")
-                                .HasColumnName("GeneratedReflectionAnswer");
-
-                            b1.Property<string>("GeneratedReflectionQuestion")
-                                .HasMaxLength(1000)
-                                .HasColumnType("character varying(1000)")
-                                .HasColumnName("GeneratedReflectionQuestion");
 
                             b1.Property<string>("MainAnswer")
                                 .HasMaxLength(3000)

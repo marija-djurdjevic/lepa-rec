@@ -14,22 +14,28 @@ namespace AngularNetBase.Practice.Services
     {
         private readonly IPerspectiveScenarioChallengeRepository _challengeRepository;
         private readonly IPerspectiveScenarioExerciseRepository _exerciseRepository;
+        private readonly IAnswerConversationRepository _conversationRepository;
         private readonly ISessionRepository _dailySessionRepository;
         private readonly ISkillRepository _skillRepository;
         private readonly IDateTimeProvider _dateTimeProvider;
+        private readonly IPerspectiveScenarioLlmClient _llmClient;
 
         public PerspectiveScenarioService(
             IPerspectiveScenarioChallengeRepository challengeRepository,
             IPerspectiveScenarioExerciseRepository exerciseRepository,
+            IAnswerConversationRepository conversationRepository,
             ISessionRepository dailySessionRepository,
             ISkillRepository skillRepository,
-            IDateTimeProvider dateTimeProvider)
+            IDateTimeProvider dateTimeProvider,
+            IPerspectiveScenarioLlmClient llmClient)
         {
             _challengeRepository = challengeRepository;
             _exerciseRepository = exerciseRepository;
+            _conversationRepository = conversationRepository;
             _dailySessionRepository = dailySessionRepository;
             _skillRepository = skillRepository;
             _dateTimeProvider = dateTimeProvider;
+            _llmClient = llmClient;
         }
 
         public async Task<PerspectiveScenarioChallengeDto> CreateChallengeAsync(
@@ -222,6 +228,47 @@ namespace AngularNetBase.Practice.Services
             bool trackInDailySession = true,
             CancellationToken cancellationToken = default)
         {
+            return await HandleGuidedAnswerAsync(
+                userId,
+                dto,
+                onGrade: null,
+                onGuideQuestionChunk: null,
+                language,
+                trackInDailySession,
+                cancellationToken);
+        }
+
+        public async Task<AnswerPerspectiveScenarioQuestionResultDto> AnswerQuestionAndStreamGuidanceAsync(
+            Guid userId,
+            AnswerPerspectiveScenarioQuestionDto dto,
+            Func<PerspectiveScenarioGradeResult, CancellationToken, Task> onGrade,
+            Func<string, CancellationToken, Task> onGuideQuestionChunk,
+            string? language = null,
+            bool trackInDailySession = true,
+            CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(onGrade);
+            ArgumentNullException.ThrowIfNull(onGuideQuestionChunk);
+
+            return await HandleGuidedAnswerAsync(
+                userId,
+                dto,
+                onGrade,
+                onGuideQuestionChunk,
+                language,
+                trackInDailySession,
+                cancellationToken);
+        }
+
+        private async Task<AnswerPerspectiveScenarioQuestionResultDto> HandleGuidedAnswerAsync(
+            Guid userId,
+            AnswerPerspectiveScenarioQuestionDto dto,
+            Func<PerspectiveScenarioGradeResult, CancellationToken, Task>? onGrade,
+            Func<string, CancellationToken, Task>? onGuideQuestionChunk,
+            string? language,
+            bool trackInDailySession,
+            CancellationToken cancellationToken)
+        {
             if (dto.ExerciseId == Guid.Empty)
                 throw new ArgumentException("ExerciseId must be provided.", nameof(dto));
 
@@ -247,13 +294,151 @@ namespace AngularNetBase.Practice.Services
 
             var existingAnswer = exercise.Answers.FirstOrDefault(x => x.QuestionId == dto.QuestionId);
 
+            var conversation = await _conversationRepository.GetByExerciseQuestionAsync(
+                userId,
+                dto.ExerciseId,
+                dto.QuestionId,
+                cancellationToken);
+
+            if (conversation is null)
+            {
+                conversation = new AnswerConversation(
+                    Guid.NewGuid(),
+                    userId,
+                    dto.ExerciseId,
+                    dto.QuestionId);
+
+                await _conversationRepository.AddAsync(conversation, cancellationToken);
+            }
+
+            if (conversation.IsClosed())
+            {
+                return BuildClosedConversationResult(exercise, challenge, question, conversation, language);
+            }
+
+            if (conversation.HasProcessedIdempotencyKey(dto.IdempotencyKey))
+            {
+                return BuildCurrentConversationResult(exercise, challenge, question, conversation, language);
+            }
+
+            if (exercise.IsCompleted() && existingAnswer is null)
+                throw new InvalidOperationException("Exercise has already been completed.");
+
+            var scenarioText = SelectLocalized(challenge.ScenarioText, challenge.ScenarioTextEn, IsEnglish(language));
+            var questionText = SelectLocalized(question.QuestionText, question.QuestionTextEn, IsEnglish(language));
+            var revealText = SelectLocalized(question.Reveal, question.RevealEn, IsEnglish(language));
+            var targetLanguage = ResolveTargetLanguage(language);
+
+            var gradeInput = new PerspectiveScenarioLlmInput(
+                scenarioText,
+                questionText,
+                revealText,
+                dto.AnswerText,
+                targetLanguage,
+                conversation.Turns.ToList());
+
+            var grade = await _llmClient.GradeAnswerAsync(gradeInput, cancellationToken);
+            if (onGrade is not null)
+                await onGrade(grade, cancellationToken);
+
+            var evaluation = new EvaluationSummary(
+                grade.Score,
+                grade.Issues,
+                grade.Strengths,
+                grade.Language);
+
+            conversation.RegisterLearnerAnswer(
+                Guid.NewGuid(),
+                dto.AnswerText,
+                evaluation,
+                _dateTimeProvider.UtcNow,
+                dto.IdempotencyKey);
+
+            if (grade.Score >= 4)
+            {
+                await AcceptAnswerAndMaybeCompleteAsync(
+                    exercise,
+                    challenge,
+                    dto,
+                    trackInDailySession,
+                    cancellationToken);
+
+                conversation.MarkCompleted();
+                await _exerciseRepository.UpdateAsync(exercise, cancellationToken);
+                await _conversationRepository.UpdateAsync(conversation, cancellationToken);
+                await _conversationRepository.SaveChangesAsync(cancellationToken);
+
+                return BuildFinalResult(
+                    exercise,
+                    challenge,
+                    question,
+                    conversation,
+                    language,
+                    PerspectiveScenarioAnswerStatus.Completed,
+                    grade,
+                    BuildPositiveFeedback(grade, language));
+            }
+
+            if (!conversation.CanAskAnotherGuideQuestion())
+            {
+                await AcceptAnswerAndMaybeCompleteAsync(
+                    exercise,
+                    challenge,
+                    dto,
+                    trackInDailySession,
+                    cancellationToken);
+
+                conversation.MarkMaxIterationsReached();
+                await _exerciseRepository.UpdateAsync(exercise, cancellationToken);
+                await _conversationRepository.UpdateAsync(conversation, cancellationToken);
+                await _conversationRepository.SaveChangesAsync(cancellationToken);
+
+                return BuildFinalResult(
+                    exercise,
+                    challenge,
+                    question,
+                    conversation,
+                    language,
+                    PerspectiveScenarioAnswerStatus.MaxIterationsReached,
+                    grade,
+                    BuildConstructiveFeedback(grade, language));
+            }
+
+            var guideInput = new PerspectiveScenarioLlmInput(
+                scenarioText,
+                questionText,
+                revealText,
+                dto.AnswerText,
+                targetLanguage,
+                conversation.Turns.ToList());
+
+            var iterationIndex = conversation.GuideIterationCount + 1;
+            var guide = onGuideQuestionChunk is null
+                ? await _llmClient.GenerateGuideQuestionAsync(guideInput, grade, iterationIndex, cancellationToken)
+                : await _llmClient.StreamGuideQuestionAsync(guideInput, grade, iterationIndex, onGuideQuestionChunk, cancellationToken);
+
+            conversation.RegisterGuideQuestion(
+                Guid.NewGuid(),
+                guide.NextQuestion,
+                guide.WhyThisQuestion,
+                _dateTimeProvider.UtcNow);
+
+            await _conversationRepository.UpdateAsync(conversation, cancellationToken);
+            await _conversationRepository.SaveChangesAsync(cancellationToken);
+
+            return BuildGuidanceResult(exercise, challenge, conversation, grade, guide.NextQuestion);
+        }
+
+        private async Task AcceptAnswerAndMaybeCompleteAsync(
+            PerspectiveScenarioExercise exercise,
+            PerspectiveScenarioChallenge challenge,
+            AnswerPerspectiveScenarioQuestionDto dto,
+            bool trackInDailySession,
+            CancellationToken cancellationToken)
+        {
             if (!exercise.IsCompleted())
             {
                 exercise.SubmitOrUpdateAnswer(new ScenarioAnswer(dto.QuestionId, dto.AnswerText));
-            }
-            else if (existingAnswer is null)
-            {
-                throw new InvalidOperationException("Exercise has already been completed.");
             }
 
             var totalQuestions = challenge.Questions.Count;
@@ -276,16 +461,191 @@ namespace AngularNetBase.Practice.Services
                     await _dailySessionRepository.UpdateAsync(dailySession, cancellationToken);
                 }
             }
+        }
 
-            await _exerciseRepository.UpdateAsync(exercise, cancellationToken);
-            await _exerciseRepository.SaveChangesAsync(cancellationToken);
+        private static AnswerPerspectiveScenarioQuestionResultDto BuildGuidanceResult(
+            PerspectiveScenarioExercise exercise,
+            PerspectiveScenarioChallenge challenge,
+            AnswerConversation conversation,
+            PerspectiveScenarioGradeResult grade,
+            string guideQuestion)
+        {
+            var totalQuestions = challenge.Questions.Count;
+            var answeredQuestionsCount = exercise.Answers.Select(x => x.QuestionId).Distinct().Count();
+
+            return new AnswerPerspectiveScenarioQuestionResultDto(
+                MapExercise(exercise),
+                null,
+                exercise.IsCompleted(),
+                answeredQuestionsCount,
+                totalQuestions,
+                PerspectiveScenarioAnswerStatus.NeedsGuidance,
+                grade.Score,
+                grade.Issues,
+                grade.Strengths,
+                new PerspectiveScenarioGuideQuestionDto(guideQuestion),
+                conversation.GuideIterationCount,
+                null);
+        }
+
+        private static AnswerPerspectiveScenarioQuestionResultDto BuildFinalResult(
+            PerspectiveScenarioExercise exercise,
+            PerspectiveScenarioChallenge challenge,
+            PerspectiveScenarioQuestion question,
+            AnswerConversation conversation,
+            string? language,
+            string status,
+            PerspectiveScenarioGradeResult grade,
+            string feedback)
+        {
+            var totalQuestions = challenge.Questions.Count;
+            var answeredQuestionsCount = exercise.Answers.Select(x => x.QuestionId).Distinct().Count();
 
             return new AnswerPerspectiveScenarioQuestionResultDto(
                 MapExercise(exercise),
                 MapReveal(question, language),
                 exercise.IsCompleted(),
                 answeredQuestionsCount,
-                totalQuestions);
+                totalQuestions,
+                status,
+                grade.Score,
+                grade.Issues,
+                grade.Strengths,
+                null,
+                conversation.GuideIterationCount,
+                feedback);
+        }
+
+        private static AnswerPerspectiveScenarioQuestionResultDto BuildClosedConversationResult(
+            PerspectiveScenarioExercise exercise,
+            PerspectiveScenarioChallenge challenge,
+            PerspectiveScenarioQuestion question,
+            AnswerConversation conversation,
+            string? language)
+        {
+            var grade = ToGradeResult(conversation.LastLearnerTurn()?.EvaluationSummary);
+            var status = conversation.Status == ConversationStatus.MaxIterationsReached
+                ? PerspectiveScenarioAnswerStatus.MaxIterationsReached
+                : PerspectiveScenarioAnswerStatus.Completed;
+
+            var feedback = status == PerspectiveScenarioAnswerStatus.MaxIterationsReached
+                ? BuildConstructiveFeedback(grade, language)
+                : BuildPositiveFeedback(grade, language);
+
+            return BuildFinalResult(
+                exercise,
+                challenge,
+                question,
+                conversation,
+                language,
+                status,
+                grade,
+                feedback);
+        }
+
+        private static AnswerPerspectiveScenarioQuestionResultDto BuildCurrentConversationResult(
+            PerspectiveScenarioExercise exercise,
+            PerspectiveScenarioChallenge challenge,
+            PerspectiveScenarioQuestion question,
+            AnswerConversation conversation,
+            string? language)
+        {
+            if (conversation.IsClosed())
+                return BuildClosedConversationResult(exercise, challenge, question, conversation, language);
+
+            var grade = ToGradeResult(conversation.LastLearnerTurn()?.EvaluationSummary);
+            var lastGuide = conversation.LastGuideTurn();
+
+            if (lastGuide is not null)
+            {
+                return BuildGuidanceResult(
+                    exercise,
+                    challenge,
+                    conversation,
+                    grade,
+                    lastGuide.Message);
+            }
+
+            var totalQuestions = challenge.Questions.Count;
+            var answeredQuestionsCount = exercise.Answers.Select(x => x.QuestionId).Distinct().Count();
+
+            return new AnswerPerspectiveScenarioQuestionResultDto(
+                MapExercise(exercise),
+                null,
+                exercise.IsCompleted(),
+                answeredQuestionsCount,
+                totalQuestions,
+                PerspectiveScenarioAnswerStatus.NeedsGuidance,
+                grade.Score,
+                grade.Issues,
+                grade.Strengths,
+                null,
+                conversation.GuideIterationCount,
+                null);
+        }
+
+        private static PerspectiveScenarioGradeResult ToGradeResult(EvaluationSummary? evaluation)
+        {
+            if (evaluation is null)
+            {
+                return new PerspectiveScenarioGradeResult(
+                    1,
+                    Array.Empty<string>(),
+                    Array.Empty<string>(),
+                    "unknown");
+            }
+
+            return new PerspectiveScenarioGradeResult(
+                evaluation.Mark,
+                evaluation.Issues.ToList(),
+                evaluation.Strengths.ToList(),
+                evaluation.Language);
+        }
+
+        private static string BuildPositiveFeedback(PerspectiveScenarioGradeResult grade, string? language)
+        {
+            if (IsEnglish(language))
+                return grade.Score >= 5
+                    ? "Nicely seen. You caught the deeper perspective with care."
+                    : "Good work. You understood the main perspective well enough to continue.";
+
+            return grade.Score >= 5
+                ? "Baš dobar uvid. Lepo ste uhvatili šta je stajalo iza reakcije."
+                : "Dobro ste to razumeli. Možemo dalje.";
+        }
+
+        private static string BuildConstructiveFeedback(PerspectiveScenarioGradeResult grade, string? language)
+        {
+            var mainIssue = grade.Issues.FirstOrDefault();
+
+            if (IsEnglish(language))
+            {
+                return mainIssue switch
+                {
+                    "judgmental_or_blaming" => "Take a look at the reveal and try to notice the softer explanation behind the behavior.",
+                    "generic_or_vague" => "The reveal adds a more specific layer. Notice what pressure, worry, or meaning was shaping the moment.",
+                    "misses_core_feeling" => "The reveal can help you spot the feeling underneath the reaction.",
+                    "misses_perspective" => "Compare your answer with the reveal and notice what the situation looked like from their side.",
+                    _ => "Read the reveal and notice the piece of perspective that was still missing."
+                };
+            }
+
+            return mainIssue switch
+            {
+                "judgmental_or_blaming" => "Pročitajte objašnjenje i probajte da primetite drugi mogući razlog iza tog ponašanja.",
+                "generic_or_vague" => "Pokušajte da povežete odgovor sa konkretnim detaljima iz situacije i objašnjenja.",
+                "misses_core_feeling" => "Objašnjenje vam može pomoći da prepoznate osećaj koji je bio ispod reakcije.",
+                "misses_perspective" => "Pogledajte objašnjenje i proverite šta je toj osobi bilo važno u toj situaciji.",
+                _ => "Pročitajte objašnjenje i obratite pažnju na deo perspektive koji je još nedostajao."
+            };
+        }
+
+        private static string ResolveTargetLanguage(string? language)
+        {
+            if (string.IsNullOrWhiteSpace(language))
+                return "sr";
+
+            return IsEnglish(language) ? "en" : "sr";
         }
 
         private static void EnsureAnswersMatchChallengeQuestions(
