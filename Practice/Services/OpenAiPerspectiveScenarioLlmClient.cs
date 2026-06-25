@@ -191,7 +191,7 @@ namespace AngularNetBase.Practice.Services
             var body = new
             {
                 model,
-                temperature = 0.2,
+                temperature = _options.Temperature,
                 response_format = new { type = "json_object" },
                 stream,
                 messages = new[]
@@ -275,6 +275,7 @@ namespace AngularNetBase.Practice.Services
             - Do not reward unsupported mind-reading or invented backstory.
             - Short answers can score high if precise and grounded.
             - Long answers should not score high if generic or padded.
+            - Be fair, but do not complete missing reasoning for the learner.
 
             Requested-dimension rule:
             - Grade learner_answer against the requested target and requested dimension of the original question.
@@ -287,6 +288,12 @@ namespace AngularNetBase.Practice.Services
             - Short answers can score high.
             - A compact phrase is acceptable when it captures the requested insight clearly enough for a facilitator to understand what the learner means.
             - Do not require full sentences, polished wording, or explanation chains.
+            - If a compact answer only names a broad category without connecting it to the requested person's perspective in this scenario, score at most 3 unless the original question only asks for a simple emotion label.
+            - Very short answers can score 4 only when the original question asks for a simple emotion or label and the answer precisely names the core feeling or label.
+            - For simple emotion questions, a very short answer may score 4 only if it names the requested person's inner feeling, not merely another person's apparent behavior, attitude, or reaction.
+            - If a short answer says what someone else seems to be doing without clearly stating how the requested person feels because of it, score at most 3.
+            - For questions asking why, what prevents, what is behind, what effect something has, what message is sent, or what a person does not understand, one-word or category-only answers are capped at 3.
+            - For score 4, a compact answer must still give a usable inner model or clear scenario-specific connection.
 
             Invalid-answer rule:
             If learner_answer is empty, punctuation-only, a filler phrase, a clarification question, or not an attempt to answer the question, score 1.
@@ -302,12 +309,21 @@ namespace AngularNetBase.Practice.Services
             - 1 = Not meaningful. Off-topic, not an answer, hostile, blaming, nonsensical, surface-level, directly contradictory, or not perspective-taking.
 
             Boundary rules:
-            - If a human facilitator could reasonably say "yes, they understood the person's perspective," score at least 4.
+            - Scores 4 and 5 mean the answer is acceptable without another guide question.
+            - If a serious issue remains, such as misses_perspective, contradicts_reveal, judgmental_or_blaming, invalidating, hostile_or_unsafe, or generic_or_vague, score at most 3 unless the issue is clearly minor and does not affect the requested insight.
+            - Never return score 4 or 5 with misses_perspective, generic_or_vague, judgmental_or_blaming, contradicts_reveal, invalidating, or hostile_or_unsafe.
+            - If a human facilitator could reasonably say "yes, they understood the person's perspective well enough to move on," score at least 4.
+            - Score 4 only when the answer includes the central hidden perspective for the requested target and dimension, not just a plausible surface interpretation.
+            - If the answer names only an observable reaction, a broad emotion, a social role, or one partial motive while missing the deeper mechanism in the reveal, score at most 3.
+            - If the answer lists multiple guesses and only one is reveal-aligned, score at most 3 unless it clearly commits to the aligned interpretation as the main answer.
+            - If the answer contains several alternative guesses, grade the whole answer, not only the best phrase. A correct guess mixed with unrelated or contradictory guesses should not score 4 unless the learner clearly marks the correct interpretation as the main answer.
+            - If the question asks for a feeling but the answer mostly gives a motive, action, intention, or behavior explanation, score at most 3 unless the feeling is also clearly named. Apply the same principle to other requested dimensions.
             - If the answer has the right general direction but does not explain the core shift, score 3.
             - If the answer contains both a correct insight and a wrong assumption, grade the central interpretation, not one isolated phrase.
             - If the answer contradicts the reveal's core meaning, score 1 unless there is still a meaningful partial perspective insight.
             - If the answer identifies a relevant member of the requested dimension, score at least 3 unless it is mostly wrong or misleading.
-            - If the answer identifies the central insight of the requested dimension in everyday language, score at least 4 even if it omits secondary reveal details.
+            - If the answer identifies the central insight of the requested dimension in everyday language with enough scenario-specific meaning, score at least 4 even if it omits secondary reveal details.
+            - If the answer introduces a concrete unsupported life event, diagnosis, motive, relationship history, or backstory that is not in the scenario or reveal, and that detail is central to the answer, score at most 3.
             - Do not default to 3. Choose the highest score fully supported by the answer.
 
             Allowed issue codes:
@@ -338,6 +354,7 @@ namespace AngularNetBase.Practice.Services
             - strengths must be short and concrete
             - language must be one of: "sr", "en", "mixed", "unknown"
             - excellent answers may have issues []
+            - scores 4 and 5 must have issues [] for all issue codes that signal a missed, vague, blaming, contradictory, invalidating, hostile, or unsafe answer
             - do not include explanations outside JSON
 
             Input:
@@ -395,6 +412,24 @@ namespace AngularNetBase.Practice.Services
             - Ask for one missing mental step, not the whole explanation.
             - Make the question narrower than the original question.
             - Do not answer the question for the learner.
+            - Do not put the likely correct answer inside the guide question.
+            - Ask open-ended questions that require the learner to explain their thinking.
+            - Do not ask questions that can be answered with only yes or no.
+            - Do not ask confirmation questions where the learner can simply agree with the suggested interpretation.
+            - Do not ask multiple-choice or either/or questions; the learner should generate the missing explanation, not choose between options.
+            - Do not name the missing reveal concept directly if the learner has not already named it.
+            - Ask for the missing type of reasoning instead, such as a feeling, assumption, meaning, concern, pressure, missing information, or visible clue.
+            - Prefer question forms that ask what, how, why, or which visible clue the learner is using.
+
+            Question shape:
+            - The guide question must ask the learner to produce an explanation in their own words.
+            - It must not ask the learner to confirm, reject, compare, or choose between suggested interpretations.
+            - It must not contain the correct interpretation, a near-answer, or a contrast where one side is clearly the better answer.
+            - It must not use a structure equivalent to "Could it be that...", "Is it more X than Y?", "Is the problem that...", "Is it because...", or "Do you think...".
+            - Do not use yes/no framing anywhere in the guide question, even embedded inside a larger open-ended question.
+            - Avoid asking what something says about whether an idea is true, welcome, allowed, justified, correct, or possible.
+            - Rephrase yes/no-framed drafts as open questions about what message something sends, what it might mean to the person, what need, fear, assumption, or pressure is underneath, or which visible clue points there.
+            - Prefer open-ended structures equivalent to asking what something might mean to the requested person, how the person might be interpreting the situation, what the person might be assuming, what the person could be missing, which visible clue points to the answer, or what might make the situation feel difficult for the person.
             - Do not ask for advice, repair, solutions, or behavior change unless the original question asks for that.
             - Do not repeat an idea already asked or answered in history.
             - If history exists, move one step narrower or toward a different missing piece.
@@ -404,9 +439,15 @@ namespace AngularNetBase.Practice.Services
             - Do not turn a hidden reveal detail into a leading question.
             - You may point abstractly toward the type of missing idea, such as an assumption, pressure, concern, misunderstanding, meaning, constraint, missing information, or tension.
             - If the learner already named a reveal detail, you may refer to it in their own wording.
+            - Use only visible scenario facts, the learner's own answer, and abstract categories of missing insight.
+            - A guide question leaks the reveal if it mentions a concrete fact, place, action, event, diagnosis, motive, relationship history, or background detail that appears only in the reveal and not in the scenario or learner answer.
+            - A guide question also leaks the reveal if it states a reveal-only emotional label, motive, relationship interpretation, hidden pressure, system explanation, or background event as the suggested answer.
+            - Before returning the guide question, silently compare it against the visible scenario and learner answer. If it contains reveal-only concrete information, rewrite it more abstractly.
+            - If your draft question contains the answer, a near-synonym of the missing insight, or a suggested interpretation the learner could simply accept, rewrite it one level more abstractly.
 
             Guide strategy:
-            - If there is no real answer, ask them to try the original question in simpler words.
+            - If there is no real answer, the answer is unclear, or the answer is mostly about the learner instead of the scenario, ask them to answer the original question directly in simpler words.
+            - For off-task or unclear answers, do not scaffold a hidden reveal detail yet.
             - If the learner answered the wrong target, redirect to the requested target.
             - If the learner answered the wrong dimension, redirect to the requested dimension.
             - If the learner gave a generic answer, ask for a more specific clue from the scenario.
@@ -422,6 +463,12 @@ namespace AngularNetBase.Practice.Services
             Language:
             - Write only in target_language.
             - For Serbian, use natural ekavian Latin script.
+            - For Serbian, use simple everyday wording and avoid literal English sentence structure.
+            - For Serbian, avoid awkward or unnatural phrasing.
+            - For Serbian, avoid ungrammatical constructions such as "Šta mu je X normalna" or "a ne samo da je Dušan smeta"; rewrite them naturally.
+            - For Serbian, prefer natural forms like "Kako on doživljava...", "Šta ona možda pretpostavlja...", "Šta njemu tu deluje...", and "Šta bi njoj u tome moglo da smeta...".
+            - For Serbian, write like a careful teacher or facilitator, not like translated English.
+            - Before returning Serbian text, silently rewrite it once for naturalness and grammar.
             - Use simple everyday wording.
             - Prefer one short sentence.
             - Check grammar before returning.
@@ -438,6 +485,14 @@ namespace AngularNetBase.Practice.Services
             - next_question must contain exactly one question
             - why_this_question must briefly name the missing step being targeted
             - why_this_question must not reveal hidden facts
+
+            Final self-check before returning:
+            1. If next_question can be answered with only yes or no, rewrite it.
+            2. If next_question uses embedded yes/no framing, rewrite it as an open meaning, message, assumption, need, fear, pressure, or visible-clue question.
+            3. If next_question contains a phrase equivalent to asking whether something is welcome, true, allowed, justified, possible, correct, or acceptable, rewrite it without a yes/no concept.
+            4. If next_question gives the learner the answer or a strong hint, rewrite it.
+            5. If next_question offers options to choose from, rewrite it.
+            6. If next_question mentions reveal-only concepts, rewrite it more abstractly.
 
             Input:
             {

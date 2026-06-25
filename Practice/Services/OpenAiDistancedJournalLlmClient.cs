@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -35,6 +35,9 @@ namespace AngularNetBase.Practice.Services
             IReadOnlyCollection<string> avoidQuestions,
             CancellationToken cancellationToken = default)
         {
+            if (IsLowSignalAnswer(input.MainAnswer, input.FollowUpAnswer))
+                return new DistancedJournalGeneratedQuestionResult(GetClarificationQuestion(input.Language));
+
             var content = await CreateChatCompletionAsync(
                 BuildPrompt(input, avoidQuestions),
                 cancellationToken);
@@ -46,6 +49,37 @@ namespace AngularNetBase.Practice.Services
                 throw new InvalidOperationException("The distanced journal generator returned an empty question.");
 
             return new DistancedJournalGeneratedQuestionResult(result.Question.Trim());
+        }
+
+        private static bool IsLowSignalAnswer(string? mainAnswer, string? followUpAnswer)
+        {
+            var combined = $"{mainAnswer} {followUpAnswer}".Trim();
+            if (combined.Length < 8)
+                return true;
+
+            var words = combined
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(word => new string(word.Where(char.IsLetter).ToArray()))
+                .Where(word => word.Length >= 2)
+                .ToArray();
+
+            if (words.Length < 3)
+                return true;
+
+            var meaningfulWords = words.Count(HasVowel);
+            return meaningfulWords < 2;
+        }
+
+        private static bool HasVowel(string value)
+        {
+            return value.Any(c => "aeiouAEIOUаеиоуАЕИОУ".Contains(c));
+        }
+
+        private static string GetClarificationQuestion(string? language)
+        {
+            return IsEnglish(language)
+                ? "Could you add one concrete sentence about what happened or how the person felt?"
+                : "Možete li dodati jednu konkretnu rečenicu o tome šta se desilo ili kako se osoba osećala?";
         }
 
         private async Task<string> CreateChatCompletionAsync(
@@ -104,31 +138,50 @@ namespace AngularNetBase.Practice.Services
         {
             var languageInstruction = IsEnglish(input.Language)
                 ? "Write in natural English."
-                : "Write in natural Serbian, Latin script, ekavian, with diacritics (š, ć, č, đ, ž). Address the user in second person plural/formal form.";
+                : "Write in natural Serbian, Latin script, ekavian, with diacritics (š, ć, č, đ, ž).";
 
             var avoidList = avoidQuestions.Count == 0
                 ? "- none"
                 : string.Join(Environment.NewLine, avoidQuestions.Select(q => $"- {q}"));
 
             return $$"""
-Generate one optional final reflection question for a distanced journal exercise.
+Generate one optional follow-up question for a distanced journal entry.
 
-Goal:
-- Use the user's two answers to notice one self-relevant meaning they gave to the situation.
-- That meaning may be painful, neutral, or positive. Positive entries should be treated as real sources of value, pride, connection, hope, growth, or strength, not as hidden problems.
-- Ask one short question that helps the user look at that self-relevant meaning with a little distance.
-
-Rules:
+Your job:
+- Read the user's answers and ask one human, supportive question that follows naturally from what they wrote.
+- The question should help the user gently continue the reflection, not analyze the entry like a school text.
 - {{languageInstruction}}
+
+First decide whether the answers are meaningful:
+- If the answers are one-letter text, keyboard mashing, random syllables, punctuation, timestamps, or do not describe any situation, do not infer meaning from them.
+- For not meaningful Serbian answers, return: "Možete li dodati jednu konkretnu rečenicu o tome šta se desilo ili kako se osoba osećala?"
+- For not meaningful English answers, return: "Could you add one concrete sentence about what happened or how the person felt?"
+
+Anchor the question:
+- Identify whose experience the entry is mainly describing.
+- Ask about that central experience, feeling, action, need, value, or moment.
+- If several people are mentioned and it is unclear whose perspective is central, do not guess. Ask about the scene, the feeling, the action, or "the person" instead.
+- Do not shift the question to another mentioned person unless the entry is clearly centered on that person.
+- Use a person's name or role only when it is clearly the natural subject of the entry.
+- When two or more people could plausibly be the subject, neutral wording is better than choosing a name.
+- Preserve the user's distance: if the answers are written in third person, ask in third person. Use direct address only when the user's own answers are clearly written in first or second person.
+
+Style:
 - Return exactly one question.
-- Do not repeat, closely paraphrase, or answer any question in the avoid list.
-- Do not give advice, reassurance, praise, diagnosis, interpretation of personality, or a lesson.
+- Keep it short, natural, and concrete.
+- Prefer what/how questions.
+- Do not ask why.
 - Do not ask multiple questions.
-- Do not use clinical language.
-- Keep it concrete enough to connect to the user's words, but general enough that it does not overfit one detail.
-- Prefer "what/how" questions over "why" questions.
-- If the answers contain something the user told themselves, target that inner sentence or meaning.
-- If there is no painful self-talk, target a value, need, hope, strength, pride, connection, or meaning the user seems to be naming.
+- Do not offer choices or use colon-separated options.
+- Do not give advice, reassurance, praise, diagnosis, or a lesson.
+- Do not judge anyone in the story.
+- Do not repeat or closely paraphrase a question in the avoid list.
+- Do not quote malformed or random text from the user's answers.
+- Do not use detached observer language, conclusion language, or abstract "what does this show" phrasing.
+- Do not default to stock phrases about preserving, keeping, or carrying something forward unless the user's answer is explicitly about memory, preservation, or continuity.
+- Avoid generic "what does it mean" questions when a concrete feeling, action, need, or moment from the answer can be used.
+- For painful entries, ask about what could support the central person, what hurt, what they needed, what boundary mattered, or what would make the moment easier to understand.
+- For positive entries, ask about what felt good, meaningful, connecting, relieving, encouraging, or worth noticing in that moment.
 
 Avoid list:
 {{avoidList}}
@@ -152,6 +205,7 @@ Return JSON only:
             return !string.IsNullOrWhiteSpace(language)
                 && language.StartsWith("en", StringComparison.OrdinalIgnoreCase);
         }
+
 
         private sealed class GeneratedQuestionJson
         {

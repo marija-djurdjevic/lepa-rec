@@ -26,6 +26,7 @@ public static class PracticeModuleRegistration
 
         services.AddScoped<ISessionRepository, SessionRepository>();
         services.AddScoped<ISessionService, SessionService>();
+        services.AddScoped<IRewardService, RewardService>();
         services.AddScoped<IDailyChallengeAssignmentRepository, DailyChallengeAssignmentRepository>();
         services.AddScoped<IDailyChallengeAssignmentService, DailyChallengeAssignmentService>();
         services.AddHostedService<DailyChallengeAssignmentScheduler>();

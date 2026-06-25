@@ -2,6 +2,7 @@ using AngularNetBase.Practice.Entities.AffirmationValues;
 using AngularNetBase.Practice.Entities.DistancedJournals;
 using AngularNetBase.Practice.Entities.GrowthMessages;
 using AngularNetBase.Practice.Entities.PerspectiveScenarios;
+using AngularNetBase.Practice.Entities.Rewards;
 using AngularNetBase.Practice.Entities.Sessions;
 using AngularNetBase.Practice.Entities.Skills;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +29,9 @@ namespace AngularNetBase.Practice.Infrastructure
         public DbSet<DailyChallengeAssignment> DailyChallengeAssignments { get; set; }
         public DbSet<UserChallengeExposure> UserChallengeExposures { get; set; }
         public DbSet<UserDailyPracticeAssignment> UserDailyPracticeAssignments { get; set; }
+        public DbSet<RewardImage> RewardImages { get; set; }
+        public DbSet<UserRewardProgress> UserRewardProgresses { get; set; }
+        public DbSet<RewardPieceGrant> RewardPieceGrants { get; set; }
 
         public PracticeContext(DbContextOptions<PracticeContext> options) : base(options) { }
 
@@ -221,6 +225,105 @@ namespace AngularNetBase.Practice.Infrastructure
 
                 entity.HasIndex(e => new { e.UserId, e.Date })
                     .IsUnique();
+            });
+
+            modelBuilder.Entity<RewardImage>(entity =>
+            {
+                entity.ToTable("RewardImages");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.AssetKey)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.AssetPath)
+                    .IsRequired()
+                    .HasMaxLength(300);
+
+                entity.Property(e => e.ImageUrl)
+                    .HasMaxLength(500);
+
+                entity.Property(e => e.SortOrder)
+                    .IsRequired();
+
+                entity.Property(e => e.IsActive)
+                    .IsRequired();
+
+                entity.Property(e => e.CreatedAt)
+                    .IsRequired();
+
+                entity.HasIndex(e => e.AssetKey)
+                    .IsUnique();
+            });
+
+            modelBuilder.Entity<UserRewardProgress>(entity =>
+            {
+                entity.ToTable("UserRewardProgresses");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.UserId)
+                    .IsRequired();
+
+                entity.Property(e => e.RewardImageId)
+                    .IsRequired();
+
+                entity.Property(e => e.UnlockedPiecesCount)
+                    .IsRequired();
+
+                entity.Property(e => e.CreatedAt)
+                    .IsRequired();
+
+                entity.Property(e => e.UpdatedAt)
+                    .IsRequired();
+
+                entity.HasOne(e => e.RewardImage)
+                    .WithMany()
+                    .HasForeignKey(e => e.RewardImageId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => new { e.UserId, e.CompletedAt });
+            });
+
+            modelBuilder.Entity<RewardPieceGrant>(entity =>
+            {
+                entity.ToTable("RewardPieceGrants");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.UserId)
+                    .IsRequired();
+
+                entity.Property(e => e.DailySessionId)
+                    .IsRequired();
+
+                entity.Property(e => e.SessionDate)
+                    .HasColumnType("date")
+                    .IsRequired();
+
+                entity.Property(e => e.RewardProgressId)
+                    .IsRequired();
+
+                entity.Property(e => e.PieceIndex)
+                    .IsRequired();
+
+                entity.Property(e => e.GrantedAt)
+                    .IsRequired();
+
+                entity.HasOne(e => e.RewardProgress)
+                    .WithMany()
+                    .HasForeignKey(e => e.RewardProgressId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => new { e.UserId, e.DailySessionId })
+                    .IsUnique();
+
+                entity.HasIndex(e => new { e.UserId, e.SessionDate })
+                    .IsUnique();
+
+                entity.HasIndex(e => e.RewardProgressId);
             });
 
             modelBuilder.Entity<AffirmationValue>(entity =>
