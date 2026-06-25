@@ -3,6 +3,7 @@ using System;
 using AngularNetBase.Practice.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AngularNetBase.Practice.Infrastructure.Migrations
 {
     [DbContext(typeof(PracticeContext))]
-    partial class PracticeContextModelSnapshot : ModelSnapshot
+    [Migration("20260611211235_RemoveAnswerConversationXminConcurrency")]
+    partial class RemoveAnswerConversationXminConcurrency
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -425,118 +428,6 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                     b.ToTable("PerspectiveScenarioQuestions", "practice");
                 });
 
-            modelBuilder.Entity("AngularNetBase.Practice.Entities.Rewards.RewardImage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AssetKey")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("AssetPath")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ImageUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AssetKey")
-                        .IsUnique();
-
-                    b.ToTable("RewardImages", "practice");
-                });
-
-            modelBuilder.Entity("AngularNetBase.Practice.Entities.Rewards.RewardPieceGrant", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("DailySessionId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("GrantedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("PieceIndex")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("RewardProgressId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("SessionDate")
-                        .HasColumnType("date");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RewardProgressId");
-
-                    b.HasIndex("UserId", "DailySessionId")
-                        .IsUnique();
-
-                    b.HasIndex("UserId", "SessionDate")
-                        .IsUnique();
-
-                    b.ToTable("RewardPieceGrants", "practice");
-                });
-
-            modelBuilder.Entity("AngularNetBase.Practice.Entities.Rewards.UserRewardProgress", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("RewardImageId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("SavedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("UnlockedPiecesCount")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RewardImageId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserId", "CompletedAt");
-
-                    b.ToTable("UserRewardProgresses", "practice");
-                });
-
             modelBuilder.Entity("AngularNetBase.Practice.Entities.Scheduling.DailyChallengeAssignment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -814,16 +705,6 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                                 .HasColumnType("character varying(3000)")
                                 .HasColumnName("FollowUpAnswer");
 
-                            b1.Property<string>("GeneratedReflectionAnswer")
-                                .HasMaxLength(3000)
-                                .HasColumnType("character varying(3000)")
-                                .HasColumnName("GeneratedReflectionAnswer");
-
-                            b1.Property<string>("GeneratedReflectionQuestion")
-                                .HasMaxLength(1000)
-                                .HasColumnType("character varying(1000)")
-                                .HasColumnName("GeneratedReflectionQuestion");
-
                             b1.Property<string>("MainAnswer")
                                 .HasMaxLength(3000)
                                 .HasColumnType("character varying(3000)")
@@ -1038,28 +919,6 @@ namespace AngularNetBase.Practice.Infrastructure.Migrations
                         .HasForeignKey("PerspectiveScenarioChallengeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("AngularNetBase.Practice.Entities.Rewards.RewardPieceGrant", b =>
-                {
-                    b.HasOne("AngularNetBase.Practice.Entities.Rewards.UserRewardProgress", "RewardProgress")
-                        .WithMany()
-                        .HasForeignKey("RewardProgressId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("RewardProgress");
-                });
-
-            modelBuilder.Entity("AngularNetBase.Practice.Entities.Rewards.UserRewardProgress", b =>
-                {
-                    b.HasOne("AngularNetBase.Practice.Entities.Rewards.RewardImage", "RewardImage")
-                        .WithMany()
-                        .HasForeignKey("RewardImageId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("RewardImage");
                 });
 
             modelBuilder.Entity("AngularNetBase.Practice.Entities.Sessions.DailySession", b =>

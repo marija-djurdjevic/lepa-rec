@@ -9,6 +9,7 @@ namespace AngularNetBase.API.Models
         public string? MainAnswer { get; set; }
         public string? FollowUpAnswer { get; set; }
         public string? Reflection { get; set; }
+        public string? Language { get; set; }
         public List<IFormFile> Photos { get; set; } = new();
     }
 }

@@ -64,6 +64,22 @@ namespace AngularNetBase.Practice.Entities.DistancedJournals
             Answer.AddReflection(reflection);
         }
 
+        public void SetGeneratedReflectionQuestion(string question)
+        {
+            if (Answer is null)
+                throw new InvalidOperationException("Cannot add a generated reflection question before submitting the answer.");
+
+            Answer.SetGeneratedReflectionQuestion(question);
+        }
+
+        public void AddGeneratedReflectionAnswer(string answer)
+        {
+            if (Answer is null)
+                throw new InvalidOperationException("Cannot add a generated reflection answer before submitting the answer.");
+
+            Answer.AddGeneratedReflectionAnswer(answer);
+        }
+
         public bool IsCompleted()
         {
             return Answer is not null;

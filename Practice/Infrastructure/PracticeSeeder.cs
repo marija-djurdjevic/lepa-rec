@@ -2,6 +2,7 @@ using AngularNetBase.Practice.Entities.AffirmationValues;
 using AngularNetBase.Practice.Entities.DistancedJournals;
 using AngularNetBase.Practice.Entities.GrowthMessages;
 using AngularNetBase.Practice.Entities.PerspectiveScenarios;
+using AngularNetBase.Practice.Entities.Rewards;
 using AngularNetBase.Practice.Entities.Skills;
 using System;
 using System.Collections.Generic;
@@ -639,7 +640,41 @@ namespace AngularNetBase.Practice.Infrastructure
                 context.PerspectiveScenarioChallenges.AddRange(challenges);
             }
 
+            EnsureRewardImages(context);
+
             await context.SaveChangesAsync();
+        }
+
+        private static void EnsureRewardImages(PracticeContext context)
+        {
+            var createdAt = new DateTime(2026, 6, 23, 0, 0, 0, DateTimeKind.Utc);
+            var images = Enumerable.Range(1, 10)
+                .Select(index => new
+                {
+                    Id = Guid.Parse($"6b8c8f0d-1e2a-4f3b-9c5d-{index:000000000000}"),
+                    AssetKey = $"reward_{index:00}",
+                    AssetPath = $"assets/images/rewards/reward_{index:00}.png",
+                    SortOrder = index
+                })
+                .ToList();
+
+            var existingKeys = context.RewardImages
+                .Select(x => x.AssetKey)
+                .ToHashSet();
+
+            foreach (var image in images)
+            {
+                if (existingKeys.Contains(image.AssetKey))
+                    continue;
+
+                context.RewardImages.Add(new RewardImage(
+                    image.Id,
+                    image.AssetKey,
+                    image.AssetPath,
+                    image.SortOrder,
+                    true,
+                    createdAt));
+            }
         }
 
         private static IEnumerable<DistancedJournalChallenge> BuildDistancedJournalChallenges(

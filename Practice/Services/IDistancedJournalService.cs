@@ -53,6 +53,11 @@ namespace AngularNetBase.Practice.Services
             AddDistancedJournalReflectionDto dto,
             CancellationToken cancellationToken = default);
 
+        Task<DistancedJournalExerciseDto> AddGeneratedReflectionAnswerAsync(
+            Guid userId,
+            AddGeneratedDistancedJournalReflectionDto dto,
+            CancellationToken cancellationToken = default);
+
         Task<(Stream Stream, string ContentType, string FileName)> GetPhotoAsync(
             Guid userId,
             Guid exerciseId,

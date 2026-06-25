@@ -9,5 +9,6 @@ namespace AngularNetBase.Practice.Dtos.DistancedJournals
     DateTime SessionDate,
     string MainAnswer,
     string FollowUpAnswer,
-    string? Reflection);
+    string? Reflection,
+    string? Language = null);
 }
