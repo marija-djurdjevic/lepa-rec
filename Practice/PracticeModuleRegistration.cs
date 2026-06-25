@@ -26,6 +26,7 @@ public static class PracticeModuleRegistration
 
         services.AddScoped<ISessionRepository, SessionRepository>();
         services.AddScoped<ISessionService, SessionService>();
+        services.AddScoped<IRewardService, RewardService>();
         services.AddScoped<IDailyChallengeAssignmentRepository, DailyChallengeAssignmentRepository>();
         services.AddScoped<IDailyChallengeAssignmentService, DailyChallengeAssignmentService>();
         services.AddHostedService<DailyChallengeAssignmentScheduler>();
@@ -47,6 +48,11 @@ public static class PracticeModuleRegistration
         services.AddScoped<ISkillRepository, SkillRepository>();
         services.AddScoped<IPerspectiveScenarioChallengeRepository, PerspectiveScenarioChallengeRepository>();
         services.AddScoped<IPerspectiveScenarioExerciseRepository, PerspectiveScenarioExerciseRepository>();
+        services.AddScoped<IAnswerConversationRepository, AnswerConversationRepository>();
+        services.Configure<PerspectiveScenarioLlmOptions>(configuration.GetSection("OpenAI"));
+        services.AddHttpClient<IPerspectiveScenarioLlmClient, OpenAiPerspectiveScenarioLlmClient>();
+        services.Configure<DistancedJournalLlmOptions>(configuration.GetSection("OpenAI"));
+        services.AddHttpClient<IDistancedJournalLlmClient, OpenAiDistancedJournalLlmClient>();
         services.AddScoped<IPerspectiveScenarioService, PerspectiveScenarioService>();
 
         return services;

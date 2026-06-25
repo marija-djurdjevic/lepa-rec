@@ -1,5 +1,6 @@
 using AngularNetBase.Practice.Dtos.DistancedJournals;
 using AngularNetBase.Practice.Dtos.PerspectiveScenarios;
+using AngularNetBase.Practice.Dtos.Rewards;
 using AngularNetBase.Practice.Dtos.Sessions;
 using AngularNetBase.Practice.Entities.DistancedJournals;
 using AngularNetBase.Practice.Entities.PerspectiveScenarios;
@@ -23,6 +24,7 @@ namespace AngularNetBase.Practice.Services
         private readonly IPerspectiveScenarioChallengeRepository _perspectiveScenarioChallengeRepository;
         private readonly IPerspectiveScenarioExerciseRepository _perspectiveScenarioExerciseRepository;
         private readonly IDailyChallengeAssignmentService _dailyChallengeAssignmentService;
+        private readonly IRewardService _rewardService;
         private readonly IDateTimeProvider _dateTimeProvider;
         private readonly PracticeContext _context;
 
@@ -33,6 +35,7 @@ namespace AngularNetBase.Practice.Services
             IPerspectiveScenarioChallengeRepository perspectiveScenarioChallengeRepository,
             IPerspectiveScenarioExerciseRepository perspectiveScenarioExerciseRepository,
             IDailyChallengeAssignmentService dailyChallengeAssignmentService,
+            IRewardService rewardService,
             IDateTimeProvider dateTimeProvider,
             PracticeContext context)
         {
@@ -42,6 +45,7 @@ namespace AngularNetBase.Practice.Services
             _perspectiveScenarioChallengeRepository = perspectiveScenarioChallengeRepository;
             _perspectiveScenarioExerciseRepository = perspectiveScenarioExerciseRepository;
             _dailyChallengeAssignmentService = dailyChallengeAssignmentService;
+            _rewardService = rewardService;
             _dateTimeProvider = dateTimeProvider;
             _context = context;
         }
@@ -98,7 +102,7 @@ namespace AngularNetBase.Practice.Services
             return MapToStateDto(session);
         }
 
-        public async Task<DailySessionStateDto> CompleteTodaySessionAsync(
+        public async Task<CompleteSessionResultDto> CompleteTodaySessionAsync(
             Guid userId,
             CancellationToken cancellationToken = default)
         {
@@ -108,7 +112,9 @@ namespace AngularNetBase.Practice.Services
             session.Complete(now);
 
             await _sessionRepository.SaveChangesAsync(cancellationToken);
-            return MapToStateDto(session);
+            var reward = await _rewardService.GrantDailyPieceAsync(userId, session, cancellationToken);
+
+            return new CompleteSessionResultDto(MapToStateDto(session), reward);
         }
 
         public async Task<TodayPracticePlanDto> GetTodayPracticePlanAsync(
@@ -149,6 +155,8 @@ namespace AngularNetBase.Practice.Services
                 ? await BuildPerspectiveScenarioChoicesForUserAssignmentAsync(assignment, isEnglish, cancellationToken)
                 : Array.Empty<PerspectiveScenarioPromptDto>();
 
+            var currentReward = await _rewardService.GetCurrentRewardAsync(userId, cancellationToken);
+
             return BuildPlan(
                 reflectionPrompt,
                 distancedJournalChoices,
@@ -156,7 +164,8 @@ namespace AngularNetBase.Practice.Services
                 assignment.MainExerciseType == ExerciseType.PerspectiveScenario && perspectiveScenarioChoices.Count > 0,
                 hasDistancedJournalToday,
                 hasDistancedJournalReflectionToday,
-                hasPerspectiveScenarioToday);
+                hasPerspectiveScenarioToday,
+                currentReward);
         }
 
         private async Task<DailySession> GetOrCreateTodaySessionEntityAsync(
@@ -803,7 +812,8 @@ namespace AngularNetBase.Practice.Services
             bool shouldShowPerspectiveScenario,
             bool isDistancedJournalCompleted,
             bool isReflectionCompleted,
-            bool isPerspectiveScenarioCompleted)
+            bool isPerspectiveScenarioCompleted,
+            RewardProgressDto? currentReward = null)
         {
             return new TodayPracticePlanDto(
                 reflectionPrompt,
@@ -812,7 +822,8 @@ namespace AngularNetBase.Practice.Services
                 shouldShowPerspectiveScenario,
                 isDistancedJournalCompleted,
                 isReflectionCompleted,
-                isPerspectiveScenarioCompleted);
+                isPerspectiveScenarioCompleted,
+                currentReward);
         }
 
         private static TodayPracticePlanDto BuildPlanWithDistancedJournalCompletedOnly()

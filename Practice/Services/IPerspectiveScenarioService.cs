@@ -57,5 +57,14 @@ namespace AngularNetBase.Practice.Services
             string? language = null,
             bool trackInDailySession = true,
             CancellationToken cancellationToken = default);
+
+        Task<AnswerPerspectiveScenarioQuestionResultDto> AnswerQuestionAndStreamGuidanceAsync(
+            Guid userId,
+            AnswerPerspectiveScenarioQuestionDto dto,
+            Func<PerspectiveScenarioGradeResult, CancellationToken, Task> onGrade,
+            Func<string, CancellationToken, Task> onGuideQuestionChunk,
+            string? language = null,
+            bool trackInDailySession = true,
+            CancellationToken cancellationToken = default);
     }
 }

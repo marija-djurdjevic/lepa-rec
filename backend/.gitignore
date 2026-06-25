@@ -74,6 +74,9 @@ project.lock.json
 project.fragment.lock.json
 artifacts/
 
+# Local LLM evaluation outputs
+llm-testing/results/
+
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 

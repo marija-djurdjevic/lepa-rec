@@ -1,5 +1,6 @@
 using AngularNetBase.Practice.Dtos.DistancedJournals;
 using AngularNetBase.Practice.Dtos.PerspectiveScenarios;
+using AngularNetBase.Practice.Dtos.Rewards;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,5 +14,6 @@ namespace AngularNetBase.Practice.Dtos.Sessions
        bool ShouldShowPerspectiveScenario,
        bool IsDistancedJournalCompleted,
        bool IsReflectionCompleted,
-       bool IsPerspectiveScenarioCompleted);
+       bool IsPerspectiveScenarioCompleted,
+       RewardProgressDto? CurrentReward);
 }

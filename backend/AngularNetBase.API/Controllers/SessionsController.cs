@@ -53,7 +53,7 @@ namespace AngularNetBase.API.Controllers
         }
 
         [HttpPost("complete")]
-        public async Task<ActionResult<DailySessionStateDto>> CompleteSession(CancellationToken cancellationToken)
+        public async Task<ActionResult<CompleteSessionResultDto>> CompleteSession(CancellationToken cancellationToken)
         {
             var userId = GetUserId();
             var result = await _sessionService.CompleteTodaySessionAsync(userId, cancellationToken);

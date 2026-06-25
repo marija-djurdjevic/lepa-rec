@@ -4,6 +4,7 @@ using AngularNetBase.Practice.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace AngularNetBase.API.Controllers
 {
@@ -13,6 +14,7 @@ namespace AngularNetBase.API.Controllers
     public class PerspectiveScenariosController : ControllerBase
     {
         private readonly IPerspectiveScenarioService _perspectiveScenarioService;
+        private static readonly JsonSerializerOptions StreamJsonOptions = new(JsonSerializerDefaults.Web);
 
         public PerspectiveScenariosController(IPerspectiveScenarioService perspectiveScenarioService)
         {
@@ -139,6 +141,68 @@ namespace AngularNetBase.API.Controllers
             }
         }
 
+        [HttpPost("answer-and-reveal/stream")]
+        public async Task AnswerQuestionAndStreamGuidance(
+            [FromBody] AnswerPerspectiveScenarioQuestionDto dto,
+            [FromQuery] string? lang,
+            CancellationToken cancellationToken)
+        {
+            var userId = GetUserId();
+
+            Response.ContentType = "text/event-stream";
+            Response.Headers.CacheControl = "no-cache";
+            Response.Headers.Connection = "keep-alive";
+
+            try
+            {
+                var result = await _perspectiveScenarioService.AnswerQuestionAndStreamGuidanceAsync(
+                    userId,
+                    dto,
+                    async (grade, token) =>
+                    {
+                        await WriteSseEventAsync(
+                            "grade",
+                            new
+                            {
+                                score = grade.Score,
+                                issues = grade.Issues,
+                                strengths = grade.Strengths,
+                                language = grade.Language
+                            },
+                            token);
+                    },
+                    async (chunk, token) =>
+                    {
+                        await WriteSseEventAsync(
+                            "guide_chunk",
+                            new { chunk },
+                            token);
+                    },
+                    lang,
+                    cancellationToken: cancellationToken);
+
+                await WriteSseEventAsync(
+                    "final",
+                    new PerspectiveScenarioStreamFinalEventDto(result),
+                    cancellationToken);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Response.StatusCode = StatusCodes.Status404NotFound;
+                await WriteSseEventAsync(
+                    "error",
+                    new { message = "Perspective scenario exercise was not found." },
+                    cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                await WriteSseEventAsync(
+                    "error",
+                    new { message = ex.Message },
+                    cancellationToken);
+            }
+        }
+
         [HttpGet("challenges/random/{level}")]
         public async Task<ActionResult<PerspectiveScenarioPromptDto>> GetRandomChallenge(
             ChallengeLevel level,
@@ -147,6 +211,16 @@ namespace AngularNetBase.API.Controllers
         {
             var result = await _perspectiveScenarioService.GetRandomChallengeAsync(level, lang, cancellationToken);
             return Ok(result);
+        }
+
+        private async Task WriteSseEventAsync(
+            string eventName,
+            object payload,
+            CancellationToken cancellationToken)
+        {
+            await Response.WriteAsync($"event: {eventName}\n", cancellationToken);
+            await Response.WriteAsync($"data: {JsonSerializer.Serialize(payload, StreamJsonOptions)}\n\n", cancellationToken);
+            await Response.Body.FlushAsync(cancellationToken);
         }
     }
 }

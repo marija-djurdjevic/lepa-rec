@@ -20,7 +20,14 @@ namespace AngularNetBase.Practice.Services
         private readonly IUserProfileReader _userProfileReader;
         private readonly IDateTimeProvider _dateTimeProvider;
         private readonly IJournalPhotoStorage _photoStorage;
+        private readonly IDistancedJournalLlmClient _llmClient;
         private const int MaxPhotosPerAnswer = 3;
+        private static readonly HashSet<string> QuestionStopWords = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "the", "and", "you", "your", "what", "how", "why", "when", "where", "that", "this", "with",
+            "šta", "sto", "kako", "zasto", "zašto", "kada", "gde", "gdje", "koje", "koji", "koja", "sebi",
+            "vam", "vas", "ste", "ovo", "ova", "ovaj", "situaciji", "situacija", "odgovor", "pitanje"
+        };
 
         public DistancedJournalService(
             IDistancedJournalChallengeRepository challengeRepository,
@@ -29,7 +36,8 @@ namespace AngularNetBase.Practice.Services
             IThirdPersonAnalyzer thirdPersonAnalyzer,
             IUserProfileReader userProfileReader,
             IDateTimeProvider dateTimeProvider,
-            IJournalPhotoStorage photoStorage)
+            IJournalPhotoStorage photoStorage,
+            IDistancedJournalLlmClient llmClient)
         {
             _challengeRepository = challengeRepository;
             _exerciseRepository = exerciseRepository;
@@ -38,6 +46,7 @@ namespace AngularNetBase.Practice.Services
             _userProfileReader = userProfileReader;
             _dateTimeProvider = dateTimeProvider;
             _photoStorage = photoStorage;
+            _llmClient = llmClient;
         }
 
         public async Task<DistancedJournalChallengeDto> CreateChallengeAsync(
@@ -169,6 +178,9 @@ namespace AngularNetBase.Practice.Services
             if (!trackInDailySession && !exercise.IsOnboardingHookRun)
                 throw new InvalidOperationException("Only onboarding hook exercises can bypass daily session tracking.");
 
+            var challenge = await _challengeRepository.GetByIdAsync(exercise.ChallengeId, cancellationToken)
+                ?? throw new InvalidOperationException("Distanced journal challenge was not found.");
+
             var submittedAt = _dateTimeProvider.UtcNow;
 
             ValidateTextAnswer(dto.MainAnswer, dto.FollowUpAnswer);
@@ -199,6 +211,14 @@ namespace AngularNetBase.Practice.Services
                 await _exerciseRepository.UpdateAsync(exercise, cancellationToken);
                 await _exerciseRepository.SaveChangesAsync(cancellationToken);
             }
+
+            await TryAttachGeneratedReflectionQuestionAsync(
+                exercise,
+                challenge,
+                dto.MainAnswer,
+                dto.FollowUpAnswer,
+                dto.Language,
+                cancellationToken);
 
             var feedback = await ComputeFeedbackAsync(
                 exercise.UserId,
@@ -241,6 +261,9 @@ namespace AngularNetBase.Practice.Services
                 throw new UnauthorizedAccessException("Exercise does not belong to the current user.");
             if (!trackInDailySession && !exercise.IsOnboardingHookRun)
                 throw new InvalidOperationException("Only onboarding hook exercises can bypass daily session tracking.");
+
+            var challenge = await _challengeRepository.GetByIdAsync(exercise.ChallengeId, cancellationToken)
+                ?? throw new InvalidOperationException("Distanced journal challenge was not found.");
 
             var submittedAt = _dateTimeProvider.UtcNow;
 
@@ -299,6 +322,17 @@ namespace AngularNetBase.Practice.Services
             {
                 await _exerciseRepository.UpdateAsync(exercise, cancellationToken);
                 await _exerciseRepository.SaveChangesAsync(cancellationToken);
+            }
+
+            if (hasText)
+            {
+                await TryAttachGeneratedReflectionQuestionAsync(
+                    exercise,
+                    challenge,
+                    dto.MainAnswer,
+                    dto.FollowUpAnswer,
+                    dto.Language,
+                    cancellationToken);
             }
 
             ThirdPersonFeedbackType? feedback = hasPhotos
@@ -367,6 +401,28 @@ namespace AngularNetBase.Practice.Services
             return MapExercise(exercise);
         }
 
+        public async Task<DistancedJournalExerciseDto> AddGeneratedReflectionAnswerAsync(
+            Guid userId,
+            AddGeneratedDistancedJournalReflectionDto dto,
+            CancellationToken cancellationToken = default)
+        {
+            if (dto.ExerciseId == Guid.Empty)
+                throw new ArgumentException("ExerciseId must be provided.");
+
+            var exercise = await _exerciseRepository.GetByIdAsync(dto.ExerciseId, cancellationToken);
+            if (exercise is null)
+                throw new InvalidOperationException("Distanced journal exercise was not found.");
+            if (exercise.UserId != userId)
+                throw new UnauthorizedAccessException("Exercise does not belong to the current user.");
+
+            exercise.AddGeneratedReflectionAnswer(dto.Answer);
+
+            await _exerciseRepository.UpdateAsync(exercise, cancellationToken);
+            await _exerciseRepository.SaveChangesAsync(cancellationToken);
+
+            return MapExercise(exercise);
+        }
+
         private static DistancedJournalChallengeDto MapChallenge(DistancedJournalChallenge challenge, string? language)
         {
             var isEnglish = IsEnglish(language);
@@ -405,6 +461,8 @@ namespace AngularNetBase.Practice.Services
                 exercise.Answer?.MainAnswer,
                 exercise.Answer?.FollowUpAnswer,
                 exercise.Answer?.Reflection,
+                exercise.Answer?.GeneratedReflectionQuestion,
+                exercise.Answer?.GeneratedReflectionAnswer,
                 exercise.Answer?.SubmittedAt,
                 exercise.IsCompleted(),
                 exercise.IsOnboardingHookRun,
@@ -491,10 +549,111 @@ namespace AngularNetBase.Practice.Services
                 .ToList();
         }
 
+        private async Task TryAttachGeneratedReflectionQuestionAsync(
+            DistancedJournalExercise exercise,
+            DistancedJournalChallenge challenge,
+            string mainAnswer,
+            string followUpAnswer,
+            string? language,
+            CancellationToken cancellationToken)
+        {
+            var isEnglish = IsEnglish(language);
+            var openingQuestion = GetQuestionText(challenge, DistancedJournalQuestionKind.Opening, isEnglish)
+                ?? SelectLocalized(challenge.Content, challenge.ContentEn, isEnglish);
+            var followUpQuestion = GetQuestionText(challenge, DistancedJournalQuestionKind.FollowUp, isEnglish)
+                ?? SelectLocalized(challenge.FollowUpQuestion, challenge.FollowUpQuestionEn, isEnglish);
+            var reflectionQuestion = GetQuestionText(challenge, DistancedJournalQuestionKind.Reflection, isEnglish);
+            var avoidQuestions = new[] { openingQuestion, followUpQuestion, reflectionQuestion }
+                .Where(q => !string.IsNullOrWhiteSpace(q))
+                .Select(q => q!)
+                .ToList();
+
+            var input = new DistancedJournalQuestionInput(
+                isEnglish ? "en" : "sr",
+                openingQuestion,
+                followUpQuestion,
+                reflectionQuestion,
+                mainAnswer,
+                followUpAnswer);
+
+            try
+            {
+                var result = await _llmClient.GenerateReflectionQuestionAsync(
+                    input,
+                    avoidQuestions,
+                    cancellationToken);
+
+                var question = result.Question;
+                if (IsTooSimilar(question, avoidQuestions))
+                {
+                    var retryAvoidQuestions = avoidQuestions.Append(question).ToList();
+                    result = await _llmClient.GenerateReflectionQuestionAsync(
+                        input,
+                        retryAvoidQuestions,
+                        cancellationToken);
+                    question = result.Question;
+                }
+
+                if (IsTooSimilar(question, avoidQuestions))
+                    question = GetFallbackGeneratedReflectionQuestion(isEnglish);
+
+                exercise.SetGeneratedReflectionQuestion(question);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                exercise.SetGeneratedReflectionQuestion(GetFallbackGeneratedReflectionQuestion(isEnglish));
+            }
+
+            await _exerciseRepository.UpdateAsync(exercise, cancellationToken);
+            await _exerciseRepository.SaveChangesAsync(cancellationToken);
+        }
+
         private static void ValidateTextAnswer(string? mainAnswer, string? followUpAnswer)
         {
             if (string.IsNullOrWhiteSpace(mainAnswer) || string.IsNullOrWhiteSpace(followUpAnswer))
                 throw new ArgumentException("Main and follow-up answers must be provided together.");
+        }
+
+        private static bool IsTooSimilar(string question, IReadOnlyCollection<string> existingQuestions)
+        {
+            var candidateTokens = GetSimilarityTokens(question);
+            if (candidateTokens.Count == 0)
+                return true;
+
+            foreach (var existingQuestion in existingQuestions)
+            {
+                var existingTokens = GetSimilarityTokens(existingQuestion);
+                if (existingTokens.Count == 0)
+                    continue;
+
+                var sharedCount = candidateTokens.Intersect(existingTokens).Count();
+                var overlap = sharedCount / (double)Math.Min(candidateTokens.Count, existingTokens.Count);
+                if (overlap >= 0.72)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static HashSet<string> GetSimilarityTokens(string text)
+        {
+            var normalized = new string(text
+                .ToLowerInvariant()
+                .Select(c => char.IsLetterOrDigit(c) ? c : ' ')
+                .ToArray());
+
+            return normalized
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Where(token => token.Length > 2)
+                .Where(token => !QuestionStopWords.Contains(token))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        }
+
+        private static string GetFallbackGeneratedReflectionQuestion(bool isEnglish)
+        {
+            return isEnglish
+                ? "What feels like the most important message you gave yourself in this situation?"
+                : "Šta Vam se čini kao najvažnija poruka koju ste sebi dali u ovoj situaciji?";
         }
 
         private async Task SaveSessionWithRetryAsync(
