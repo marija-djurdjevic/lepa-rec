@@ -49,6 +49,12 @@ services:
       Jwt__AccessTokenExpirationMinutes: ${JWT_ACCESS_TOKEN_EXPIRATION_MINUTES:-60}
       Jwt__RefreshTokenExpirationDays: ${JWT_REFRESH_TOKEN_EXPIRATION_DAYS:-7}
       SeedPracticeContent: ${SEED_PRACTICE_CONTENT:-false}
+      OpenAI__ApiKey: ${OPENAI_API_KEY}
+      OpenAI__BaseUrl: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      OpenAI__Model: ${OPENAI_MODEL:-gpt-5.4-mini}
+      OpenAI__GraderModel: ${OPENAI_GRADER_MODEL:-gpt-5.4-mini}
+      OpenAI__GuideModel: ${OPENAI_GUIDE_MODEL:-gpt-5.4-mini}
+      OpenAI__Temperature: ${OPENAI_TEMPERATURE:-0.3}
       Minio__Endpoint: ${MINIO_ENDPOINT}
       Minio__AccessKey: ${MINIO_ACCESS_KEY}
       Minio__SecretKey: ${MINIO_SECRET_KEY}
