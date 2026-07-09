@@ -133,11 +133,14 @@ public class OnboardingSessionController : ControllerBase
     }
 
     [HttpPost("hook/distanced-journal/submit")]
-    public async Task<IActionResult> SubmitDistanced([FromBody] SessionSubmitDistancedHookRequest request)
+    public async Task<IActionResult> SubmitDistanced(
+        [FromBody] SessionSubmitDistancedHookRequest request,
+        [FromQuery] string? lang)
     {
         try
         {
             var session = await _sessionService.GetActiveSessionAsync(request.OnboardingSessionId);
+            var language = request.Language ?? lang;
             var result = await _distancedJournalService.SubmitAnswerAsync(
                 session.Id,
                 new SubmitDistancedJournalAnswerDto(
@@ -145,7 +148,8 @@ public class OnboardingSessionController : ControllerBase
                     request.SessionDate,
                     request.MainAnswer,
                     request.FollowUpAnswer,
-                    request.Reflection),
+                    request.Reflection,
+                    language),
                 trackInDailySession: false);
 
             await _sessionService.MarkDistancedHookCompletedAsync(request.OnboardingSessionId, request);
