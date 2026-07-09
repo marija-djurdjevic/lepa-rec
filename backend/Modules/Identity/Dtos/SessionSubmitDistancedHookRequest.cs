@@ -6,4 +6,5 @@ public record SessionSubmitDistancedHookRequest(
     DateTime SessionDate,
     string MainAnswer,
     string FollowUpAnswer,
-    string? Reflection);
+    string? Reflection,
+    string? Language);
